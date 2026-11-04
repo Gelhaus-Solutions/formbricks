@@ -3,26 +3,16 @@ import { AccountSecurity } from "@/app/(app)/workspaces/[workspaceId]/settings/a
 import { DeleteAccount } from "@/app/(app)/workspaces/[workspaceId]/settings/account/profile/components/DeleteAccount";
 import { EditProfileDetailsForm } from "@/app/(app)/workspaces/[workspaceId]/settings/account/profile/components/EditProfileDetailsForm";
 import { SettingsCard } from "@/app/(app)/workspaces/[workspaceId]/settings/components/SettingsCard";
-import {
-  EMAIL_VERIFICATION_DISABLED,
-  ENTERPRISE_LICENSE_REQUEST_FORM_URL,
-  IS_FORMBRICKS_CLOUD,
-  PASSWORD_RESET_DISABLED,
-} from "@/lib/constants";
+import { EMAIL_VERIFICATION_DISABLED, IS_FORMBRICKS_CLOUD, PASSWORD_RESET_DISABLED } from "@/lib/constants";
 import { getOrganizationsWhereUserIsSingleOwner } from "@/lib/organization/service";
 import { getUser } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
 import { requiresPasswordConfirmationForAccountDeletion } from "@/modules/account/lib/account-deletion-auth";
 import { getSession } from "@/modules/auth/lib/session";
-import { LiteLicenseTip } from "@/modules/ee/license-check/components/lite-license-tip";
-import { getEnterpriseLicense } from "@/modules/ee/license-check/lib/license";
 import { getIsMultiOrgEnabled, getIsTwoFactorAuthEnabled } from "@/modules/features/lib/flags";
-import { getSettingsLayoutData } from "@/modules/settings/lib/navigation-data";
-import { getOrganizationBillingPath } from "@/modules/settings/lib/routes";
 import { IdBadge } from "@/modules/ui/components/id-badge";
 import { PageContentWrapper } from "@/modules/ui/components/page-content-wrapper";
 import { PageHeader } from "@/modules/ui/components/page-header";
-import { UpgradePrompt } from "@/modules/ui/components/upgrade-prompt";
 
 const Page = async () => {
   const isTwoFactorAuthEnabled = await getIsTwoFactorAuthEnabled();
@@ -39,49 +29,9 @@ const Page = async () => {
     throw new AuthenticationError(t("common.not_authenticated"));
   }
 
-  // Two-factor upgrade points at the user's organization billing page (org-scoped after the refactor).
-  const layoutData = await getSettingsLayoutData(session.user.id);
-  const billingUpgradeHref = layoutData
-    ? getOrganizationBillingPath(layoutData.organization.id, IS_FORMBRICKS_CLOUD)
-    : "/";
-
+  // GForms offers no two-factor upgrade: until its rebuild (GFORMS-13), only an account that already
+  // has two-factor authentication sees the security card, so it can still turn it off.
   const canUseTwoFactorAuth = isTwoFactorAuthEnabled || user.twoFactorEnabled;
-  // Self-hosted without any license key: 2FA is part of the free Lite license, so offer that instead
-  // of the paid upgrade.
-  const showTwoFactorLiteLicenseTip =
-    !canUseTwoFactorAuth && !IS_FORMBRICKS_CLOUD && (await getEnterpriseLicense()).status === "no-license";
-
-  let securityContent: React.ReactNode;
-  if (canUseTwoFactorAuth) {
-    securityContent = <AccountSecurity user={user} />;
-  } else if (showTwoFactorLiteLicenseTip) {
-    securityContent = (
-      <LiteLicenseTip
-        feature="two_factor_auth"
-        title={t("workspace.settings.profile.two_factor_authentication_lite_license_title")}
-        description={t("common.lite_license_tip_description")}
-      />
-    );
-  } else {
-    securityContent = (
-      <UpgradePrompt
-        title={t("workspace.settings.profile.unlock_two_factor_authentication")}
-        description={t("workspace.settings.profile.two_factor_authentication_description")}
-        buttons={[
-          {
-            text: IS_FORMBRICKS_CLOUD ? t("common.upgrade_plan") : t("common.request_trial_license"),
-            href: IS_FORMBRICKS_CLOUD ? billingUpgradeHref : ENTERPRISE_LICENSE_REQUEST_FORM_URL,
-          },
-          {
-            text: t("common.learn_more"),
-            href: IS_FORMBRICKS_CLOUD
-              ? billingUpgradeHref
-              : "https://formbricks.com/learn-more-self-hosting-license?utm_source=formbricks-app&utm_medium=webapp&utm_campaign=ee_lock_two_factor",
-          },
-        ]}
-      />
-    );
-  }
 
   const isPasswordResetEnabled = !PASSWORD_RESET_DISABLED && user.identityProvider === "email";
   const requiresPasswordConfirmation = requiresPasswordConfirmationForAccountDeletion(user);
@@ -99,12 +49,11 @@ const Page = async () => {
             isPasswordResetEnabled={isPasswordResetEnabled}
           />
         </SettingsCard>
-        {user.identityProvider === "email" && (
+        {user.identityProvider === "email" && canUseTwoFactorAuth && (
           <SettingsCard
             title={t("common.security")}
-            description={t("workspace.settings.profile.security_description")}
-            bodyVariant={showTwoFactorLiteLicenseTip ? "bleed" : "padded"}>
-            {securityContent}
+            description={t("workspace.settings.profile.security_description")}>
+            <AccountSecurity user={user} />
           </SettingsCard>
         )}
 
