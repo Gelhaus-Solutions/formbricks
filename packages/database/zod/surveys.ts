@@ -19,8 +19,14 @@ export const ZStylingColor = z.object({
   dark: ZColor.nullish(),
 });
 
-// "cardless" is only supported for link surveys; app surveys keep the card-based arrangements.
-export const ZLinkSurveyCardArrangementOptions = z.enum(["casual", "straight", "simple", "cardless"]);
+// "cardless" and "focus" are only supported for link surveys; app surveys keep the card-based arrangements.
+export const ZLinkSurveyCardArrangementOptions = z.enum([
+  "casual",
+  "straight",
+  "simple",
+  "cardless",
+  "focus",
+]);
 export const ZAppSurveyCardArrangementOptions = z.enum(["casual", "straight", "simple"]);
 
 export const ZCardArrangement = z.object({

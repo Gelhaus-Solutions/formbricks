@@ -276,7 +276,7 @@ export interface TBaseStyling {
   roundness?: TDimension;
   cardArrangement?: {
     // "cardless" is only supported for link surveys.
-    linkSurveys: "casual" | "straight" | "simple" | "cardless";
+    linkSurveys: "casual" | "straight" | "simple" | "cardless" | "focus";
     appSurveys: "casual" | "straight" | "simple";
   } | null;
   linkSurveyCardWidth?: "narrow" | "default" | "wide" | null;

@@ -8,10 +8,23 @@ export const ZStylingColor = z.object({
 export type TStylingColor = z.infer<typeof ZStylingColor>;
 
 // "cardless" is only supported for link surveys; app surveys keep the card-based arrangements.
-export const ZLinkSurveyCardArrangementOptions = z.enum(["casual", "straight", "simple", "cardless"]);
+export const ZLinkSurveyCardArrangementOptions = z.enum([
+  "casual",
+  "straight",
+  "simple",
+  "cardless",
+  "focus",
+]);
 export const ZAppSurveyCardArrangementOptions = z.enum(["casual", "straight", "simple"]);
 export type TCardArrangementOptions = z.infer<typeof ZLinkSurveyCardArrangementOptions>;
 export type TAppSurveyCardArrangementOptions = z.infer<typeof ZAppSurveyCardArrangementOptions>;
+
+/**
+ * Link-survey arrangements that fill the page instead of drawing a card: the plain cardless layout and
+ * Focus, the one-question-per-screen layout GForms uses by default.
+ */
+export const isFullPageLinkArrangement = (arrangement?: string | null): boolean =>
+  arrangement === "cardless" || arrangement === "focus";
 
 export const ZCardArrangement = z.object({
   linkSurveys: ZLinkSurveyCardArrangementOptions,
