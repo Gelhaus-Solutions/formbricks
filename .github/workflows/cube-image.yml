@@ -2,7 +2,8 @@ name: Cube Image
 
 # Builds ghcr.io/gelhaus-solutions/gforms-cube from docker/cube-image (see its README.md). Pull requests and the merge
 # queue build it for amd64, gate it on Trivy and run the smoke test. Pushes to main and manual runs on
-# main also publish it for amd64 and arm64 under its immutable tag plus `latest`, and sign it with cosign.
+# main also publish it (amd64 only, like the app image) under its immutable tag plus `latest`, and sign it
+# with cosign.
 on:
   pull_request:
     branches:
@@ -112,16 +113,6 @@ jobs:
         if: steps.changes.outputs.relevant == 'true'
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      # The build stage cross-builds (see the Dockerfile), so arm64 needs no emulation. Building it here
-      # catches a bad arm64 checksum before main tries to publish.
-      - name: Build linux/arm64
-        if: steps.changes.outputs.image == 'true'
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: docker/cube-image
-          platforms: linux/arm64
-          outputs: type=cacheonly
-
       - name: Build linux/amd64
         if: steps.changes.outputs.relevant == 'true'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -221,13 +212,13 @@ jobs:
         if: steps.existing.outputs.exists == 'false'
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      - name: Build and push linux/amd64 and linux/arm64
+      - name: Build and push linux/amd64
         id: build
         if: steps.existing.outputs.exists == 'false'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: docker/cube-image
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: |
             ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}

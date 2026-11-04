@@ -1,6 +1,6 @@
 name: Edge Docker Image
 
-# Every push to main builds the app image, smoke-tests the same digest natively on amd64 and arm64, and
+# Every push to main builds the app image (amd64 only), smoke-tests that digest natively, and
 # only then points ghcr.io/gelhaus-solutions/gforms:edge (plus `main` and a unique
 # 0.0.0-alpha-main-<timestamp> tag) at it. Versioned releases stay with formbricks-release.yml; edge is
 # for Gelhaus Solutions' own deploys (decision D7).
@@ -44,8 +44,6 @@ jobs:
         include:
           - platform: linux/amd64
             runner: ubuntu-24.04
-          - platform: linux/arm64
-            runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     permissions:

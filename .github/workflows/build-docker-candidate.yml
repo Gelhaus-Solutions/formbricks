@@ -133,14 +133,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # GitHub's hosted runners (4 vCPU for a public repository), native per architecture.
+          # GitHub's hosted runner (4 vCPU for a public repository), built natively. GForms ships amd64
+          # only: no arm64 build and no emulation.
           - arch: amd64
             machine: x86_64
             runner: ubuntu-24.04
-            node_build_jobs: 4
-          - arch: arm64
-            machine: aarch64
-            runner: ubuntu-24.04-arm
             node_build_jobs: 4
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
@@ -213,18 +210,19 @@ jobs:
         with:
           registry_type: ${{ inputs.registry_type }}
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - name: Assemble multi-platform candidate
+      # An index with the one amd64 manifest (imagetools prefers an index for a single source), so the
+      # candidate keeps the shape signing and promotion expect.
+      - name: Assemble the candidate index
         id: merge
         run: |
           set -euo pipefail
           image="$CANDIDATE_REPOSITORY:$CANDIDATE_TAG"
-          docker buildx imagetools create --tag "$image" \
-            "$CANDIDATE_REPOSITORY:$CANDIDATE_TAG-amd64" \
-            "$CANDIDATE_REPOSITORY:$CANDIDATE_TAG-arm64"
+          docker buildx imagetools create --prefer-index --tag "$image" \
+            "$CANDIDATE_REPOSITORY:$CANDIDATE_TAG-amd64"
           digest="$(docker buildx imagetools inspect --format '{{json .Manifest}}' "$image" | jq -er .digest)"
           [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           docker buildx imagetools inspect --raw "$CANDIDATE_REPOSITORY@$digest" | jq -e '
-            [.manifests[] | select(.platform.os == "linux") | .platform.architecture] | sort == ["amd64", "arm64"]
+            [.manifests[] | select(.platform.os == "linux") | .platform.architecture] | sort == ["amd64"]
           '
           {
             echo "image=$CANDIDATE_REPOSITORY@$digest"

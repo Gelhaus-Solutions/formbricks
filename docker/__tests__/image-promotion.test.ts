@@ -179,13 +179,10 @@ describe("release promotion boundary", () => {
     }
   });
 
-  test("builds each architecture natively on GitHub-hosted runners with a per-architecture cache", () => {
+  test("builds amd64 only, natively on a GitHub-hosted runner with its own cache", () => {
     const { jobs } = workflow("build-docker-candidate");
     const build = jobs.build.steps.find((step) => step.name === "Build native candidate");
-    expect(jobs.build.strategy?.matrix.include.map((entry) => entry.runner)).toEqual([
-      "ubuntu-24.04",
-      "ubuntu-24.04-arm",
-    ]);
+    expect(jobs.build.strategy?.matrix.include.map((entry) => entry.runner)).toEqual(["ubuntu-24.04"]);
     expect(jobs.build.steps[0].uses).toMatch(/^step-security\/harden-runner@/);
     expect(build?.uses).toMatch(/^docker\/build-push-action@/);
     expect(build?.with?.["cache-from"]).toBe("type=gha,scope=web-${{ matrix.arch }}");
@@ -217,14 +214,13 @@ describe("release promotion boundary", () => {
   });
 
   test.each(["release-docker-github", "release-docker-edge"])(
-    "%s gates promotion on both native architectures testing the same digest",
+    "%s gates promotion on the native amd64 smoke test of the same digest",
     (name) => {
       const { jobs } = workflow(name);
       const validation = jobs.validate;
       const promotion = jobs.promote;
       expect(validation.strategy?.matrix.include).toEqual([
         { platform: "linux/amd64", runner: "ubuntu-24.04" },
-        { platform: "linux/arm64", runner: "ubuntu-24.04-arm" },
       ]);
       expect(validation["runs-on"]).toBe("${{ matrix.runner }}");
       expect(promotion.needs).toContain("validate");
