@@ -11,13 +11,12 @@ import { createMembership } from "@/lib/membership/service";
 import { capturePostHogEvent } from "@/lib/posthog";
 import { getUserByEmail } from "@/lib/user/service";
 import { AuditLoggingCtx } from "@/lib/utils/action-client/types/context";
+import { UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
 import { auth } from "@/modules/auth/lib/auth";
 import { readSignupIntent } from "@/modules/auth/lib/signup-intent";
 import { updateUser } from "@/modules/auth/lib/user";
 import { deleteInvite, getInvite, resolveInviteMatch } from "@/modules/auth/signup/lib/invite";
 import { applyIPRateLimit } from "@/modules/core/rate-limit/helpers";
-import { UNKNOWN_DATA } from "@/modules/ee/audit-logs/types/audit-log";
-import { subscribeUserToMailingList } from "@/modules/ee/mailing/lib/mailing-subscription";
 import { sendInviteAcceptedEmail } from "@/modules/email";
 import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { createUserAction } from "./actions";
@@ -78,7 +77,6 @@ vi.mock("@/modules/ee/billing/lib/organization-billing", () => ({
   ensureCloudStripeSetupForOrganization: vi.fn(),
 }));
 vi.mock("@/modules/features/lib/flags", () => ({ getIsMultiOrgEnabled: vi.fn() }));
-vi.mock("@/modules/ee/mailing/lib/mailing-subscription", () => ({ subscribeUserToMailingList: vi.fn() }));
 vi.mock("@/modules/email", () => ({ sendInviteAcceptedEmail: vi.fn() }));
 vi.mock("@/modules/workspaces/settings/lib/workspace", () => ({ createWorkspace: vi.fn() }));
 
@@ -112,7 +110,7 @@ vi.mock("@/lib/constants", () => ({
 
 vi.mock("@/lib/instance/service", () => ({ getIsFreshInstance: vi.fn() }));
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_type: string, _object: string, fn: Function) => fn),
 }));
 
@@ -294,7 +292,6 @@ describe("createUserAction — signup verification email callbackURL", () => {
     const result = await createUserAction({ ctx, parsedInput: baseInput } as never);
 
     expect(result).toEqual({ success: true }); // same response as a real signup
-    expect(subscribeUserToMailingList).not.toHaveBeenCalled();
     expect(updateUser).not.toHaveBeenCalled(); // no locale write on someone else's account
     expect(capturePostHogEvent).not.toHaveBeenCalled();
     // No `created` audit attribution for an account that was not created (S1) — and no `created` event
@@ -379,8 +376,7 @@ describe("createUserAction — signup verification email callbackURL", () => {
     const result = await createUserAction({ ctx: newCtx(), parsedInput: baseInput } as never);
 
     expect(result).toEqual({ success: true });
-    // already-existed short-circuits handlePostUserCreation + mailing-list subscription.
-    expect(subscribeUserToMailingList).not.toHaveBeenCalled();
+    // already-existed short-circuits handlePostUserCreation.
   });
 });
 

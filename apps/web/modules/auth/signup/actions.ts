@@ -26,6 +26,7 @@ import { getUserByEmail } from "@/lib/user/service";
 import { actionClient } from "@/lib/utils/action-client";
 import { ActionClientCtx } from "@/lib/utils/action-client/types/context";
 import { DEFAULT_WORKSPACE_NAME } from "@/lib/workspace/constants";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { ATTRIBUTION_COOKIE_NAME, getAttributionPropertiesFromCookies } from "@/modules/auth/lib/attribution";
 import { auth } from "@/modules/auth/lib/auth";
 import { isPasswordCompromisedError } from "@/modules/auth/lib/better-auth-hibp";
@@ -53,9 +54,7 @@ import { createTeamMembership } from "@/modules/auth/signup/lib/team";
 import { verifyTurnstileToken } from "@/modules/auth/signup/lib/utils";
 import { applyIPRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
 import { ensureCloudStripeSetupForOrganization } from "@/modules/ee/billing/lib/organization-billing";
-import { subscribeUserToMailingList } from "@/modules/ee/mailing/lib/mailing-subscription";
 import { sendInviteAcceptedEmail } from "@/modules/email";
 import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { createWorkspace } from "@/modules/workspaces/settings/lib/workspace";
@@ -86,8 +85,8 @@ async function verifyTurnstileIfConfigured(turnstileToken: string | undefined): 
 /**
  * Whether THIS request created the account, as a discriminated union rather than a boolean flag.
  *
- * Everything downstream of sign-up — invite acceptance, organization creation, the mailing-list
- * subscription, the analytics identify, the `created` audit event — may only run for `"created"`.
+ * Everything downstream of sign-up (invite acceptance, organization creation, the analytics identify,
+ * the `created` audit event) may only run for `"created"`.
  * `createUserAction` is unauthenticated, so running any of it against an account the caller has not
  * proven they own is an authorization defect (ENG-2091). Encoding that in the type keeps the guard
  * from being dropped by a later refactor: `handlePostUserCreation` accepts only the `"created"`
@@ -448,13 +447,6 @@ export const createUserAction = actionClient.inputSchema(ZCreateUserAction).acti
       }
 
       await handlePostUserCreation(ctx, outcome, inviteToken);
-
-      await subscribeUserToMailingList({
-        email: user.email,
-        isFormbricksCloud: IS_FORMBRICKS_CLOUD,
-        subscribeToSecurityUpdates: parsedInput.subscribeToSecurityUpdates,
-        subscribeToProductUpdates: parsedInput.subscribeToProductUpdates,
-      });
 
       const cookieStore = await cookies();
       const hasAttributionCookie = cookieStore.get(ATTRIBUTION_COOKIE_NAME) !== undefined;

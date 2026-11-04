@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import {
   EMAIL_AUTH_ENABLED,
   EMAIL_VERIFICATION_DISABLED,
-  IS_FORMBRICKS_CLOUD,
   IS_TURNSTILE_CONFIGURED,
   OIDC_DISPLAY_NAME,
   PRIVACY_URL,
@@ -60,7 +59,6 @@ export const SignupPage = async ({
         emailFromSearchParams={emailFromSearchParams}
         isTurnstileConfigured={IS_TURNSTILE_CONFIGURED}
         turnstileSiteKey={TURNSTILE_SITE_KEY}
-        isFormbricksCloud={IS_FORMBRICKS_CLOUD}
       />
     </FormWrapper>
   );

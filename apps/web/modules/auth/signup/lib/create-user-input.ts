@@ -19,8 +19,6 @@ export const ZCreateUserAction = z
     inviteToken: z.string().optional(),
     userLocale: ZUserLocale.optional(),
     turnstileToken: z.string().optional(),
-    subscribeToSecurityUpdates: z.boolean().optional(),
-    subscribeToProductUpdates: z.boolean().optional(),
   })
   .refine((input) => !IS_TURNSTILE_CONFIGURED || Boolean(input.turnstileToken), {
     message: "CAPTCHA verification required",
