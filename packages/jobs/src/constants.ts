@@ -63,7 +63,6 @@ export const JOB_NAMES = {
   responsePipeline: "response-pipeline.process",
   surveyScheduling: "survey-scheduling.reconcile",
   surveyArchivePurge: "survey-archive-purge.process",
-  usageTelemetry: "usage-telemetry.process",
   webhookDelivery: "webhook-delivery.process",
   workflowsUsageSnapshot: "workflows-usage.snapshot",
   workflowRun: "workflow-run.process",

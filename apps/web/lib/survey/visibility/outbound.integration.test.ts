@@ -24,7 +24,6 @@ vi.mock("@formbricks/jobs", async (importOriginal) => ({
     return { id: `job-${enqueued.jobs.length}` };
   },
 }));
-vi.mock("@/lib/telemetry/usage-update", () => ({ sendTelemetryEvents: async () => undefined }));
 
 const ids = { privateSurvey: "", visibleSurvey: "", workspace: "" };
 

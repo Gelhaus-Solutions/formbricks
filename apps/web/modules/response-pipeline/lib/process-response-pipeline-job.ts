@@ -19,7 +19,6 @@ import { isDatabasePoolExhaustionError } from "@/lib/jobs/pool-exhaustion";
 import { getQuestionCodes } from "@/lib/response/data-by-question-code";
 import { getResponseCountBySurveyId } from "@/lib/response/service";
 import { isSurveyOutboundAllowed, surveyOutboundVisibilitySelect } from "@/lib/survey/visibility/outbound";
-import { sendTelemetryEvents } from "@/lib/telemetry/usage-update";
 import { isNewReleaseWorkEnabled } from "@/lib/upgrade/compatibility";
 import { queueAuditEventWithoutRequest } from "@/modules/ee/audit-logs/lib/handler";
 import { type TAuditStatus, UNKNOWN_DATA } from "@/modules/ee/audit-logs/types/audit-log";
@@ -835,18 +834,6 @@ const runResponseCreatedSideEffects = async ({
         "Response pipeline PostHog capture failed"
       );
     }
-  }
-
-  try {
-    await sendTelemetryEvents();
-  } catch (error) {
-    logger.error(
-      {
-        ...logContext,
-        err: error,
-      },
-      "Response pipeline telemetry dispatch failed"
-    );
   }
 };
 

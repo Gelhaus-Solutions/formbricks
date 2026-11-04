@@ -36,7 +36,6 @@ const {
   mockRecordResponseCreatedMeterEvent,
   mockSendFollowUpsForResponse,
   mockSendResponseFinishedEmail,
-  mockSendTelemetryEvents,
 } = vi.hoisted(() => {
   process.env.HUB_API_URL ??= "https://hub.test";
 
@@ -63,7 +62,6 @@ const {
     mockRecordResponseCreatedMeterEvent: vi.fn(),
     mockSendFollowUpsForResponse: vi.fn(),
     mockSendResponseFinishedEmail: vi.fn(),
-    mockSendTelemetryEvents: vi.fn(),
   };
 });
 
@@ -109,10 +107,6 @@ vi.mock(import("@/lib/constants"), async (importOriginal) => {
 
 vi.mock("./handle-integrations", () => ({
   handleIntegrations: mockHandleIntegrations,
-}));
-
-vi.mock("@/lib/telemetry/usage-update", () => ({
-  sendTelemetryEvents: mockSendTelemetryEvents,
 }));
 
 vi.mock("@/lib/feedback-source/pipeline-handler", () => ({
@@ -261,7 +255,6 @@ describe("processResponsePipelineJob", () => {
     mockSendResponseFinishedEmail.mockResolvedValue(undefined);
     mockSendFollowUpsForResponse.mockResolvedValue({ ok: true, data: [] });
     mockEnqueueResponseCompletedWorkflowRuns.mockResolvedValue(undefined);
-    mockSendTelemetryEvents.mockResolvedValue(undefined);
     mockPrismaSurveyUpdate.mockResolvedValue(undefined);
     mockPrismaResponseFindUnique.mockResolvedValue({ outcome: null });
     mockHandleFeedbackSourcePipeline.mockResolvedValue(undefined);
@@ -414,7 +407,6 @@ describe("processResponsePipelineJob", () => {
       responseId: "response_123",
       stripeCustomerId: "cus_123",
     });
-    expect(mockSendTelemetryEvents).toHaveBeenCalledTimes(1);
     expect(mockHandleIntegrations).not.toHaveBeenCalled();
   });
 
@@ -646,7 +638,6 @@ describe("processResponsePipelineJob", () => {
         userType: "system",
       })
     );
-    expect(mockSendTelemetryEvents).not.toHaveBeenCalled();
   });
 
   test("only counts finished responses towards the auto-complete response limit", async () => {
@@ -1115,22 +1106,6 @@ describe("processResponsePipelineJob", () => {
     expect(mockSendResponseFinishedEmail).not.toHaveBeenCalled();
   });
 
-  test("logs telemetry failures without failing the responseCreated job", async () => {
-    const telemetryError = new Error("telemetry offline");
-    mockSendTelemetryEvents.mockRejectedValue(telemetryError);
-
-    await expect(processResponsePipelineJob(baseData, baseContext)).resolves.toBeUndefined();
-
-    expect(mockLoggerError).toHaveBeenCalledWith(
-      expect.objectContaining({
-        err: telemetryError,
-        event: "responseCreated",
-        jobId: "job_123",
-      }),
-      "Response pipeline telemetry dispatch failed"
-    );
-  });
-
   test("continues responseCreated side effects when the fan-out fails on the final attempt", async () => {
     mockPrismaWebhookFindMany.mockResolvedValue([webhookRow]);
     mockEnqueueWebhookDeliveryJob.mockRejectedValue(new Error("redis unavailable"));
@@ -1142,7 +1117,6 @@ describe("processResponsePipelineJob", () => {
       responseId: "response_123",
       stripeCustomerId: "cus_123",
     });
-    expect(mockSendTelemetryEvents).toHaveBeenCalledTimes(1);
     expect(mockLoggerError).toHaveBeenCalledWith(
       expect.objectContaining({
         attempt: 3,
@@ -1168,12 +1142,11 @@ describe("processResponsePipelineJob", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(settled).toBe(false);
-    expect(mockSendTelemetryEvents).not.toHaveBeenCalled();
 
     resolveMetering?.();
     await jobPromise;
 
-    expect(mockSendTelemetryEvents).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(true);
   });
 
   test("fails fast when the workspace organization cannot be found", async () => {
