@@ -1,6 +1,6 @@
 "use client";
 
-import { SquareDashedTopSolid } from "lucide-react";
+import { Rows3Icon, SquareDashedTopSolid } from "lucide-react";
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { TCardArrangementOptions } from "@formbricks/types/styling";
@@ -37,6 +37,8 @@ export const CardArrangementTabs = ({
         return <StraightCardArrangementIcon />;
       case "cardless":
         return <SquareDashedTopSolid className="size-4 text-slate-900" />;
+      case "focus":
+        return <Rows3Icon className="size-4 text-slate-900" />;
       default:
         return <SimpleCardsArrangementIcon />;
     }
@@ -65,6 +67,12 @@ export const CardArrangementTabs = ({
   ];
 
   if (surveyType === "link") {
+    // Focus is the default for link surveys, so it leads the row.
+    options.unshift({
+      value: "focus",
+      label: t("workspace.surveys.edit.focus"),
+      icon: getCardArrangementIcon("focus"),
+    });
     options.push({
       value: "cardless",
       label: t("workspace.surveys.edit.cardless"),

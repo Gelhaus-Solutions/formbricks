@@ -8,7 +8,7 @@ import { getLanguageLabel } from "@formbricks/i18n-utils/utils";
 import type { TRendererCustomCss } from "@formbricks/types/custom-css";
 import { resolveDarkColors } from "@formbricks/types/dark-palette";
 import { resolveOverlayAppearance } from "@formbricks/types/overlay";
-import { getLinkSurveyCardMaxWidth } from "@formbricks/types/styling";
+import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
 import { TSurvey, TSurveyLanguage, TSurveyStyling } from "@formbricks/types/surveys/types";
 import { TUserLocale } from "@formbricks/types/user";
 import { TWorkspaceStyling } from "@formbricks/types/workspace";
@@ -169,7 +169,7 @@ export const PreviewSurvey = ({
   // Page font (ENG-3864): the app survey takes the font of the page around it, here the editor's.
   const pageFont = (styling.pageFont ?? workspace.styling.pageFont) === true;
 
-  const isCardless = styling.cardArrangement?.linkSurveys === "cardless";
+  const isCardless = isFullPageLinkArrangement(styling.cardArrangement?.linkSurveys);
   // The mock modal paints its own card color around the survey, so it has to follow the dark palette.
   const modalBackground =
     appearance === "dark"

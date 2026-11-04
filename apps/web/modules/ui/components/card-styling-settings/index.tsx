@@ -130,8 +130,9 @@ export const CardStylingSettings = ({
                     activeCardArrangement={isAppSurvey ? appCardArrangement : linkCardArrangement}
                     setActiveCardArrangement={(value, type) => {
                       if (type === "app") {
-                        // "cardless" is not offered for app surveys, so it can be safely excluded here.
-                        if (value !== "cardless") {
+                        // The full-page arrangements are not offered for app surveys, so they can be
+                        // safely excluded here.
+                        if (value !== "cardless" && value !== "focus") {
                           form.setValue("cardArrangement.appSurveys", value);
                         }
                       } else {

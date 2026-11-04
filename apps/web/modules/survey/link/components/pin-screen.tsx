@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Response, Workspace } from "@formbricks/database/prisma-browser";
 import type { TRendererCustomCss } from "@formbricks/types/custom-css";
-import { getLinkSurveyCardMaxWidth } from "@formbricks/types/styling";
+import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
 import { TSurvey, TSurveyStyling } from "@formbricks/types/surveys/types";
 import { TUserLocale } from "@formbricks/types/user";
 import { TWorkspaceStyling } from "@formbricks/types/workspace";
@@ -82,7 +82,7 @@ export const PinScreen = (props: Readonly<PinScreenProps>) => {
   const [survey, setSurvey] = useState<TSurvey>();
   const [pinAuthToken, setPinAuthToken] = useState<string | undefined>();
   const [customCss, setCustomCss] = useState<TRendererCustomCss | undefined>();
-  const isCardless = styling.cardArrangement?.linkSurveys === "cardless";
+  const isCardless = isFullPageLinkArrangement(styling.cardArrangement?.linkSurveys);
   const linkSurveyCardMaxWidth = getLinkSurveyCardMaxWidth(styling.linkSurveyCardWidth);
 
   const resetState = useCallback(() => {

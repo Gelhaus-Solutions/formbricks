@@ -41,6 +41,7 @@ export const StackedCardsContainer = ({
       );
 
     case "cardless":
+    case "focus":
       return (
         <div className="mx-auto w-full" style={{ maxWidth: linkSurveyCardMaxWidth }}>
           {children}

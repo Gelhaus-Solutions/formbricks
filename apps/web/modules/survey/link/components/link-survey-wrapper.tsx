@@ -1,7 +1,7 @@
 import { type JSX, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SurveyType, Workspace } from "@formbricks/database/prisma-browser";
-import { getLinkSurveyCardMaxWidth } from "@formbricks/types/styling";
+import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
 import { TSurveyStyling } from "@formbricks/types/surveys/types";
 import { TWorkspaceStyling } from "@formbricks/types/workspace";
 import { cn } from "@/lib/cn";
@@ -68,7 +68,7 @@ export const LinkSurveyWrapper = ({
   const explicitFooterLinkColor = styling.footerLinkColor?.light;
   const footerLinkColor = explicitFooterLinkColor ?? footerLinkStyle.textColor;
   const footerLinkBackdropColor = explicitFooterLinkColor ? undefined : footerLinkStyle.backdropColor;
-  const isCardless = styling.cardArrangement?.linkSurveys === "cardless";
+  const isCardless = isFullPageLinkArrangement(styling.cardArrangement?.linkSurveys);
   const linkSurveyCardMaxWidth = getLinkSurveyCardMaxWidth(styling.linkSurveyCardWidth);
   const hasLogo = !styling.isLogoHidden && !!(workspace.logo?.url || styling.logo?.url);
   const showCardlessLogo = isCardless && hasLogo;

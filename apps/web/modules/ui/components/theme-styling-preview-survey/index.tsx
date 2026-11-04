@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { TRendererCustomCss } from "@formbricks/types/custom-css";
 import { resolveDarkColors } from "@formbricks/types/dark-palette";
 import { resolveOverlayAppearance } from "@formbricks/types/overlay";
-import { getLinkSurveyCardMaxWidth } from "@formbricks/types/styling";
+import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
 import { TSurvey, TSurveyType } from "@formbricks/types/surveys/types";
 import { TWorkspace } from "@formbricks/types/workspace";
 import { cn } from "@/lib/cn";
@@ -149,7 +149,7 @@ export const ThemeStylingPreviewSurvey = ({
     return workspace.styling;
   }, [workspace.styling, survey.styling]);
 
-  const isCardless = styling.cardArrangement?.linkSurveys === "cardless";
+  const isCardless = isFullPageLinkArrangement(styling.cardArrangement?.linkSurveys);
   const linkSurveyCardMaxWidth = getLinkSurveyCardMaxWidth(styling.linkSurveyCardWidth);
 
   // Create a unique key that includes both timestamp and preview type
