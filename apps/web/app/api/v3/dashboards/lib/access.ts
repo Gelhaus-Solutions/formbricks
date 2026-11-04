@@ -3,7 +3,7 @@ import type { TV3ChartOperationContext } from "@/app/api/v3/charts/lib/access";
 import { requireDashboardsAccess } from "@/app/api/v3/lib/dashboards-access";
 import { problemForbidden } from "@/app/api/v3/lib/response";
 import type { V3WorkspaceContext } from "@/app/api/v3/lib/workspace-context";
-import type { TTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
+import type { TTeamPermission } from "@/modules/workspaces/types/team-permission";
 
 export type TV3DashboardOperationContext = TV3ChartOperationContext;
 

@@ -6,7 +6,7 @@ import type { TAuthenticationApiKey } from "@formbricks/types/auth";
 import { AuthorizationError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { type TAuthorizationActor, assertCan, can } from "@/lib/authorization";
 import { getWorkspaceAuthorizationAction } from "@/lib/authorization/permission-action";
-import type { TTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
+import type { TTeamPermission } from "@/modules/workspaces/types/team-permission";
 import { problemForbidden, problemUnauthorized } from "./response";
 import type { TV3Authentication } from "./types";
 import { type V3WorkspaceContext, resolveV3WorkspaceContext } from "./workspace-context";

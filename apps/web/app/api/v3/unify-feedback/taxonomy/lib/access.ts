@@ -6,7 +6,7 @@ import type { TV3Authentication } from "@/app/api/v3/lib/types";
 import type { V3WorkspaceContext } from "@/app/api/v3/lib/workspace-context";
 import { can } from "@/lib/authorization";
 import { getFeedbackDirectoryAssignmentAuthorizationAction } from "@/lib/authorization/permission-action";
-import type { TTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
+import type { TTeamPermission } from "@/modules/workspaces/types/team-permission";
 
 /**
  * Authorize a Unify Feedback taxonomy request against a workspace + feedback directory.

@@ -18,9 +18,9 @@ import { canUserNavigateWorkspace } from "@/lib/workspace/auth";
 import { getWorkspace } from "@/lib/workspace/service";
 import { getTranslate } from "@/lingodotdev/server";
 import { getSession } from "@/modules/auth/lib/session";
-import { getWorkspacePermissionByUserId } from "@/modules/ee/teams/lib/roles";
-import { getTeamPermissionFlags } from "@/modules/ee/teams/utils/teams";
 import { getAccessControlPermission } from "@/modules/features/lib/flags";
+import { getWorkspacePermissionByUserId } from "@/modules/workspaces/lib/team-permission";
+import { getTeamPermissionFlags } from "@/modules/workspaces/lib/team-permission-flags";
 import { TWorkspaceAuth, TWorkspaceLayoutData } from "@/modules/workspaces/types/workspace-auth";
 
 /**

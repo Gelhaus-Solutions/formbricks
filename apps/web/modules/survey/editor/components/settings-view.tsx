@@ -11,7 +11,6 @@ import { getCreativeOpenedMode } from "@/modules/ee/creatives/lib/survey-side";
 import { SurveyRetentionCard } from "@/modules/ee/data-retention/components/survey/survey-retention-card";
 import type { TSurveyDataRetentionContext } from "@/modules/ee/data-retention/types";
 import { QuotasCard } from "@/modules/ee/quotas/components/quotas-card";
-import { TTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
 import { HowToSendCard } from "@/modules/survey/editor/components/how-to-send-card";
 import { RecontactOptionsCard } from "@/modules/survey/editor/components/recontact-options-card";
 import { ResponseOptionsCard } from "@/modules/survey/editor/components/response-options-card";
@@ -19,6 +18,7 @@ import { SurveyPlacementCard } from "@/modules/survey/editor/components/survey-p
 import { TargetingLockedCard } from "@/modules/survey/editor/components/targeting-locked-card";
 import { WhenToSendCard } from "@/modules/survey/editor/components/when-to-send-card";
 import { type TSurveySchedulingConfig } from "@/modules/survey/scheduling/lib/config";
+import { TTeamPermission } from "@/modules/workspaces/types/team-permission";
 
 interface SettingsViewProps {
   localSurvey: TSurvey;

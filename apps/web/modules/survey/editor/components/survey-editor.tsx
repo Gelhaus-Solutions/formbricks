@@ -37,7 +37,6 @@ import { isSurveyCustomCssApplied } from "@/modules/custom-css/lib/survey-css-ga
 import { useSurveyLinkedCreatives } from "@/modules/ee/creatives/hooks/use-survey-linked-creatives";
 import type { TSurveyLinkedCreative } from "@/modules/ee/creatives/lib/survey-side";
 import type { TSurveyDataRetentionContext } from "@/modules/ee/data-retention/types";
-import { TTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
 import { EditPublicSurveyAlertDialog } from "@/modules/survey/components/edit-public-survey-alert-dialog";
 import { ElementsView } from "@/modules/survey/editor/components/elements-view";
 import { LoadingSkeleton } from "@/modules/survey/editor/components/loading-skeleton";
@@ -59,6 +58,7 @@ import {
   withoutVisibilityControls,
 } from "@/modules/survey/visibility/lib/state";
 import { PreviewSurvey } from "@/modules/ui/components/preview-survey";
+import { TTeamPermission } from "@/modules/workspaces/types/team-permission";
 import { getWorkspaceLanguagesAction, refetchWorkspaceAction } from "../actions";
 
 // How long the preview trails the editor. Every preview render re-mounts the whole survey bundle, so

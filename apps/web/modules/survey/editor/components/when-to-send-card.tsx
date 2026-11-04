@@ -11,8 +11,6 @@ import { cn } from "@/lib/cn";
 import { getAccessFlags } from "@/lib/membership/utils";
 import { OpenedByCreatives } from "@/modules/ee/creatives/components/survey-side/opened-by-creatives";
 import type { TSurveyLinkedCreative } from "@/modules/ee/creatives/lib/survey-side";
-import { getTeamPermissionFlags } from "@/modules/ee/teams/utils/teams";
-import { TTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
 import { ShowConditionsBlock } from "@/modules/show-conditions/components/show-conditions-block";
 import { AddActionModal } from "@/modules/survey/editor/components/add-action-modal";
 import { ActionClassInfo } from "@/modules/ui/components/action-class-info";
@@ -20,8 +18,10 @@ import { AdvancedOptionToggle } from "@/modules/ui/components/advanced-option-to
 import { Button } from "@/modules/ui/components/button";
 import { Input } from "@/modules/ui/components/input";
 import { TooltipRenderer } from "@/modules/ui/components/tooltip";
+import { getTeamPermissionFlags } from "@/modules/workspaces/lib/team-permission-flags";
 import { ACTION_TYPE_ICON_LOOKUP } from "@/modules/workspaces/settings/(setup)/app-connection/utils";
 import { ActionDetailModal } from "@/modules/workspaces/settings/(setup)/components/ActionDetailModal";
+import { TTeamPermission } from "@/modules/workspaces/types/team-permission";
 
 interface WhenToSendCardProps {
   localSurvey: TSurvey;

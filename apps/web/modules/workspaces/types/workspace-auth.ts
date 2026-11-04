@@ -4,7 +4,7 @@ import { TMembership, ZMembership } from "@formbricks/types/memberships";
 import { TOrganization, ZOrganization } from "@formbricks/types/organizations";
 import { TUser, ZUser } from "@formbricks/types/user";
 import { TWorkspace, ZWorkspace } from "@formbricks/types/workspace";
-import { TTeamPermission, ZTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
+import { TTeamPermission, ZTeamPermission } from "@/modules/workspaces/types/team-permission";
 
 export const ZWorkspaceAuth = z.object({
   workspace: ZWorkspace,
