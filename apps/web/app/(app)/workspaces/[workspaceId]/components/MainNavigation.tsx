@@ -12,7 +12,6 @@ import {
   PlusIcon,
   SettingsIcon,
   UserIcon,
-  WorkflowIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
@@ -38,7 +37,6 @@ import {
 } from "@/modules/settings/components/switcher-dropdown-body";
 import { UserDropdown } from "@/modules/settings/components/user-dropdown";
 import { useSwitcherData } from "@/modules/settings/hooks/use-switcher-data";
-import { Badge } from "@/modules/ui/components/badge";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -66,24 +64,6 @@ interface NavigationProps {
   // upgrade notice: Creatives doesn't exist for that workspace.
   isCreativesVisible: boolean;
 }
-
-/**
- * A nav section header carrying a Beta badge.
- *
- * Act is still a pre-1.0 surface, and the badge is what tells someone the difference between
- * "this is finished" and "this is early". Analyze graduated out of beta and no longer carries it.
- */
-const sectionLabelWithBeta = (label: React.ReactNode) => (
-  <span className="inline-flex items-center gap-2">
-    <span>{label}</span>
-    <Badge
-      text="Beta"
-      type="gray"
-      size="tiny"
-      className="text-[10px] font-semibold tracking-normal normal-case"
-    />
-  </span>
-);
 
 /**
  * The text half of a sidebar switcher trigger: name, caption, an in-flight spinner and the chevron.
@@ -226,24 +206,6 @@ export const MainNavigation = ({
             href: `/workspaces/${workspace.id}/dashboards`,
             icon: BarChart3Icon,
             isActive: pathname?.includes("/dashboards") || pathname?.includes("/charts"),
-            isHidden: false,
-            disabled: isMembershipPending || isBilling,
-          },
-        ],
-      },
-      {
-        id: "act",
-        // Kept translated, unlike "Ask" and "Analyze" above. Those two are deliberately English in
-        // every locale; this one has been going through t() since it was added. Making the three
-        // consistent means dropping a string 15 locales already translate, which is a naming
-        // decision rather than a side effect of adding a badge — see ENG-2742.
-        name: sectionLabelWithBeta(t("common.act")),
-        items: [
-          {
-            name: t("common.workflows"),
-            href: `/workspaces/${workspace.id}/workflows`,
-            icon: WorkflowIcon,
-            isActive: pathname?.startsWith(`/workspaces/${workspace.id}/workflows`),
             isHidden: false,
             disabled: isMembershipPending || isBilling,
           },
