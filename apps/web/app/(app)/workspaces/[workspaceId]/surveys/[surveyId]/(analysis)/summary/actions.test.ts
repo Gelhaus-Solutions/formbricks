@@ -17,7 +17,7 @@ vi.mock("@/lib/utils/action-client", () => ({
   },
 }));
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_event, _object, fn) => fn),
 }));
 
@@ -57,7 +57,7 @@ vi.mock("@/modules/core/rate-limit/rate-limit-configs", () => ({ rateLimitConfig
 vi.mock("@/modules/ee/contacts/lib/contacts", () => ({ generatePersonalLinks: vi.fn() }));
 vi.mock("@/modules/ee/contacts/lib/personal-link-errors", () => ({ NO_CONTACTS_IN_SEGMENT_ERROR_CODE: "x" }));
 vi.mock("@/modules/features/lib/flags", () => ({ getIsContactsEnabled: vi.fn() }));
-vi.mock("@/modules/ee/whitelabel/email-customization/lib/organization", () => ({
+vi.mock("@/lib/organization/logo", () => ({
   getOrganizationLogoUrl: mocks.getOrganizationLogoUrl,
 }));
 vi.mock("@/modules/email", () => ({ sendEmbedSurveyPreviewEmail: mocks.sendEmbedSurveyPreviewEmail }));

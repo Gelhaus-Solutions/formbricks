@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ResourceNotFoundError } from "@formbricks/types/errors";
+import { getOrganizationLogoUrl } from "@/lib/organization/logo";
 import { actionClient } from "@/lib/utils/action-client";
 import { getOrganizationIdFromSurveyId } from "@/lib/utils/helper";
 import { generateSurveySingleUseLinkParams } from "@/lib/utils/single-use-surveys";
-import { getOrganizationLogoUrl } from "@/modules/ee/whitelabel/email-customization/lib/organization";
 import { sendLinkSurveyToVerifiedEmail } from "@/modules/email";
 import { sendLinkSurveyEmailAction, validateSurveyPinAction } from "./actions";
 import { getResponseBySingleUseId, getSurveyOwnerId, getSurveyWithMetadata } from "./lib/data";
@@ -39,7 +39,7 @@ vi.mock("@/modules/core/rate-limit/rate-limit-configs", () => ({
   rateLimitConfigs: { actions: { sendLinkSurveyEmail: {}, validateSurveyPin: {} } },
 }));
 vi.mock("@/lib/utils/helper", () => ({ getOrganizationIdFromSurveyId: vi.fn().mockResolvedValue("org-1") }));
-vi.mock("@/modules/ee/whitelabel/email-customization/lib/organization", () => ({
+vi.mock("@/lib/organization/logo", () => ({
   getOrganizationLogoUrl: vi.fn().mockResolvedValue(null),
 }));
 vi.mock("@/modules/email", () => ({ sendLinkSurveyToVerifiedEmail: vi.fn() }));

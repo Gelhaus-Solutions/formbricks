@@ -15,8 +15,6 @@ import { CustomCssQueryClientProvider } from "@/modules/custom-css/components/cu
 import { hasStylesInHeadScripts } from "@/modules/custom-css/components/lib/hints";
 import { type TWorkspaceCustomCssAccess } from "@/modules/custom-css/components/types";
 import { getCustomCssPlanAllowed } from "@/modules/custom-css/lib/access";
-import { BrandingSettingsCard } from "@/modules/ee/whitelabel/remove-branding/components/branding-settings-card";
-import { getRemoveBrandingPermission } from "@/modules/features/lib/flags";
 import { Alert, AlertDescription } from "@/modules/ui/components/alert";
 import { PageContentWrapper } from "@/modules/ui/components/page-content-wrapper";
 import { PageHeader } from "@/modules/ui/components/page-header";
@@ -41,10 +39,7 @@ export const WorkspaceLookSettingsPage = async (props: {
     return notFound();
   }
 
-  const [canRemoveBranding, isCustomCssPlanAllowed] = await Promise.all([
-    getRemoveBrandingPermission(organization.id),
-    getCustomCssPlanAllowed(organization.id),
-  ]);
+  const isCustomCssPlanAllowed = await getCustomCssPlanAllowed(organization.id);
   const publicDomain = getPublicDomain();
 
   // Mirrors the server's checks for `PATCH …/custom-css` (ENG-2949), which stay authoritative.
@@ -96,12 +91,6 @@ export const WorkspaceLookSettingsPage = async (props: {
         description={t("workspace.look.app_survey_placement_settings_description")}>
         <EditPlacementForm workspace={workspace} isReadOnly={isReadOnly} />
       </SettingsCard>
-
-      <BrandingSettingsCard
-        canRemoveBranding={canRemoveBranding}
-        workspace={workspace}
-        isReadOnly={isReadOnly}
-      />
     </PageContentWrapper>
   );
 };
