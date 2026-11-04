@@ -4175,7 +4175,8 @@ export const ZSurveyCreateInput = makeSchemaOptional(ZSurveyBase)
     endings: ZSurveyEndings.prefault([]),
     type: ZSurveyType.prefault("link"),
     followUps: z.array(ZSurveyFollowUp.omit({ createdAt: true, updatedAt: true })).prefault([]),
-    isAutoProgressingEnabled: z.boolean().prefault(false),
+    // GForms: new surveys move on as soon as a single choice is picked (Focus, Typeform-style).
+    isAutoProgressingEnabled: z.boolean().prefault(true),
   })
   .superRefine((survey, ctx) => {
     surveyRefinement(survey as z.infer<typeof ZSurveyBase>, ctx);
@@ -4237,7 +4238,8 @@ export const ZSurveyCreateInputWithWorkspaceId = makeSchemaOptional(ZSurveyBase)
     endings: ZSurveyEndings.prefault([]),
     type: ZSurveyType.prefault("link"),
     followUps: z.array(ZSurveyFollowUp.omit({ createdAt: true, updatedAt: true })).prefault([]),
-    isAutoProgressingEnabled: z.boolean().prefault(false),
+    // GForms: new surveys move on as soon as a single choice is picked (Focus, Typeform-style).
+    isAutoProgressingEnabled: z.boolean().prefault(true),
   })
   .superRefine((survey, ctx) => {
     surveyRefinement(survey as z.infer<typeof ZSurveyBase>, ctx);
