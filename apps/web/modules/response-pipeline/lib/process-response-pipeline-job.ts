@@ -23,8 +23,6 @@ import { isNewReleaseWorkEnabled } from "@/lib/upgrade/compatibility";
 import { queueAuditEventWithoutRequest } from "@/modules/audit-log/lib/handler";
 import { type TAuditStatus, UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
 import { recordResponseCreatedMeterEvent } from "@/modules/ee/billing/lib/metering";
-import { dispatchWorkflowRunViaJobs } from "@/modules/ee/workflows/lib/runner/dispatch";
-import { enqueueResponseCompletedWorkflowRuns } from "@/modules/ee/workflows/lib/runner/enqueue-response-completed-runs";
 import { sendResponseFinishedEmail } from "@/modules/email";
 import { captureSurveyResponsePostHogEvent } from "@/modules/response-pipeline/lib/posthog";
 import { sendFollowUpsForResponse } from "@/modules/survey/follow-ups/lib/follow-ups";
@@ -684,7 +682,6 @@ const runResponseFinishedSideEffects = async ({
   displayTimeZone,
   logContext,
   organizationId,
-  stripeCustomerId,
   survey,
   outboundAllowed,
   workspaceId,
@@ -693,7 +690,6 @@ const runResponseFinishedSideEffects = async ({
   displayTimeZone: string | null;
   logContext: ReturnType<typeof getPipelineLogContext>;
   organizationId: string;
-  stripeCustomerId: string | null | undefined;
   survey: TPipelineSurvey;
   /** ENG-3283: false for a survey that is not workspace-visible — nothing leaves the app for it. */
   outboundAllowed: boolean;
@@ -758,32 +754,6 @@ const runResponseFinishedSideEffects = async ({
     organizationId,
     survey,
   });
-
-  if (!outboundAllowed) {
-    recordSurveyOutboundSkipped("workflow");
-    return;
-  }
-
-  // Workflow runner (producer): enqueue runs for matching enabled workflows. Isolated so a runner
-  // failure never breaks the response pipeline job, its retries, or the other side-effects above.
-  try {
-    await enqueueResponseCompletedWorkflowRuns({
-      response: data.response,
-      workspaceId,
-      organizationId,
-      stripeCustomerId,
-      dispatch: dispatchWorkflowRunViaJobs,
-      logContext,
-    });
-  } catch (error) {
-    // Transient DB pool exhaustion must propagate so the job retries (same contract as the outer
-    // pipeline catch); otherwise a completed-response trigger is silently lost. Only non-retryable
-    // failures are swallowed, so they never break the other responseFinished side-effects above.
-    if (isDatabasePoolExhaustionError(error)) {
-      throw error;
-    }
-    logger.error({ ...logContext, err: error }, "Response pipeline workflow run enqueue failed");
-  }
 };
 
 const runResponseCreatedSideEffects = async ({
@@ -887,7 +857,6 @@ export const processResponsePipelineJob: JobHandler<TResponsePipelineJobData> = 
         logContext,
         organizationId: organization.id,
         outboundAllowed,
-        stripeCustomerId: organization.billing?.stripeCustomerId,
         survey,
         workspaceId: data.workspaceId,
       });

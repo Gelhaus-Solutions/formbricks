@@ -17,7 +17,6 @@ const {
   mockFilterAuthorizedUserIds,
   mockIsSurveyVisibilityReady,
   mockCaptureSurveyResponsePostHogEvent,
-  mockEnqueueResponseCompletedWorkflowRuns,
   mockEnqueueWebhookDeliveryJob,
   mockGetIntegrations,
   mockGetFinishedResponseCountBySurveyId,
@@ -43,7 +42,6 @@ const {
     mockFilterAuthorizedUserIds: vi.fn(),
     mockIsSurveyVisibilityReady: vi.fn(),
     mockCaptureSurveyResponsePostHogEvent: vi.fn(),
-    mockEnqueueResponseCompletedWorkflowRuns: vi.fn(),
     mockEnqueueWebhookDeliveryJob: vi.fn(),
     mockGetIntegrations: vi.fn(),
     mockGetFinishedResponseCountBySurveyId: vi.fn(),
@@ -143,14 +141,6 @@ vi.mock("@/modules/email", () => ({
 
 vi.mock("@/modules/survey/follow-ups/lib/follow-ups", () => ({
   sendFollowUpsForResponse: mockSendFollowUpsForResponse,
-}));
-
-vi.mock("@/modules/ee/workflows/lib/runner/enqueue-response-completed-runs", () => ({
-  enqueueResponseCompletedWorkflowRuns: mockEnqueueResponseCompletedWorkflowRuns,
-}));
-
-vi.mock("@/modules/ee/workflows/lib/runner/dispatch", () => ({
-  dispatchWorkflowRunViaJobs: vi.fn(),
 }));
 
 vi.mock("@/lib/authorization/user-list", () => ({ filterAuthorizedUserIds: mockFilterAuthorizedUserIds }));
@@ -254,7 +244,6 @@ describe("processResponsePipelineJob", () => {
     mockRecordResponseCreatedMeterEvent.mockResolvedValue(undefined);
     mockSendResponseFinishedEmail.mockResolvedValue(undefined);
     mockSendFollowUpsForResponse.mockResolvedValue({ ok: true, data: [] });
-    mockEnqueueResponseCompletedWorkflowRuns.mockResolvedValue(undefined);
     mockPrismaSurveyUpdate.mockResolvedValue(undefined);
     mockPrismaResponseFindUnique.mockResolvedValue({ outcome: null });
     mockHandleFeedbackSourcePipeline.mockResolvedValue(undefined);
@@ -281,8 +270,6 @@ describe("processResponsePipelineJob", () => {
       await processResponsePipelineJob(finished, baseContext);
 
       expect(mockHandleFeedbackSourcePipeline).not.toHaveBeenCalled();
-      // Nothing else is held back: Low quality changes only Feedback Records (ADR 0022).
-      expect(mockEnqueueResponseCompletedWorkflowRuns).toHaveBeenCalledTimes(1);
       expect(mockSendFollowUpsForResponse).not.toHaveBeenCalled();
     });
 
@@ -309,23 +296,6 @@ describe("processResponsePipelineJob", () => {
     });
   });
 
-  test("invokes the workflow runner on responseFinished", async () => {
-    await expect(
-      processResponsePipelineJob({ ...baseData, event: "responseFinished" }, baseContext)
-    ).resolves.toBeUndefined();
-
-    expect(mockEnqueueResponseCompletedWorkflowRuns).toHaveBeenCalledTimes(1);
-    expect(mockEnqueueResponseCompletedWorkflowRuns).toHaveBeenCalledWith(
-      expect.objectContaining({
-        response: expect.objectContaining({ id: "response_123" }),
-        workspaceId: "workspace_123",
-        // The runner gates on the organization's workflows entitlement, so the pipeline must
-        // thread the resolved organization through.
-        organizationId: "org_123",
-      })
-    );
-  });
-
   /**
    * ENG-1845: the pipeline's readers — the notification email, follow-ups and integrations — resolve
    * Embedded Data definitions through the joined rows, and `getSurveyEmbeddedFields` fails closed. A
@@ -337,34 +307,6 @@ describe("processResponsePipelineJob", () => {
 
     expect(mockPrismaSurveyFindUnique.mock.calls[0][0].select).toEqual(
       expect.objectContaining({ embeddedDataLinks: selectSurveyEmbeddedDataLinks })
-    );
-  });
-
-  test("does not invoke the workflow runner on responseCreated", async () => {
-    await expect(processResponsePipelineJob(baseData, baseContext)).resolves.toBeUndefined();
-    expect(mockEnqueueResponseCompletedWorkflowRuns).not.toHaveBeenCalled();
-  });
-
-  test("rethrows a transient DB pool-exhaustion error from the workflow runner so the job retries", async () => {
-    mockEnqueueResponseCompletedWorkflowRuns.mockRejectedValue(
-      new Error("Timed out fetching a new connection from the connection pool")
-    );
-
-    await expect(
-      processResponsePipelineJob({ ...baseData, event: "responseFinished" }, baseContext)
-    ).rejects.toThrow(/connection pool/i);
-  });
-
-  test("isolates a workflow runner failure from the response pipeline", async () => {
-    mockEnqueueResponseCompletedWorkflowRuns.mockRejectedValue(new Error("runner boom"));
-
-    await expect(
-      processResponsePipelineJob({ ...baseData, event: "responseFinished" }, baseContext)
-    ).resolves.toBeUndefined();
-
-    expect(mockLoggerError).toHaveBeenCalledWith(
-      expect.objectContaining({ err: expect.any(Error) }),
-      "Response pipeline workflow run enqueue failed"
     );
   });
 
@@ -495,7 +437,6 @@ describe("processResponsePipelineJob", () => {
     expect(mockGetIntegrations).not.toHaveBeenCalled();
     expect(mockHandleIntegrations).not.toHaveBeenCalled();
     expect(mockSendFollowUpsForResponse).not.toHaveBeenCalled();
-    expect(mockEnqueueResponseCompletedWorkflowRuns).not.toHaveBeenCalled();
   });
 
   test("alerts only authorized subscribers for a restricted survey", async () => {
@@ -884,7 +825,6 @@ describe("processResponsePipelineJob", () => {
     expect(mockHandleIntegrations).not.toHaveBeenCalled();
     expect(mockSendResponseFinishedEmail).not.toHaveBeenCalled();
     expect(mockSendFollowUpsForResponse).not.toHaveBeenCalled();
-    expect(mockEnqueueResponseCompletedWorkflowRuns).not.toHaveBeenCalled();
     await expect(
       processResponsePipelineJob(data, { ...baseContext, attempt: baseContext.attempt + 1 })
     ).resolves.toBeUndefined();
