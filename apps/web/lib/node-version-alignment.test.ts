@@ -8,11 +8,11 @@ import * as yaml from "yaml";
 // Keeps every place that picks a Node.js version on the same major as `.nvmrc` (see ENG-1676,
 // ENG-2878). `.nvmrc` is the single source of truth; the rest drifted from it once already:
 //
-//   package.json engines            — the range local installs are checked against.
-//   apps/web/Dockerfile             — the production runtime.
-//   .devcontainer/devcontainer.json — Codespaces / VS Code dev containers.
+//   package.json engines            : the range local installs are checked against.
+//   apps/web/Dockerfile             : the production runtime.
+//   .devcontainer/devcontainer.json : Codespaces / VS Code dev containers.
 //   .github/workflows/*.yml,
-//   .github/actions/*/action.yml    — every actions/setup-node step must read `.nvmrc` rather than
+//   .github/actions/*/action.yml    : every actions/setup-node step must read `.nvmrc` rather than
 //                                     hard-code a version.
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -68,12 +68,13 @@ describe("Node.js version alignment", () => {
     expect(baseImage).toBe(nodeMajor);
   });
 
-  // The runtime is compiled from source at NODE_VERSION, so a Node security release is a manual edit of that
-  // pin and its checksum. Requiring the exact `.nvmrc` version keeps that edit and the dev/CI pin in one step.
-  test("the production image compiles the exact .nvmrc version", () => {
-    const compiled = /^ARG NODE_VERSION=(\S+)$/m.exec(read("apps", "web", "Dockerfile"))?.[1];
+  // The runtime stage is the official Node image itself (no compile), so its tag is what picks the runtime.
+  test("the production runtime stage is the official image on the .nvmrc major", () => {
+    const runtime = /^FROM\s+node:(\d+)-alpine\S*\s+AS\s+runtime-base$/m.exec(
+      read("apps", "web", "Dockerfile")
+    )?.[1];
 
-    expect(compiled).toBe(nvmrcVersion.replace(/^v/, ""));
+    expect(runtime).toBe(nodeMajor);
   });
 
   test("the devcontainer image runs the .nvmrc major", () => {

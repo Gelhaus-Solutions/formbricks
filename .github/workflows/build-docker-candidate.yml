@@ -138,9 +138,8 @@ jobs:
           - arch: amd64
             machine: x86_64
             runner: ubuntu-24.04
-            node_build_jobs: 4
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
+    timeout-minutes: 90
     steps:
       - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
@@ -159,8 +158,8 @@ jobs:
         with:
           registry_type: ${{ inputs.registry_type }}
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      # The Node runtime is compiled from source in the Dockerfile, so the layer cache is what keeps a
-      # release build inside the timeout. One GitHub Actions cache scope per architecture.
+      # One GitHub Actions cache scope per architecture; the layer cache skips the dependency install
+      # and the Next build when their inputs are unchanged.
       - name: Build native candidate
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -175,7 +174,6 @@ jobs:
           cache-from: type=gha,scope=web-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=web-${{ matrix.arch }}
           build-args: |
-            NODE_BUILD_JOBS=${{ matrix.node_build_jobs }}
             FORMBRICKS_DEPLOYMENT_ID=${{ needs.prepare.outputs.identity }}
             FORMBRICKS_BUILD_VARIANT=${{ inputs.registry_type }}
           no-cache-filters: ${{ inputs.rebuild_application == true && 'installer,runner' || '' }}

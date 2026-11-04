@@ -4,38 +4,17 @@
 # Node major must stay in sync with .nvmrc (single source of truth for dev + CI + prod).
 FROM node:24-alpine3.24 AS base
 
-# Node's official binary embeds OpenSSL, so apk upgrades cannot patch its TLS implementation.
-# Keep Node 24's current Undici fixes while linking its runtime to Alpine's patched OpenSSL/zlib.
-#
-# --openssl-use-def-ca-store makes Node trust the OS CA bundle (Alpine's ca-certificates) instead of the
-# Mozilla list compiled into the binary. It is the build-time form of --use-openssl-ca, so unlike a
-# NODE_OPTIONS value it survives a deployment that sets its own NODE_OPTIONS. Without it a CA-package fix,
-# such as the compromised eMudhra intermediates (ENG-4065), never reaches Node.
-FROM alpine:3.24 AS node-runtime-builder
-ARG NODE_VERSION=24.22.2
-ARG NODE_SOURCE_SHA256=8fe2ec1723bb9f8d0b683907c82708debbeda64af21cb2aa214c4241eed0a061
-ARG NODE_BUILD_JOBS=4
-RUN apk add --no-cache curl g++ linux-headers make python3 xz \
-    "openssl-dev>=3.5.9-r0" "zlib-dev>=1.3.2-r1"
-WORKDIR /node-source
-RUN curl --proto '=https' --proto-redir '=https' --fail --location --retry 3 \
-      --output node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}.tar.xz" \
-    && echo "${NODE_SOURCE_SHA256}  node.tar.xz" | sha256sum -c - \
-    && tar -xJf node.tar.xz --strip-components=1 \
-    && ./configure --shared-openssl --shared-zlib --openssl-use-def-ca-store --without-npm
-# Compile within the build layer; release binaries must not read shared writable compiler objects.
-RUN make -j${NODE_BUILD_JOBS} \
-    && install -m 755 out/Release/node /usr/local/bin/node
-RUN install -D -m 644 LICENSE /usr/local/share/doc/node/LICENSE
-
-# Node reads its trust store from these packages (see node-runtime-builder), so the CA pin is a security
-# control: 20261020-r0 is the first Alpine release that distrusts the compromised eMudhra root.
-FROM alpine:3.24 AS runtime-base
+# The runtime uses the official Node binary from the same image (operator's choice, 2026-11-04): compiling
+# Node from source cost about an hour per cold build. That binary embeds OpenSSL and Node's own root CA list,
+# so those are patched by Node releases, picked up by rebuilding on the current node:24-alpine3.24, not by
+# apk. Alpine's OpenSSL, zlib and CA packages stay pinned for everything else in the image (Prisma's engines
+# link libssl). npm, npx, corepack and yarn are removed: the application and migrations invoke Node directly.
+FROM node:24-alpine3.24 AS runtime-base
 RUN apk update && apk upgrade --no-cache \
     && apk add --no-cache "ca-certificates>=20261020-r0" "ca-certificates-bundle>=20261020-r0" \
-      "libcrypto3>=3.5.9-r0" libgcc "libssl3>=3.5.9-r0" libstdc++ "zlib>=1.3.2-r1"
-COPY --from=node-runtime-builder /usr/local/bin/node /usr/local/bin/node
-COPY --from=node-runtime-builder /usr/local/share/doc/node/LICENSE /usr/local/share/doc/node/LICENSE
+      "libcrypto3>=3.5.9-r0" libgcc "libssl3>=3.5.9-r0" libstdc++ "zlib>=1.3.2-r1" \
+    && rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+      /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
 COPY apps/web/scripts/docker/verify-runtime.mjs /tmp/verify-runtime.mjs
 RUN node /tmp/verify-runtime.mjs && rm /tmp/verify-runtime.mjs
 

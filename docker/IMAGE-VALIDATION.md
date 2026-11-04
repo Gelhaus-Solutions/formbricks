@@ -84,33 +84,19 @@ configuration values. Unexpected errors, including malformed JSON, retain a gene
 
 ## CA trust
 
-Node trusts the OS CA bundle (Alpine's `ca-certificates`), not the Mozilla list compiled into
-its binary: the Dockerfile builds Node with `--openssl-use-def-ca-store` and pins a minimum
-CA package version. Both matter. A CA-package fix, such as the distrust of the compromised
-eMudhra intermediates, only reaches Node through this switch, and it holds even when a
-deployment sets its own `NODE_OPTIONS`.
+The runtime is the official Node binary from `node:24-alpine3.24`. It trusts the root CA list compiled
+into it, so a CA distrust or an OpenSSL fix reaches Node with a Node release: rebuild on the current
+base image. Alpine's `ca-certificates` and OpenSSL packages are still pinned for the rest of the image.
 
-The image build checks the installed CA package versions, that the compromised root is absent
-from the OS bundle, and that Node defaults to the OS store. Two scripts prove the behaviour
-with real handshakes. Both need Docker; the first also needs `openssl`:
-
-```sh
-# Offline, a few seconds. Runs on every PR and on each release candidate digest.
-bash apps/web/scripts/docker/verify-tls-image.sh REPOSITORY@sha256:DIGEST
-
-# Needs network. Evidence for a rollout: the 12 published eMudhra chains must be rejected
-# through tls, https, fetch and undici, and a valid public chain accepted.
-bash apps/web/scripts/docker/verify-tls-image.sh REPOSITORY@sha256:DIGEST --incident-hosts
-```
-
-The live check depends on hosts we do not run, so it is not a PR gate. Node keeps honouring
-`NODE_EXTRA_CA_CERTS` on top of the OS store. `SSL_CERT_FILE` and `SSL_CERT_DIR` now apply too.
+`NODE_EXTRA_CA_CERTS` adds a private CA on top of Node's list. To make Node follow the OS bundle
+instead, a deployment sets `NODE_OPTIONS=--use-openssl-ca` together with
+`SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt`; a `NODE_OPTIONS` of its own must keep that flag.
 
 ## Repair and recovery
 
 Use `rebuild_application: true` on **Deploy Selected Branch to Apollo** or
-**Build Cloud Deployment Images** to bypass the installer and runner caches. Node
-compilation and dependency-download caches remain reusable. Only this explicit repair mode
+**Build Cloud Deployment Images** to bypass the installer and runner caches.
+Dependency-download caches remain reusable. Only this explicit repair mode
 adds a run/attempt nonce to the deployment identity. Ordinary reruns retain the identity and
 can reuse the complete application artifact. This builds, validates
 and promotes a new candidate; it does not modify the existing image.

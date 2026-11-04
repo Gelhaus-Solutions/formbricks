@@ -257,7 +257,6 @@ jobs:
           push: false
           load: true
           build-args: |
-            NODE_BUILD_JOBS=12
             FORMBRICKS_DEPLOYMENT_ID=${{ github.sha }}-pr
             FORMBRICKS_BUILD_VARIANT=pr
           tags: formbricks-test:${{ github.sha }}
@@ -298,12 +297,6 @@ jobs:
           IMAGE: formbricks-test:${{ github.sha }}
           BUILD_IDENTITY: ${{ github.sha }}-pr
         run: docker run --rm --network none --entrypoint node "$IMAGE" verify-next-runtime.mjs "$BUILD_IDENTITY" pr
-
-      # Node must trust the OS CA bundle, or a CA-package fix such as the eMudhra distrust never reaches it.
-      - name: Verify Node trusts the OS CA bundle
-        env:
-          IMAGE: formbricks-test:${{ github.sha }}
-        run: bash apps/web/scripts/docker/verify-tls-image.sh "$IMAGE"
 
       - name: Verify Runtime Image Excludes npm
         shell: bash
