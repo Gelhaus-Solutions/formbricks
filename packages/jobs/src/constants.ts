@@ -64,9 +64,7 @@ export const JOB_NAMES = {
   surveyScheduling: "survey-scheduling.reconcile",
   surveyArchivePurge: "survey-archive-purge.process",
   webhookDelivery: "webhook-delivery.process",
-  workflowsUsageSnapshot: "workflows-usage.snapshot",
   workflowRun: "workflow-run.process",
-  workflowRunReconcile: "workflow-run.reconcile",
 } as const;
 
 /**

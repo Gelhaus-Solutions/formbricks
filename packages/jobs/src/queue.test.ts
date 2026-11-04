@@ -530,19 +530,19 @@ describe("@formbricks/jobs queue helpers", () => {
 
   test("upserts a recurring schedule through its handle using an every schedule", async () => {
     mockQueueUpsertJobScheduler.mockResolvedValue({
-      id: "job-reconcile-1",
-      name: JOB_NAMES.workflowRunReconcile,
+      id: "job-drain-1",
+      name: JOB_NAMES.deletionCleanupDrain,
       queueName: JOBS_QUEUE_NAME,
     });
 
-    await recurringJobs.workflowRunReconcile.upsert({ everyMs: 180_000, kind: "every" });
+    await recurringJobs.deletionCleanupDrain.upsert({ everyMs: 180_000, kind: "every" });
 
     expect(mockQueueUpsertJobScheduler).toHaveBeenCalledWith(
-      "workflow-run.reconcile:global:workflow-run-reconcile",
+      "deletion-cleanup.drain:global:deletion-cleanup-drain",
       { endDate: undefined, every: 180_000, limit: undefined, startDate: undefined },
       {
         data: { scope: "global" },
-        name: JOB_NAMES.workflowRunReconcile,
+        name: JOB_NAMES.deletionCleanupDrain,
         opts: JOBS_DEFAULT_JOB_SCHEDULER_TEMPLATE_OPTIONS,
       }
     );
@@ -602,8 +602,6 @@ describe("@formbricks/jobs queue helpers", () => {
     ["deletionCleanupDrain", "deletion-cleanup.drain:global:deletion-cleanup-drain"],
     ["surveyArchivePurge", "survey-archive-purge.process:global:daily-survey-archive-purge"],
     ["surveyScheduling", "survey-scheduling.reconcile:global:daily-survey-scheduling"],
-    ["workflowRunReconcile", "workflow-run.reconcile:global:workflow-run-reconcile"],
-    ["workflowsUsageSnapshot", "workflows-usage.snapshot:global:daily-workflows-usage-snapshot"],
   ] as const)("keeps the %s scheduler id stable", async (key, expectedSchedulerId) => {
     mockQueueUpsertJobScheduler.mockResolvedValue({
       id: "job-id-parity",

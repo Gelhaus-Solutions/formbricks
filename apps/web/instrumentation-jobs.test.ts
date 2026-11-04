@@ -8,10 +8,6 @@ const mockRemoveSurveyScheduling = vi.fn();
 const mockUpsertSurveyScheduling = vi.fn();
 const mockRemoveSurveyArchivePurge = vi.fn();
 const mockUpsertSurveyArchivePurge = vi.fn();
-const mockRemoveWorkflowRunReconcile = vi.fn();
-const mockUpsertWorkflowRunReconcile = vi.fn();
-const mockRemoveWorkflowsUsageSnapshot = vi.fn();
-const mockUpsertWorkflowsUsageSnapshot = vi.fn();
 const mockUpsertAuthzedProjectionDelivery = vi.fn();
 const mockUpsertAuthzedReconciliationAudit = vi.fn();
 const mockUpsertDeletionCleanupDrain = vi.fn();
@@ -26,9 +22,6 @@ const mockGetJobsWorkerBootstrapConfig = vi.fn();
 const mockProcessResponsePipelineJob = vi.fn();
 const mockProcessSurveySchedulingJob = vi.fn();
 const mockProcessSurveyArchivePurgeJob = vi.fn();
-const mockProcessWorkflowRunJob = vi.fn();
-const mockProcessWorkflowRunReconcileJob = vi.fn();
-const mockProcessWorkflowsUsageSnapshotJob = vi.fn();
 const mockProcessAuthzedProjectionDeliveryJob = vi.fn();
 const mockObserveAuthzedOutboxHealth = vi.fn();
 const mockProcessAuthzedScheduledReconciliationJob = vi.fn();
@@ -114,20 +107,6 @@ vi.mock("@formbricks/jobs", () => ({
       scope: "global",
       upsert: mockUpsertSurveyScheduling,
     },
-    workflowRunReconcile: {
-      name: "workflow-run.reconcile",
-      remove: mockRemoveWorkflowRunReconcile,
-      scheduleId: "workflow-run-reconcile",
-      scope: "global",
-      upsert: mockUpsertWorkflowRunReconcile,
-    },
-    workflowsUsageSnapshot: {
-      name: "workflows-usage.snapshot",
-      remove: mockRemoveWorkflowsUsageSnapshot,
-      scheduleId: "daily-workflows-usage-snapshot",
-      scope: "global",
-      upsert: mockUpsertWorkflowsUsageSnapshot,
-    },
   },
   startJobsRuntime: mockStartJobsRuntime,
 }));
@@ -162,18 +141,6 @@ vi.mock("@/modules/survey/scheduling/lib/process-survey-scheduling-job", () => (
 
 vi.mock("@/modules/survey/archive/lib/process-survey-archive-purge-job", () => ({
   processSurveyArchivePurgeJob: mockProcessSurveyArchivePurgeJob,
-}));
-
-vi.mock("@/modules/ee/workflows/lib/runner/process-workflow-run-job", () => ({
-  processWorkflowRunJob: mockProcessWorkflowRunJob,
-}));
-
-vi.mock("@/modules/ee/workflows/lib/runner/process-workflow-run-reconcile-job", () => ({
-  processWorkflowRunReconcileJob: mockProcessWorkflowRunReconcileJob,
-}));
-
-vi.mock("@/modules/ee/workflows/lib/analytics/process-workflows-usage-snapshot-job", () => ({
-  processWorkflowsUsageSnapshotJob: mockProcessWorkflowsUsageSnapshotJob,
 }));
 
 vi.mock("@/modules/ee/data-retention/sweep/process-data-retention-sweep-job", () => ({
@@ -214,13 +181,6 @@ describe("instrumentation-jobs", () => {
     mockUpsertSurveyArchivePurge.mockResolvedValue({
       id: "archive-purge-schedule-1",
       name: "survey-archive-purge.process",
-      queueName: "background-jobs",
-    });
-    mockRemoveWorkflowRunReconcile.mockResolvedValue(true);
-    mockRemoveWorkflowsUsageSnapshot.mockResolvedValue(true);
-    mockUpsertWorkflowsUsageSnapshot.mockResolvedValue({
-      id: "workflows-usage-snapshot-schedule-1",
-      name: "workflows-usage.snapshot",
       queueName: "background-jobs",
     });
     mockGetJobsQueueingConfig.mockReturnValue({
@@ -311,10 +271,7 @@ describe("instrumentation-jobs", () => {
         "survey-scheduling.reconcile": expect.any(Function),
         "survey-archive-purge.process": expect.any(Function),
         "webhook-delivery.process": expect.any(Function),
-        "workflow-run.process": expect.any(Function),
         "test-log.process": mockExistingOverride,
-        "workflow-run.reconcile": expect.any(Function),
-        "workflows-usage.snapshot": expect.any(Function),
       },
       redisUrl: "redis://localhost:6379",
       workerCount: 2,
@@ -322,7 +279,6 @@ describe("instrumentation-jobs", () => {
     const overrides = mockStartJobsRuntime.mock.calls[0]?.[0]?.jobHandlerOverrides;
     const responsePipelineOverride = overrides?.["response-pipeline.process"];
     const surveySchedulingOverride = overrides?.["survey-scheduling.reconcile"];
-    const workflowRunOverride = overrides?.["workflow-run.process"];
 
     await responsePipelineOverride?.(
       {
@@ -351,20 +307,6 @@ describe("instrumentation-jobs", () => {
         queueName: "background-jobs",
       }
     );
-    await workflowRunOverride?.(
-      {
-        workflowRunId: "run_123",
-        workflowId: "wf_123",
-        workspaceId: "ws_123",
-      },
-      {
-        attempt: 1,
-        jobId: "job_789",
-        jobName: "workflow-run.process",
-        maxAttempts: 3,
-        queueName: "background-jobs",
-      }
-    );
 
     expect(mockProcessResponsePipelineJob).toHaveBeenCalledWith(
       {
@@ -389,42 +331,6 @@ describe("instrumentation-jobs", () => {
         attempt: 1,
         jobId: "job_456",
         jobName: "survey-scheduling.reconcile",
-        maxAttempts: 3,
-        queueName: "background-jobs",
-      }
-    );
-
-    const workflowRunReconcileOverride = overrides?.["workflow-run.reconcile"];
-    await workflowRunReconcileOverride?.(
-      { scope: "global" },
-      {
-        attempt: 1,
-        jobId: "job_789",
-        jobName: "workflow-run.reconcile",
-        maxAttempts: 3,
-        queueName: "background-jobs",
-      }
-    );
-    expect(mockProcessWorkflowRunJob).toHaveBeenCalledWith(
-      {
-        workflowRunId: "run_123",
-        workflowId: "wf_123",
-        workspaceId: "ws_123",
-      },
-      {
-        attempt: 1,
-        jobId: "job_789",
-        jobName: "workflow-run.process",
-        maxAttempts: 3,
-        queueName: "background-jobs",
-      }
-    );
-    expect(mockProcessWorkflowRunReconcileJob).toHaveBeenCalledWith(
-      { scope: "global" },
-      {
-        attempt: 1,
-        jobId: "job_789",
-        jobName: "workflow-run.reconcile",
         maxAttempts: 3,
         queueName: "background-jobs",
       }
@@ -575,21 +481,12 @@ describe("instrumentation-jobs", () => {
         name: "survey-scheduling.reconcile",
         queueName: "background-jobs",
       });
-      mockUpsertWorkflowRunReconcile.mockResolvedValue({
-        id: "schedule-job-2",
-        name: "workflow-run.reconcile",
-        queueName: "background-jobs",
-      });
 
       const { registerRecurringJobs } = await import("./instrumentation-jobs");
       const { SURVEY_SCHEDULING_DAILY_CRON_PATTERN, SURVEY_SCHEDULING_TIME_ZONE } =
         await import("@/modules/survey/scheduling/lib/constants");
       const { SURVEY_ARCHIVE_PURGE_DAILY_CRON_PATTERN, SURVEY_ARCHIVE_PURGE_TIME_ZONE } =
         await import("@/modules/survey/archive/lib/constants");
-      const { WORKFLOW_RUN_RECONCILE_INTERVAL_MS } =
-        await import("@/modules/ee/workflows/lib/runner/reconcile-constants");
-      const { WORKFLOWS_USAGE_SNAPSHOT_DAILY_CRON_PATTERN, WORKFLOWS_USAGE_SNAPSHOT_TIME_ZONE } =
-        await import("@/modules/ee/workflows/lib/analytics/constants");
       const { DELETION_CLEANUP_DRAIN_INTERVAL_MS } = await import("@/modules/deletion-cleanup/lib/constants");
       const { DATA_RETENTION_SWEEP_DAILY_CRON_PATTERN, DATA_RETENTION_SWEEP_TIME_ZONE } =
         await import("@/modules/ee/data-retention/sweep/constants");
@@ -647,23 +544,10 @@ describe("instrumentation-jobs", () => {
       // NEXT_PUBLIC_ var that ENG-1665 renamed away, pinning it to the Europe/Berlin fallback
       // regardless of configuration (ENG-2244).
       expect(SURVEY_ARCHIVE_PURGE_TIME_ZONE).toBe(SURVEY_SCHEDULING_TIME_ZONE);
-      expect(mockUpsertWorkflowRunReconcile).toHaveBeenCalledTimes(1);
-      expect(mockUpsertWorkflowRunReconcile).toHaveBeenCalledWith({
-        everyMs: WORKFLOW_RUN_RECONCILE_INTERVAL_MS,
-        kind: "every",
-      });
-      expect(mockUpsertWorkflowsUsageSnapshot).toHaveBeenCalledTimes(1);
-      expect(mockUpsertWorkflowsUsageSnapshot).toHaveBeenCalledWith({
-        cronPattern: WORKFLOWS_USAGE_SNAPSHOT_DAILY_CRON_PATTERN,
-        kind: "cron",
-        timeZone: WORKFLOWS_USAGE_SNAPSHOT_TIME_ZONE,
-      });
       // Upsert is idempotent and updates repeat options in place; removing first risks leaving the
       // scheduler with no delayed job (bullmq#3063).
       expect(mockRemoveSurveyScheduling).not.toHaveBeenCalled();
       expect(mockRemoveSurveyArchivePurge).not.toHaveBeenCalled();
-      expect(mockRemoveWorkflowRunReconcile).not.toHaveBeenCalled();
-      expect(mockRemoveWorkflowsUsageSnapshot).not.toHaveBeenCalled();
     }
   );
 

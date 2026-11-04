@@ -349,7 +349,6 @@ describe("@formbricks/jobs processor registry", () => {
     [JOB_NAMES.deletionCleanupDrain, "deletion cleanup drain"],
     [JOB_NAMES.surveyArchivePurge, "survey archive purge"],
     [JOB_NAMES.surveyScheduling, "survey scheduling"],
-    [JOB_NAMES.workflowRunReconcile, "workflow run reconcile"],
   ])("fails fast for the unimplemented %s processor", async (jobName, label) => {
     await expect(
       processJob({
