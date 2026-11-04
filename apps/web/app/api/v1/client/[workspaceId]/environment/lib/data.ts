@@ -27,7 +27,7 @@ import {
   getUpcomingCreativesWhere,
   toCreativePayloads,
 } from "@/modules/ee/creatives/lib/delivery";
-import { getIsCreativesEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsCreativesEnabled } from "@/modules/features/lib/flags";
 import { resolveStorageUrlsInObject } from "@/modules/storage/utils";
 import { transformPrismaSurvey } from "@/modules/survey/lib/utils";
 import { resolveRespondentCustomCss } from "@/modules/survey/link/lib/respondent-custom-css";

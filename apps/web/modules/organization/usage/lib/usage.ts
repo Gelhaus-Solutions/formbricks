@@ -4,7 +4,7 @@ import { Prisma } from "@formbricks/database/prisma";
 import { logger } from "@formbricks/logger";
 import { ZId } from "@formbricks/types/common";
 import { validateInputs } from "@/lib/utils/validate";
-import { getIsWorkflowsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsWorkflowsEnabled } from "@/modules/features/lib/flags";
 import type { TOrganizationUsage, TOrganizationUsageWorkspace } from "../types/usage";
 import { ACTIVE_MEMBER_DAYS, DORMANT_MEMBER_DAYS } from "./constants";
 import type { TUsageRangeBounds } from "./range";

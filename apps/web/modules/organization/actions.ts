@@ -15,7 +15,7 @@ import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
 import { ensureCloudStripeSetupForOrganization } from "@/modules/ee/billing/lib/organization-billing";
-import { getIsMultiOrgEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { createWorkspace } from "@/modules/workspaces/settings/lib/workspace";
 
 const ZCreateOrganizationAction = z.object({

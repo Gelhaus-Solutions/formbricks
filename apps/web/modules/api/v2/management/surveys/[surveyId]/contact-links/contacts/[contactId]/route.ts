@@ -17,7 +17,7 @@ import {
 import { calculateExpirationDate } from "@/modules/api/v2/management/surveys/[surveyId]/contact-links/lib/utils";
 import { ApiErrorResponseV2 } from "@/modules/api/v2/types/api-error";
 import { getContactSurveyLink } from "@/modules/ee/contacts/lib/contact-survey-link";
-import { getIsContactsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 
 export const GET = async (request: Request, props: { params: Promise<TContactLinkParams> }) =>
   authenticatedApiClient({

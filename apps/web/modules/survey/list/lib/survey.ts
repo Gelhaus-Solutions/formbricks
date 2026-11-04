@@ -29,8 +29,8 @@ import { type TSurveyVisibilityFilter, buildSurveyAccessWhere } from "@/lib/surv
 import { validateInputs } from "@/lib/utils/validate";
 import { getTranslate } from "@/lingodotdev/server";
 import { resolveCopiedSurveyCustomCss } from "@/modules/custom-css/lib/service";
-import { getIsQuotasEnabled } from "@/modules/ee/license-check/lib/utils";
 import { getQuotas } from "@/modules/ee/quotas/lib/quotas";
+import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { assertCanWriteCustomHeadScripts } from "@/modules/survey/lib/custom-head-scripts-permission";
 import { buildWhereClause } from "@/modules/survey/lib/utils";
 import { doesWorkspaceExist, getWorkspaceWithLanguages } from "@/modules/survey/list/lib/workspace";

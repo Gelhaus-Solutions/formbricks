@@ -15,8 +15,8 @@ import { CustomCssQueryClientProvider } from "@/modules/custom-css/components/cu
 import { hasStylesInHeadScripts } from "@/modules/custom-css/components/lib/hints";
 import { type TWorkspaceCustomCssAccess } from "@/modules/custom-css/components/types";
 import { getCustomCssPlanAllowed } from "@/modules/custom-css/lib/access";
-import { getRemoveBrandingPermission } from "@/modules/ee/license-check/lib/utils";
 import { BrandingSettingsCard } from "@/modules/ee/whitelabel/remove-branding/components/branding-settings-card";
+import { getRemoveBrandingPermission } from "@/modules/features/lib/flags";
 import { Alert, AlertDescription } from "@/modules/ui/components/alert";
 import { PageContentWrapper } from "@/modules/ui/components/page-content-wrapper";
 import { PageHeader } from "@/modules/ui/components/page-header";

@@ -36,7 +36,7 @@ vi.mock("@/lib/utils/helper", () => ({
 }));
 vi.mock("@/lib/utils/resolve-client-id", () => ({ resolveClientApiIds: mocks.resolveClientApiIds }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: mocks.applyRateLimit }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getBiggerUploadFileSizePermission: mocks.getBiggerUploadFileSizePermission,
 }));
 vi.mock("@/modules/storage/service", () => ({ getSignedUrlForUpload: mocks.getSignedUrlForUpload }));

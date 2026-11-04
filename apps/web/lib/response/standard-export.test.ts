@@ -35,7 +35,7 @@ vi.mock("@/modules/survey/lib/survey", () => ({
   getOrganizationBilling: vi.fn(() => Promise.resolve({ limits: {} })),
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getIsQuotasEnabled: vi.fn(() => Promise.resolve(false)),
 }));
 

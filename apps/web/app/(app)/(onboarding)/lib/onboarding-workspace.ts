@@ -5,7 +5,7 @@ import { TWorkspace } from "@formbricks/types/workspace";
 import { can } from "@/lib/authorization";
 import { getOrganization, updateOrganization } from "@/lib/organization/service";
 import { getUserWorkspaces, getWorkspaces } from "@/lib/workspace/service";
-import { getIsAISmartToolsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsAISmartToolsEnabled } from "@/modules/features/lib/flags";
 
 export const selectOldestWorkspace = (workspaces: TWorkspace[]): TWorkspace | undefined => {
   if (workspaces.length === 0) {

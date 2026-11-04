@@ -11,7 +11,7 @@ import {
   getSurveyRetentionFacts,
   getSurveyRetentionPolicies,
 } from "@/modules/ee/data-retention/lib/survey-retention-service";
-import { getIsDataRetentionEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsDataRetentionEnabled } from "@/modules/features/lib/flags";
 import {
   SURVEY_RETENTION_NOT_GOVERNED,
   serializeSurveyRetention,

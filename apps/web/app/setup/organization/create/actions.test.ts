@@ -34,7 +34,7 @@ vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
 vi.mock("@/modules/ee/billing/lib/organization-billing", () => ({
   ensureCloudStripeSetupForOrganization: vi.fn(),
 }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getIsMultiOrgEnabled: mocks.getIsMultiOrgEnabled,
 }));
 vi.mock("@/modules/workspaces/settings/lib/workspace", () => ({ createWorkspace: mocks.createWorkspace }));

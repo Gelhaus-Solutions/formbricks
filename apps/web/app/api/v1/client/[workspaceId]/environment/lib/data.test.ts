@@ -5,7 +5,7 @@ import { logger } from "@formbricks/logger";
 import { DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { PUBLIC_API_SURVEY_NAME_PLACEHOLDER } from "@formbricks/types/js-constants";
 import { selectPublicSurveyEmbeddedDataLinks } from "@/lib/embedded-data/survey-fields";
-import { getIsCreativesEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsCreativesEnabled } from "@/modules/features/lib/flags";
 import { transformPrismaSurvey } from "@/modules/survey/lib/utils";
 import { resolveRespondentCustomCss } from "@/modules/survey/link/lib/respondent-custom-css";
 import { getWorkspaceStateData } from "./data";
@@ -62,7 +62,7 @@ vi.mock("@/lib/cache", () => ({
 }));
 
 // The licence includes Creatives unless a test says otherwise (ENG-6602).
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsCreativesEnabled: vi.fn(async () => true) }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsCreativesEnabled: vi.fn(async () => true) }));
 
 // No custom CSS unless a test says otherwise (ENG-3552).
 vi.mock("@/modules/survey/link/lib/respondent-custom-css", () => ({

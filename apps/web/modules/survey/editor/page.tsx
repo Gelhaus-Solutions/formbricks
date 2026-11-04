@@ -24,13 +24,13 @@ import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attri
 import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
 import { getSurveyLinkedCreatives } from "@/modules/ee/creatives/lib/survey-linked-creatives";
 import { getSurveyDataRetentionContext } from "@/modules/ee/data-retention/lib/survey-context";
+import { getQuotas } from "@/modules/ee/quotas/lib/quotas";
 import {
   getIsContactsEnabled,
   getIsQuotasEnabled,
   getIsSpamProtectionEnabled,
   getIsWorkflowsEnabled,
-} from "@/modules/ee/license-check/lib/utils";
-import { getQuotas } from "@/modules/ee/quotas/lib/quotas";
+} from "@/modules/features/lib/flags";
 import { getTeamMemberDetails } from "@/modules/survey/editor/lib/team";
 import { getUserEmail } from "@/modules/survey/editor/lib/user";
 import { getWorkspaceLanguages } from "@/modules/survey/editor/lib/workspace";

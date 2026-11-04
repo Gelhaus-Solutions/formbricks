@@ -56,7 +56,7 @@ vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: vi.fn() })
 vi.mock("@/modules/core/rate-limit/rate-limit-configs", () => ({ rateLimitConfigs: { actions: {} } }));
 vi.mock("@/modules/ee/contacts/lib/contacts", () => ({ generatePersonalLinks: vi.fn() }));
 vi.mock("@/modules/ee/contacts/lib/personal-link-errors", () => ({ NO_CONTACTS_IN_SEGMENT_ERROR_CODE: "x" }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsContactsEnabled: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsContactsEnabled: vi.fn() }));
 vi.mock("@/modules/ee/whitelabel/email-customization/lib/organization", () => ({
   getOrganizationLogoUrl: mocks.getOrganizationLogoUrl,
 }));

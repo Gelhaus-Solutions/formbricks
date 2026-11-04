@@ -17,9 +17,9 @@ import { updateUser } from "@/modules/auth/lib/user";
 import { deleteInvite, getInvite, resolveInviteMatch } from "@/modules/auth/signup/lib/invite";
 import { applyIPRateLimit } from "@/modules/core/rate-limit/helpers";
 import { UNKNOWN_DATA } from "@/modules/ee/audit-logs/types/audit-log";
-import { getIsMultiOrgEnabled } from "@/modules/ee/license-check/lib/utils";
 import { subscribeUserToMailingList } from "@/modules/ee/mailing/lib/mailing-subscription";
 import { sendInviteAcceptedEmail } from "@/modules/email";
+import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { createUserAction } from "./actions";
 
 vi.mock("next/headers", () => ({
@@ -77,7 +77,7 @@ vi.mock("@/lib/posthog", () => ({
 vi.mock("@/modules/ee/billing/lib/organization-billing", () => ({
   ensureCloudStripeSetupForOrganization: vi.fn(),
 }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsMultiOrgEnabled: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsMultiOrgEnabled: vi.fn() }));
 vi.mock("@/modules/ee/mailing/lib/mailing-subscription", () => ({ subscribeUserToMailingList: vi.fn() }));
 vi.mock("@/modules/email", () => ({ sendInviteAcceptedEmail: vi.fn() }));
 vi.mock("@/modules/workspaces/settings/lib/workspace", () => ({ createWorkspace: vi.fn() }));

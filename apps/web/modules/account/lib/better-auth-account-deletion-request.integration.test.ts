@@ -6,8 +6,8 @@ import {
   FORMBRICKS_CLOUD_ACCOUNT_DELETION_SURVEY_URL,
 } from "@/modules/account/constants";
 import { auth } from "@/modules/auth/lib/auth";
-import { getIsMultiOrgEnabled } from "@/modules/ee/license-check/lib/utils";
 import { sendDeleteAccountConfirmationEmail } from "@/modules/email";
+import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { requestSsoAccountDeletionEmail } from "./better-auth-account-deletion-request";
 
 // getSession is NextAuth-backed (the Phase 2 DAL) and can't read the Better Auth cookie this harness
@@ -42,7 +42,7 @@ vi.mock("@/lib/constants", async (importOriginal) => {
 // when the license permits multiple organizations — so a test that needs a SECOND user has to say which.
 // Mirrors the mock in better-auth-account-deletion.integration.test.ts; defaults to false (single-org,
 // the real local shape) and is raised only by the test that needs two accounts.
-vi.mock("@/modules/ee/license-check/lib/utils", async (importOriginal) => {
+vi.mock("@/modules/features/lib/flags", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return { ...actual, getIsMultiOrgEnabled: vi.fn() };
 });

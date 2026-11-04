@@ -1,6 +1,6 @@
 import "server-only";
 import { type TAuthorizationActor, can } from "@/lib/authorization";
-import { getCustomCssPermission } from "@/modules/ee/license-check/lib/utils";
+import { getCustomCssPermission } from "@/modules/features/lib/flags";
 
 export const WORKSPACE_CUSTOM_CSS_PERMISSION_MESSAGE =
   "Only organization owners and managers can change workspace custom CSS. API keys need manage access to the workspace.";

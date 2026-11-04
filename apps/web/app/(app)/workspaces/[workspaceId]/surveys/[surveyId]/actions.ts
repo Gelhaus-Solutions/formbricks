@@ -9,8 +9,8 @@ import { getSurvey } from "@/lib/survey/service";
 import { getTagsByWorkspaceId } from "@/lib/tag/service";
 import { authenticatedActionClient } from "@/lib/utils/action-client";
 import { getOrganizationIdFromSurveyId } from "@/lib/utils/helper";
-import { getIsQuotasEnabled } from "@/modules/ee/license-check/lib/utils";
 import { getQuotas } from "@/modules/ee/quotas/lib/quotas";
+import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 
 const ZGetSurveyFilterDataAction = z.object({

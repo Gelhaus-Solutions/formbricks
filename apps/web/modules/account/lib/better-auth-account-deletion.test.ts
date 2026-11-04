@@ -7,12 +7,12 @@ import { deleteUserTeamRelationships } from "@/lib/authzed/team-workspace";
 import { deleteOrganization, getOrganizationsWhereUserIsSingleOwner } from "@/lib/organization/service";
 import { capturePostHogEvent } from "@/lib/posthog";
 import { deleteBrevoCustomerByEmail } from "@/modules/auth/lib/brevo";
-import { getIsMultiOrgEnabled } from "@/modules/ee/license-check/lib/utils";
 import { sendAccountDeletedEmail } from "@/modules/email";
 import {
   activateEmailAuditErasureIntent,
   requestEmailAuditErasureBeforeUserDeletion,
 } from "@/modules/email/lib/email-audit-maintenance";
+import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { queueAccountDeletionAuditEvent } from "./account-deletion-audit";
 import {
   accountDeletionAfterDelete,
@@ -35,7 +35,7 @@ vi.mock("@/lib/organization/service", () => ({
 }));
 vi.mock("@/lib/posthog", () => ({ capturePostHogEvent: vi.fn() }));
 vi.mock("@/modules/auth/lib/brevo", () => ({ deleteBrevoCustomerByEmail: vi.fn() }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsMultiOrgEnabled: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsMultiOrgEnabled: vi.fn() }));
 vi.mock("@/modules/email/lib/email-audit-maintenance", () => ({
   activateEmailAuditErasureIntent: vi.fn(),
   requestEmailAuditErasureBeforeUserDeletion: vi.fn(),

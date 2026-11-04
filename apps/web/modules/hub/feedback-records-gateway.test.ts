@@ -5,7 +5,7 @@ import type { TAuthenticationApiKey } from "@formbricks/types/auth";
 import { can } from "@/lib/authorization";
 import { withAuthorizationSurface } from "@/lib/authorization/context";
 import { getFeedbackDirectoryAuthContext } from "@/modules/ee/feedback-directory/lib/feedback-directory";
-import { getIsFeedbackDirectoriesEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 import type { TGatewayAuthenticatedPrincipal } from "@/modules/gateway-auth/lib/request";
 import { feedbackRecordsGatewayAuthorizer } from "./feedback-records-gateway";
 import { getFeedbackRecordTenant } from "./service";
@@ -39,7 +39,7 @@ vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
   getFeedbackDirectoryAuthContext: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getIsFeedbackDirectoriesEnabled: vi.fn(),
 }));
 

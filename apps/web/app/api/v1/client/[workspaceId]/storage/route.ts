@@ -11,7 +11,7 @@ import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
 import { resolveClientApiIds } from "@/lib/utils/resolve-client-id";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { getBiggerUploadFileSizePermission } from "@/modules/ee/license-check/lib/utils";
+import { getBiggerUploadFileSizePermission } from "@/modules/features/lib/flags";
 import { getSignedUrlForUpload } from "@/modules/storage/service";
 import { getSurveyUploadElementMaxFileSize } from "@/modules/storage/survey-upload-elements";
 import { getErrorResponseFromStorageError, validateSurveyAllowsUpload } from "@/modules/storage/utils";

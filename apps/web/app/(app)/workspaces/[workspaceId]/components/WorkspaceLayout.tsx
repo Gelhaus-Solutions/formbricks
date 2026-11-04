@@ -12,7 +12,7 @@ import { CreativesAccessProvider } from "@/modules/ee/creatives/components/creat
 import { getCreativesAccess } from "@/modules/ee/creatives/lib/access";
 import { isCreativesVisible } from "@/modules/ee/creatives/lib/access-rules";
 import { getPendingDowngradeSchedule } from "@/modules/ee/license-check/lib/license";
-import { getOrganizationWorkspacesLimit } from "@/modules/ee/license-check/lib/utils";
+import { getOrganizationWorkspacesLimit } from "@/modules/features/lib/flags";
 import { LimitsReachedBanner } from "@/modules/ui/components/limits-reached-banner";
 import { PendingDowngradeBanner } from "@/modules/ui/components/pending-downgrade-banner";
 import { TWorkspaceLayoutData } from "@/modules/workspaces/types/workspace-auth";

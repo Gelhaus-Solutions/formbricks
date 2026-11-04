@@ -20,7 +20,7 @@ vi.mock("@/app/api/v3/surveys/authorization", () => ({ getAuthorizedV3Survey: mo
 vi.mock("@/lib/authorization", () => ({ can: mocks.can }));
 vi.mock("@/modules/core/rate-limit/rate-limit", () => ({ checkRateLimit: mocks.checkRateLimit }));
 vi.mock("@/lib/organization/service", () => ({ getOrganization: mocks.getOrganization }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsQuotasEnabled: mocks.getIsQuotasEnabled }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsQuotasEnabled: mocks.getIsQuotasEnabled }));
 vi.mock("@/lib/posthog", () => ({ capturePostHogEvent: mocks.capturePostHogEvent }));
 vi.mock("./export-response", () => ({
   buildExportResponse: mocks.buildExportResponse,

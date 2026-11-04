@@ -28,7 +28,7 @@ vi.mock("@/lib/survey/service", () => ({
 }));
 vi.mock("@/app/api/v1/management/lib/workspace-resolver", () => ({ resolveBodyIds: vi.fn() }));
 // The real `checkSurveyWritePermissions` runs; only the organization's entitlement lookups are stubbed.
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsSpamProtectionEnabled: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsSpamProtectionEnabled: vi.fn() }));
 vi.mock("@/modules/survey/follow-ups/lib/utils", () => ({ getSurveyFollowUpsPermission: vi.fn() }));
 vi.mock("@/modules/survey/lib/permission", () => ({ getExternalUrlsPermission: vi.fn() }));
 vi.mock("@/app/api/v1/management/surveys/lib/surveys", () => ({ getSurveys: vi.fn() }));

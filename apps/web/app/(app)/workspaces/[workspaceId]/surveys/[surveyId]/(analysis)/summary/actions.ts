@@ -19,9 +19,9 @@ import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
 import { generatePersonalLinks } from "@/modules/ee/contacts/lib/contacts";
 import { NO_CONTACTS_IN_SEGMENT_ERROR_CODE } from "@/modules/ee/contacts/lib/personal-link-errors";
-import { getIsContactsEnabled } from "@/modules/ee/license-check/lib/utils";
 import { getOrganizationLogoUrl } from "@/modules/ee/whitelabel/email-customization/lib/organization";
 import { sendEmbedSurveyPreviewEmail } from "@/modules/email";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { deleteResponsesAndDisplaysForSurvey } from "./lib/survey";
 
 const ZSendEmbedSurveyPreviewEmailAction = z.object({

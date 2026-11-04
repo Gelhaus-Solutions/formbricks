@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ResourceNotFoundError } from "@formbricks/types/errors";
 import { can } from "@/lib/authorization";
 import { getOrganizationIdFromDirectoryId } from "@/modules/ee/feedback-directory/lib/feedback-directory";
-import { getIsFeedbackDirectoriesEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 import { requireFeedbackDatasetMutationAccess } from "./access";
 
 vi.mock("server-only", () => ({}));
@@ -15,7 +15,7 @@ vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
   getOrganizationIdFromDirectoryId: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getIsFeedbackDirectoriesEnabled: vi.fn(),
 }));
 

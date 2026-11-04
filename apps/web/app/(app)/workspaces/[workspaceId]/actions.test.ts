@@ -29,7 +29,7 @@ vi.mock("@/lib/organization/service", () => ({ getOrganization: mocks.getOrganiz
 vi.mock("@/lib/workspace/service", () => ({
   getOrganizationWorkspacesCount: mocks.getOrganizationWorkspacesCount,
 }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getAccessControlPermission: mocks.getAccessControlPermission,
   getOrganizationWorkspacesLimit: mocks.getOrganizationWorkspacesLimit,
 }));

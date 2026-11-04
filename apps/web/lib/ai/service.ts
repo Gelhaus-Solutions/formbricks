@@ -24,7 +24,7 @@ import { describeAIError } from "@/lib/ai/loggable-error";
 import { env } from "@/lib/env";
 import { getOrganization } from "@/lib/organization/service";
 import { type AITracingContext, wrapAiModelWithTracing } from "@/lib/posthog/ai-tracing";
-import { getIsAISmartToolsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsAISmartToolsEnabled } from "@/modules/features/lib/flags";
 
 export const AI_ERROR_CODES = {
   FEATURES_NOT_ENABLED: "ai_features_not_enabled",

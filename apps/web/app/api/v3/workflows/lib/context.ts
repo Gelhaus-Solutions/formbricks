@@ -17,7 +17,7 @@ import { buildHiddenSurveyWhere } from "@/lib/survey/visibility/predicate";
 import { normalizeEmailForComparison } from "@/lib/utils/email";
 import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
 import { getWorkspaceMemberEmails } from "@/lib/workspace/service";
-import { getIsWorkflowsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsWorkflowsEnabled } from "@/modules/features/lib/flags";
 import { buildRecordAnalytics } from "./analytics";
 
 /**

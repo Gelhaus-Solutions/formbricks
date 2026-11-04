@@ -21,7 +21,7 @@ import { getOrganization } from "@/lib/organization/service";
 import { capturePostHogEvent } from "@/lib/posthog";
 import { checkRateLimit } from "@/modules/core/rate-limit/rate-limit";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { getIsQuotasEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { EXCEL_MAX_WAITERS, EXCEL_WAIT_MS } from "./export-limits";
 import { ExportCancelledError, buildExportResponse, countExportResponses } from "./export-response";
 

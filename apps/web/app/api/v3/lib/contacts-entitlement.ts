@@ -1,6 +1,6 @@
 import "server-only";
 import { problemForbidden } from "@/app/api/v3/lib/response";
-import { getIsContactsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 
 /**
  * The enterprise Contacts gate shared by the v3 contact, contact-attribute and segment reads — the same

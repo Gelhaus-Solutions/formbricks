@@ -26,8 +26,8 @@ vi.mock("@/lib/constants", async (importOriginal) => ({
 
 // The SSO license gate (`ssoLicenseGateBefore`) re-checks both features on every callback and would 403
 // before state validation ran.
-vi.mock("@/modules/ee/license-check/lib/utils", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/modules/ee/license-check/lib/utils")>()),
+vi.mock("@/modules/features/lib/flags", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/features/lib/flags")>()),
   getIsSsoEnabled: vi.fn(async () => true),
   getIsSamlSsoEnabled: vi.fn(async () => true),
 }));

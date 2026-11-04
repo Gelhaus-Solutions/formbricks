@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { can } from "@/lib/authorization";
-import { getCustomCssPermission } from "@/modules/ee/license-check/lib/utils";
+import { getCustomCssPermission } from "@/modules/features/lib/flags";
 import { canWriteWorkspaceCustomCss, getCustomCssPlanAllowed } from "./access";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getCustomCssPermission: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getCustomCssPermission: vi.fn() }));
 
 const workspace = { workspaceId: "ws_1", organizationId: "org_1" };
 

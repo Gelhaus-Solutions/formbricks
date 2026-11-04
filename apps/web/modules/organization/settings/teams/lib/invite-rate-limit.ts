@@ -4,7 +4,7 @@ import { reserveRateLimitUsage, settleRateLimitUsage } from "@/modules/core/rate
 import type { TRateLimitReservation } from "@/modules/core/rate-limit/rate-limit";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import type { TRateLimitConfig } from "@/modules/core/rate-limit/types/rate-limit";
-import { getBulkInvitePermission } from "@/modules/ee/license-check/lib/utils";
+import { getBulkInvitePermission } from "@/modules/features/lib/flags";
 
 const CLOUD_BULK_INVITE_RATE_LIMIT_PER_24_HOURS = 500;
 

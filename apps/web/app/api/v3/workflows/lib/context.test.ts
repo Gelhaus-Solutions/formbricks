@@ -6,7 +6,7 @@ import { capturePostHogEvent } from "@/lib/posthog";
 import { resolveSurveyActorContext } from "@/lib/survey/visibility/actor-context";
 import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
 import { getWorkspaceMemberEmails } from "@/lib/workspace/service";
-import { getIsWorkflowsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsWorkflowsEnabled } from "@/modules/features/lib/flags";
 import { buildWorkflowApiContext } from "./context";
 
 const { surveyFindMany, surveyFindUnique } = vi.hoisted(() => ({
@@ -30,7 +30,7 @@ const visibility = vi.hoisted(() => ({ ready: false }));
 vi.mock("@/lib/authzed/scope-readiness", () => ({ isSurveyVisibilityReady: async () => visibility.ready }));
 vi.mock("@/lib/utils/helper", () => ({ getOrganizationIdFromWorkspaceId: vi.fn() }));
 vi.mock("@/lib/workspace/service", () => ({ getWorkspaceMemberEmails: vi.fn() }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsWorkflowsEnabled: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsWorkflowsEnabled: vi.fn() }));
 
 const baseAuditLog = (): TV3AuditLog => ({
   action: "updated",

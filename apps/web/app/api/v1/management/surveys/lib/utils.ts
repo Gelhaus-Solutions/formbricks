@@ -3,7 +3,7 @@ import { TSurvey, TSurveyCreateInputWithWorkspaceId } from "@formbricks/types/su
 import { responses } from "@/app/lib/api/response";
 import { isDefaultEndingCardButtonLink } from "@/lib/survey/default-ending-card";
 import { getElementsFromBlocks } from "@/lib/survey/utils";
-import { getIsSpamProtectionEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsSpamProtectionEnabled } from "@/modules/features/lib/flags";
 import { getSurveyFollowUpsPermission } from "@/modules/survey/follow-ups/lib/utils";
 import {
   CUSTOM_HEAD_SCRIPTS_PERMISSION_MESSAGE,

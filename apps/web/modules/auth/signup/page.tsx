@@ -15,8 +15,8 @@ import { verifyInviteToken } from "@/lib/jwt";
 import { findMatchingLocale } from "@/lib/utils/locale";
 import { FormWrapper } from "@/modules/auth/components/form-wrapper";
 import { getIsValidInviteToken } from "@/modules/auth/signup/lib/invite";
-import { getIsMultiOrgEnabled } from "@/modules/ee/license-check/lib/utils";
 import { getSsoAvailability, toSsoFormProps } from "@/modules/ee/sso/lib/sso-availability";
+import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { SignupForm } from "./components/signup-form";
 
 export const SignupPage = async ({

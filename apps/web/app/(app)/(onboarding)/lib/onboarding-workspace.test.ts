@@ -3,7 +3,7 @@ import { AuthorizationError, ResourceNotFoundError } from "@formbricks/types/err
 import { can } from "@/lib/authorization";
 import { getOrganization, updateOrganization } from "@/lib/organization/service";
 import { getUserWorkspaces, getWorkspaces } from "@/lib/workspace/service";
-import { getIsAISmartToolsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsAISmartToolsEnabled } from "@/modules/features/lib/flags";
 import { getOnboardingWorkspaceContext, selectOldestWorkspace } from "./onboarding-workspace";
 
 vi.mock("@/lib/authorization", () => ({
@@ -15,7 +15,7 @@ vi.mock("@/lib/organization/service", () => ({
   updateOrganization: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getIsAISmartToolsEnabled: vi.fn(),
 }));
 

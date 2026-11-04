@@ -8,7 +8,7 @@ import { can } from "@/lib/authorization";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { getCustomCssHealth } from "@/modules/custom-css/lib/delivery";
 import { getWorkspaceCustomCssRecord, updateWorkspaceCustomCss } from "@/modules/custom-css/lib/service";
-import { getCustomCssPermission } from "@/modules/ee/license-check/lib/utils";
+import { getCustomCssPermission } from "@/modules/features/lib/flags";
 import { getV3WorkspaceCustomCss, patchV3WorkspaceCustomCss } from "./custom-css";
 
 vi.mock("server-only", () => ({}));
@@ -31,7 +31,7 @@ vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: vi.fn() })
 
 // The real role rules in `access.ts` run against a mocked authorization engine and plan.
 vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getCustomCssPermission: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getCustomCssPermission: vi.fn() }));
 vi.mock("@/modules/custom-css/lib/delivery", () => ({ getCustomCssHealth: vi.fn() }));
 vi.mock("@/modules/custom-css/lib/service", async () => {
   const { toCustomCssSource } = await vi.importActual<typeof import("@/modules/custom-css/lib/source")>(

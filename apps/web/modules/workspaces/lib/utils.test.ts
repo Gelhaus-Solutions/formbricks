@@ -11,8 +11,8 @@ import { canUserNavigateWorkspace } from "@/lib/workspace/auth";
 import { getWorkspace } from "@/lib/workspace/service";
 import { getSession } from "@/modules/auth/lib/session";
 import { getEnterpriseLicense } from "@/modules/ee/license-check/lib/license";
-import { getAccessControlPermission } from "@/modules/ee/license-check/lib/utils";
 import { getWorkspacePermissionByUserId } from "@/modules/ee/teams/lib/roles";
+import { getAccessControlPermission } from "@/modules/features/lib/flags";
 import { getWorkspaceAuth, getWorkspaceLayoutData, workspaceIdLayoutChecks } from "./utils";
 
 const mocks = vi.hoisted(() => ({ isFormbricksCloud: false, workspaceFindUnique: vi.fn() }));
@@ -37,7 +37,7 @@ vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
 vi.mock("@/lib/workspace/auth", () => ({ canUserNavigateWorkspace: vi.fn() }));
 vi.mock("@formbricks/database", () => ({ prisma: { workspace: { findUnique: mocks.workspaceFindUnique } } }));
 vi.mock("@/lib/user/service", () => ({ getUser: vi.fn() }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getAccessControlPermission: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getAccessControlPermission: vi.fn() }));
 vi.mock("@/modules/ee/license-check/lib/license", () => ({ getEnterpriseLicense: vi.fn() }));
 vi.mock("@/lib/organization/service", () => ({
   getOrganization: vi.fn(),

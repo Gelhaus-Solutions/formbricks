@@ -17,7 +17,7 @@ import {
   getExistingWorkspaceSurveyIds,
   getSegments,
 } from "@/modules/ee/contacts/segments/lib/segments";
-import { getIsContactsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { V3SurveyReferenceValidationError } from "./reference-validation";
 import type { TV3SurveyTargeting } from "./schemas";
 

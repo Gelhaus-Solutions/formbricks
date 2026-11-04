@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/authorization", () => ({ can: mocks.can }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsDataRetentionEnabled: mocks.isEnabled }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsDataRetentionEnabled: mocks.isEnabled }));
 vi.mock("@/modules/organization/settings/teams/lib/reactivate-member", () => ({
   reactivateOrganizationMember: mocks.reactivate,
 }));

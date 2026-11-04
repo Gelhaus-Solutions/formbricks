@@ -6,7 +6,7 @@ import { DatabaseError } from "@formbricks/types/errors";
 import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
 import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
 import { getExistingWorkspaceSurveyIds, getSegments } from "@/modules/ee/contacts/segments/lib/segments";
-import { getIsContactsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { V3SurveyReferenceValidationError } from "./reference-validation";
 import type { TV3SurveyTargeting } from "./schemas";
 import {
@@ -40,7 +40,7 @@ vi.mock("@/modules/ee/contacts/segments/lib/segments", () => ({
   getExistingWorkspaceSurveyIds: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getIsContactsEnabled: vi.fn(),
 }));
 

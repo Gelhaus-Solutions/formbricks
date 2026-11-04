@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { reserveRateLimitUsage, settleRateLimitUsage } from "@/modules/core/rate-limit/helpers";
 import type { TRateLimitReservation } from "@/modules/core/rate-limit/rate-limit";
-import { getBulkInvitePermission } from "@/modules/ee/license-check/lib/utils";
+import { getBulkInvitePermission } from "@/modules/features/lib/flags";
 import { getInviteRateLimitConfig, reserveInviteRateLimit, settleInviteRateLimit } from "./invite-rate-limit";
 
 const constants = vi.hoisted(() => ({
@@ -15,7 +15,7 @@ vi.mock("@/lib/constants", () => ({
   INVITE_RATE_LIMIT_PER_24_HOURS: 75,
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getBulkInvitePermission: vi.fn(),
 }));
 

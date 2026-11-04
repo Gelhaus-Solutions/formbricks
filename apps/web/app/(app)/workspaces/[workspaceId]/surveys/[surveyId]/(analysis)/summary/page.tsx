@@ -19,7 +19,7 @@ import { getTranslate } from "@/lingodotdev/server";
 import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
 import { SurveyRetentionNote } from "@/modules/ee/data-retention/components/survey/survey-retention-note";
 import { getSurveyDataRetentionContext } from "@/modules/ee/data-retention/lib/survey-context";
-import { getIsContactsEnabled, getIsQuotasEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsContactsEnabled, getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 import { getSurveyAuth } from "@/modules/survey/lib/survey-auth";
 import { RestrictedSurveyBanner } from "@/modules/survey/visibility/components/restricted-survey-banner";

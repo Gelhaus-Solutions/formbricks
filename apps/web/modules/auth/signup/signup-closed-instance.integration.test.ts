@@ -31,8 +31,8 @@ vi.mock("@/lib/constants", async (importOriginal) => ({
   SIGNUP_ENABLED: false,
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/modules/ee/license-check/lib/utils")>()),
+vi.mock("@/modules/features/lib/flags", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/features/lib/flags")>()),
   getIsMultiOrgEnabled: vi.fn(async () => false),
 }));
 

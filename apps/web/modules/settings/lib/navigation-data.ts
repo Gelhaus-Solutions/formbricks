@@ -13,10 +13,7 @@ import { getUser } from "@/lib/user/service";
 import { getWorkspace } from "@/lib/workspace/service";
 import { getSession } from "@/modules/auth/lib/session";
 import { getEnterpriseLicense } from "@/modules/ee/license-check/lib/license";
-import {
-  getAccessControlPermission,
-  getOrganizationWorkspacesLimit,
-} from "@/modules/ee/license-check/lib/utils";
+import { getAccessControlPermission, getOrganizationWorkspacesLimit } from "@/modules/features/lib/flags";
 
 type TOrganizationWithBilling = NonNullable<Awaited<ReturnType<typeof getOrganization>>>;
 type TLicense = Awaited<ReturnType<typeof getEnterpriseLicense>>;

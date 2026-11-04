@@ -13,8 +13,8 @@ import {
   getSearchParamString,
   resolveAuthCallbackUrl,
 } from "@/modules/auth/lib/callback-url";
-import { getIsMultiOrgEnabled } from "@/modules/ee/license-check/lib/utils";
 import { getSsoAvailability, toSsoFormProps } from "@/modules/ee/sso/lib/sso-availability";
+import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { LoginForm } from "./components/login-form";
 
 export const metadata: Metadata = {

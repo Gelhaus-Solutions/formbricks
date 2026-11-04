@@ -13,8 +13,8 @@ import { getWorkspace } from "@/lib/workspace/service";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
-import { getRemoveBrandingPermission } from "@/modules/ee/license-check/lib/utils";
 import { getTeamsByOrganizationId } from "@/modules/ee/teams/team-list/lib/team";
+import { getRemoveBrandingPermission } from "@/modules/features/lib/flags";
 import { updateWorkspace } from "@/modules/workspaces/settings/lib/workspace";
 import { ZWorkspaceUpdateActionInput } from "@/modules/workspaces/settings/lib/workspace-update-input";
 

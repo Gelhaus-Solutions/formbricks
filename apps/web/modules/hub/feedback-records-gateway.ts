@@ -10,7 +10,7 @@ import { getFeedbackDirectoryAuthorizationAction } from "@/lib/authorization/per
 import { verifyFeedbackRecordsGatewayToken } from "@/lib/jwt";
 import { getBearerTokenFromHeaders } from "@/modules/api/lib/api-key-auth";
 import { getFeedbackDirectoryAuthContext } from "@/modules/ee/feedback-directory/lib/feedback-directory";
-import { getIsFeedbackDirectoriesEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 import {
   type TGatewayJsonBodyRejectionReason,
   hasCaseVariantKey,

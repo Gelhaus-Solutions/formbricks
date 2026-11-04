@@ -13,12 +13,12 @@ import {
 } from "@/lib/constants";
 import { getUser } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
+import { EmailCustomizationSettings } from "@/modules/ee/whitelabel/email-customization/components/email-customization-settings";
 import {
   getIsAISmartToolsEnabled,
   getIsMultiOrgEnabled,
   getWhiteLabelPermission,
-} from "@/modules/ee/license-check/lib/utils";
-import { EmailCustomizationSettings } from "@/modules/ee/whitelabel/email-customization/components/email-customization-settings";
+} from "@/modules/features/lib/flags";
 import { getOrganizationAuth } from "@/modules/organization/lib/utils";
 import { getSettingsLayoutData } from "@/modules/settings/lib/navigation-data";
 import { redirectBillingRoleFromRestrictedOrgSettings } from "@/modules/settings/lib/redirect-billing-role";

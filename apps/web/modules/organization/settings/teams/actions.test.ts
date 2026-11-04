@@ -94,7 +94,7 @@ vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
   withAuditLogging: vi.fn((_eventName, _objectType, fn) => fn),
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getBulkInvitePermission: mocks.getBulkInvitePermission,
   getIsMultiOrgEnabled: vi.fn(),
 }));

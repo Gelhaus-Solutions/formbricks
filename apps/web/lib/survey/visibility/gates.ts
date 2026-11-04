@@ -2,7 +2,7 @@ import "server-only";
 import { isSurveyVisibilityReady } from "@/lib/authzed/scope-readiness";
 import { env } from "@/lib/env";
 import { isNewReleaseWorkEnabled } from "@/lib/upgrade/compatibility";
-import { getAccessControlPermission } from "@/modules/ee/license-check/lib/utils";
+import { getAccessControlPermission } from "@/modules/features/lib/flags";
 
 /** Readiness and entitlement control mutations only. Stored visibility is always enforced. */
 export type TSurveyVisibilityGates = Readonly<{ entitled: boolean; ready: boolean }>;

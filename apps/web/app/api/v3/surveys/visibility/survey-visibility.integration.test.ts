@@ -27,8 +27,8 @@ import { changeV3SurveyVisibility, getV3SurveyVisibility } from "./operations";
  */
 
 // The RBAC entitlement is a licence check; this suite is about enforcement, so it is granted.
-vi.mock("@/modules/ee/license-check/lib/utils", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/modules/ee/license-check/lib/utils")>()),
+vi.mock("@/modules/features/lib/flags", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/features/lib/flags")>()),
   getAccessControlPermission: vi.fn(async () => true),
 }));
 

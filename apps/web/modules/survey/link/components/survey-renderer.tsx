@@ -15,7 +15,7 @@ import {
 } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
 import { getCreativeAttribution } from "@/modules/ee/creatives/lib/attribution";
-import { getIsContactsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { PinScreen } from "@/modules/survey/link/components/pin-screen";
 import { SurveyClientWrapper } from "@/modules/survey/link/components/survey-client-wrapper";
 import { SurveyCompletedMessage } from "@/modules/survey/link/components/survey-completed-message";

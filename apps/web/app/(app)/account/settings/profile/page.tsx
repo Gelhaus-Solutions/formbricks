@@ -16,7 +16,7 @@ import { requiresPasswordConfirmationForAccountDeletion } from "@/modules/accoun
 import { getSession } from "@/modules/auth/lib/session";
 import { LiteLicenseTip } from "@/modules/ee/license-check/components/lite-license-tip";
 import { getEnterpriseLicense } from "@/modules/ee/license-check/lib/license";
-import { getIsMultiOrgEnabled, getIsTwoFactorAuthEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsMultiOrgEnabled, getIsTwoFactorAuthEnabled } from "@/modules/features/lib/flags";
 import { getSettingsLayoutData } from "@/modules/settings/lib/navigation-data";
 import { getOrganizationBillingPath } from "@/modules/settings/lib/routes";
 import { IdBadge } from "@/modules/ui/components/id-badge";

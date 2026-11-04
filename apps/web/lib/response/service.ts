@@ -18,9 +18,9 @@ import {
 } from "@formbricks/types/responses";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { TTag } from "@formbricks/types/tags";
-import { getIsQuotasEnabled } from "@/modules/ee/license-check/lib/utils";
 import { reduceQuotaLimits } from "@/modules/ee/quotas/lib/quotas";
 import { requestEmailAuditErasureRequired } from "@/modules/email/lib/email-audit-maintenance";
+import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { deleteResponseFileUrls } from "@/modules/storage/lib/delete-response-files";
 import { enqueueReplacedSignatureFileCleanup } from "@/modules/storage/lib/replaced-signature-files";
 import {

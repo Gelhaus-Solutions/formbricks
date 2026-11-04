@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { can } from "@/lib/authorization";
-import { getIsDashboardsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsDashboardsEnabled } from "@/modules/features/lib/flags";
 import { requireV3WorkspaceAccess } from "./auth";
 import { refuseUnlessFeedbackDatasetAccess, requireDashboardsAccess } from "./dashboards-access";
 import { problemForbidden } from "./response";
@@ -8,7 +8,7 @@ import type { TV3Authentication } from "./types";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsDashboardsEnabled: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsDashboardsEnabled: vi.fn() }));
 vi.mock("./auth", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./auth")>()),
   requireV3WorkspaceAccess: vi.fn(),

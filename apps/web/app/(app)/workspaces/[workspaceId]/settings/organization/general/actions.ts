@@ -11,7 +11,7 @@ import { authenticatedActionClient } from "@/lib/utils/action-client";
 import { AuthenticatedActionClientCtx } from "@/lib/utils/action-client/types/context";
 import { getTranslate } from "@/lingodotdev/server";
 import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
-import { getIsMultiOrgEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import {
   ZOrganizationAISettingsInput,
   ZUpdateOrganizationAISettingsAction,

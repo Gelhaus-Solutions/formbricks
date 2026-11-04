@@ -20,8 +20,8 @@ import { getResponseDownloadFile } from "@/lib/response/service";
  * The export asks the enterprise licence service whether to add a Quotas column, which a node test
  * cannot reach. Stubbed off so the export runs; the column has nothing to do with paging.
  */
-vi.mock("@/modules/ee/license-check/lib/utils", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/modules/ee/license-check/lib/utils")>()),
+vi.mock("@/modules/features/lib/flags", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/features/lib/flags")>()),
   getIsQuotasEnabled: async () => false,
 }));
 

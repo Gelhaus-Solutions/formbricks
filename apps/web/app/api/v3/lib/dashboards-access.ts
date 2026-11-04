@@ -1,8 +1,8 @@
 import "server-only";
 import { can } from "@/lib/authorization";
 import { getFeedbackDirectoryAssignmentAuthorizationAction } from "@/lib/authorization/permission-action";
-import { getIsDashboardsEnabled } from "@/modules/ee/license-check/lib/utils";
 import type { TTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
+import { getIsDashboardsEnabled } from "@/modules/features/lib/flags";
 import { getV3AuthorizationActor, requireV3WorkspaceAccess } from "./auth";
 import { problemDashboardsPlanRequired, problemForbidden, problemUnauthorized } from "./response";
 import type { TV3Authentication } from "./types";
