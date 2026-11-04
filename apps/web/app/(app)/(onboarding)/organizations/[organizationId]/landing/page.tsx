@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { CreateFirstWorkspaceButton } from "@/app/(app)/(onboarding)/organizations/[organizationId]/landing/components/create-first-workspace-button";
 import { LandingSidebar } from "@/app/(app)/(onboarding)/organizations/[organizationId]/landing/components/landing-sidebar";
 import { WorkspaceAndOrgSwitch } from "@/app/(app)/workspaces/[workspaceId]/components/workspace-and-org-switch";
-import { IS_FORMBRICKS_CLOUD, IS_FORMBRICKS_SURVEYS_CONFIGURED } from "@/lib/constants";
+import { IS_FORMBRICKS_SURVEYS_CONFIGURED } from "@/lib/constants";
 import { getMembershipByUserIdOrganizationId } from "@/lib/membership/service";
 import { getAccessFlags } from "@/lib/membership/utils";
 import { getUser } from "@/lib/user/service";
@@ -47,10 +47,6 @@ const Page = async (props: { readonly params: Promise<{ organizationId: string }
               currentOrganizationId={organization.id}
               currentOrganizationName={organization.name}
               isMultiOrgEnabled={isMultiOrgEnabled}
-              organizationWorkspacesLimit={0}
-              isFormbricksCloud={IS_FORMBRICKS_CLOUD}
-              isLicenseActive={false}
-              isNoLicense={false}
               isOwnerOrManager={false}
               isAccessControlAllowed={false}
               isMembershipPending={isMembershipPending}

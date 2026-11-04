@@ -11,9 +11,7 @@ const mocks = {
   getMonthlyOrganizationResponseCount: vi.fn(),
   getUser: vi.fn(),
   getWorkspace: vi.fn(),
-  getEnterpriseLicense: vi.fn(),
   getAccessControlPermission: vi.fn(),
-  getOrganizationWorkspacesLimit: vi.fn(),
   getPublicDomain: vi.fn(),
   cookieGet: vi.fn(),
 };
@@ -42,12 +40,9 @@ vi.mock("@/lib/organization/service", () => ({
 }));
 vi.mock("@/lib/user/service", () => ({ getUser: (...a: unknown[]) => mocks.getUser(...a) }));
 vi.mock("@/lib/workspace/service", () => ({ getWorkspace: (...a: unknown[]) => mocks.getWorkspace(...a) }));
-vi.mock("@/modules/ee/license-check/lib/license", () => ({
-  getEnterpriseLicense: (...a: unknown[]) => mocks.getEnterpriseLicense(...a),
-}));
 vi.mock("@/modules/features/lib/flags", () => ({
   getAccessControlPermission: (...a: unknown[]) => mocks.getAccessControlPermission(...a),
-  getOrganizationWorkspacesLimit: (...a: unknown[]) => mocks.getOrganizationWorkspacesLimit(...a),
+  isGFormsFeatureEnabled: () => true,
 }));
 
 const { getSettingsLayoutData } = await import("./navigation-data");
@@ -58,8 +53,6 @@ const seedSuccess = () => {
   mocks.getOrganization.mockResolvedValue({ id: "org-1", name: "Org", billing: {} });
   mocks.getMembershipByUserIdOrganizationId.mockResolvedValue({ role: "owner" });
   mocks.getAccessControlPermission.mockResolvedValue(true);
-  mocks.getEnterpriseLicense.mockResolvedValue({ features: { isMultiOrgEnabled: true } });
-  mocks.getOrganizationWorkspacesLimit.mockResolvedValue(3);
   mocks.getMonthlyOrganizationResponseCount.mockResolvedValue(42);
   mocks.getPublicDomain.mockReturnValue("https://app.formbricks.com");
   // No active-workspace cookie by default.

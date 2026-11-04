@@ -12,11 +12,9 @@ import { getMonthlyOrganizationResponseCount, getOrganization } from "@/lib/orga
 import { getUser } from "@/lib/user/service";
 import { getWorkspace } from "@/lib/workspace/service";
 import { getSession } from "@/modules/auth/lib/session";
-import { getEnterpriseLicense } from "@/modules/ee/license-check/lib/license";
-import { getAccessControlPermission, getOrganizationWorkspacesLimit } from "@/modules/features/lib/flags";
+import { getAccessControlPermission, isGFormsFeatureEnabled } from "@/modules/features/lib/flags";
 
 type TOrganizationWithBilling = NonNullable<Awaited<ReturnType<typeof getOrganization>>>;
-type TLicense = Awaited<ReturnType<typeof getEnterpriseLicense>>;
 type TUser = NonNullable<Awaited<ReturnType<typeof getUser>>>;
 
 export interface TSettingsLayoutData {
@@ -27,8 +25,6 @@ export interface TSettingsLayoutData {
   isAccessControlAllowed: boolean;
   isOwnerOrManager: boolean;
   isMultiOrgEnabled: boolean;
-  organizationWorkspacesLimit: number;
-  license: TLicense;
   responseCount: number;
   isFormbricksCloud: boolean;
   isDevelopment: boolean;
@@ -110,10 +106,8 @@ export const getSettingsLayoutData = async (
   ]);
   if (!user || !organization || !membership) return null;
 
-  const [isAccessControlAllowed, license, organizationWorkspacesLimit, workspaces] = await Promise.all([
+  const [isAccessControlAllowed, workspaces] = await Promise.all([
     getAccessControlPermission(organization.id),
-    getEnterpriseLicense(),
-    getOrganizationWorkspacesLimit(organization.id),
     getWorkspacesByUserId(userId, organization.id),
   ]);
 
@@ -137,9 +131,7 @@ export const getSettingsLayoutData = async (
     membershipRole: membership.role,
     isAccessControlAllowed,
     isOwnerOrManager,
-    isMultiOrgEnabled: license.features?.isMultiOrgEnabled ?? false,
-    organizationWorkspacesLimit,
-    license,
+    isMultiOrgEnabled: isGFormsFeatureEnabled("multiOrg"),
     responseCount,
     isFormbricksCloud: IS_FORMBRICKS_CLOUD,
     isDevelopment: IS_DEVELOPMENT,

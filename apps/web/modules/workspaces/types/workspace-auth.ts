@@ -4,21 +4,7 @@ import { TMembership, ZMembership } from "@formbricks/types/memberships";
 import { TOrganization, ZOrganization } from "@formbricks/types/organizations";
 import { TUser, ZUser } from "@formbricks/types/user";
 import { TWorkspace, ZWorkspace } from "@formbricks/types/workspace";
-import {
-  TEnterpriseLicenseFeatures,
-  TLicenseStatus,
-} from "@/modules/ee/license-check/types/enterprise-license";
 import { TTeamPermission, ZTeamPermission } from "@/modules/ee/teams/workspace-teams/types/team";
-
-// Type for the enterprise license returned by getEnterpriseLicense()
-type TEnterpriseLicense = {
-  active: boolean;
-  features: TEnterpriseLicenseFeatures | null;
-  lastChecked: Date;
-  isPendingDowngrade: boolean;
-  fallbackLevel: string;
-  status: TLicenseStatus;
-};
 
 export const ZWorkspaceAuth = z.object({
   workspace: ZWorkspace,
@@ -57,6 +43,5 @@ export type TWorkspaceLayoutData = {
   membership: TMembership;
   isAccessControlAllowed: boolean;
   workspacePermission: TTeamPermission | null;
-  license: TEnterpriseLicense;
   responseCount: number;
 };

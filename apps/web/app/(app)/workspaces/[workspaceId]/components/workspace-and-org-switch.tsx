@@ -10,10 +10,6 @@ interface WorkspaceAndOrgSwitchProps {
   currentWorkspaceId?: string;
   currentWorkspaceName?: string; // Optional: for pages without context
   isMultiOrgEnabled: boolean;
-  organizationWorkspacesLimit: number;
-  isFormbricksCloud: boolean;
-  isLicenseActive: boolean;
-  isNoLicense: boolean;
   isOwnerOrManager: boolean;
   isAccessControlAllowed: boolean;
   isMembershipPending: boolean;
@@ -29,10 +25,6 @@ export const WorkspaceAndOrgSwitch = ({
   currentWorkspaceId,
   currentWorkspaceName,
   isMultiOrgEnabled,
-  organizationWorkspacesLimit,
-  isFormbricksCloud,
-  isLicenseActive,
-  isNoLicense,
   isOwnerOrManager,
   isAccessControlAllowed,
   isMembershipPending,
@@ -58,10 +50,6 @@ export const WorkspaceAndOrgSwitch = ({
             currentWorkspaceName={currentWorkspaceName}
             currentOrganizationId={currentOrganizationId}
             isOwnerOrManager={isOwnerOrManager}
-            organizationWorkspacesLimit={organizationWorkspacesLimit}
-            isFormbricksCloud={isFormbricksCloud}
-            isLicenseActive={isLicenseActive}
-            isNoLicense={isNoLicense}
             isAccessControlAllowed={isAccessControlAllowed}
             isEnvironmentBreadcrumbVisible={false}
             isMembershipPending={isMembershipPending}

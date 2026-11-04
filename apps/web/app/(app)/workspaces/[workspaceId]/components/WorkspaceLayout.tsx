@@ -11,10 +11,8 @@ import { TrialResponseWarningModal } from "@/modules/ee/billing/components/trial
 import { CreativesAccessProvider } from "@/modules/ee/creatives/components/creatives-access-provider";
 import { getCreativesAccess } from "@/modules/ee/creatives/lib/access";
 import { isCreativesVisible } from "@/modules/ee/creatives/lib/access-rules";
-import { getPendingDowngradeSchedule } from "@/modules/ee/license-check/lib/license";
-import { getOrganizationWorkspacesLimit } from "@/modules/features/lib/flags";
+import { isGFormsFeatureEnabled } from "@/modules/features/lib/flags";
 import { LimitsReachedBanner } from "@/modules/ui/components/limits-reached-banner";
-import { PendingDowngradeBanner } from "@/modules/ui/components/pending-downgrade-banner";
 import { TWorkspaceLayoutData } from "@/modules/workspaces/types/workspace-auth";
 
 type TCookieStore = Awaited<ReturnType<typeof cookies>>;
@@ -70,23 +68,21 @@ export const WorkspaceLayout = async ({ layoutData, cookieStore, children }: Wor
     workspace, // Current workspace details
     isAccessControlAllowed,
     workspacePermission,
-    license,
     responseCount,
   } = layoutData;
 
   // Calculate derived values (no queries)
   const { isMember, isOwner, isManager } = getAccessFlags(membership.role);
 
-  const { features, lastChecked, isPendingDowngrade, active, status } = license;
-  const isMultiOrgEnabled = features?.isMultiOrgEnabled ?? false;
+  const isMultiOrgEnabled = isGFormsFeatureEnabled("multiOrg");
   const isTrialing = IS_FORMBRICKS_CLOUD && organization.billing?.stripe?.subscriptionStatus === "trialing";
   // Hobby (free) plan only — excludes trial and paid (Pro/Scale) orgs.
   const isHobby = IS_FORMBRICKS_CLOUD && organization.billing?.stripe?.plan === "hobby";
 
-  const [organizationWorkspacesLimit, creativesAccess] = await Promise.all([
-    getOrganizationWorkspacesLimit(organization.id),
-    getCreativesAccess({ organizationId: organization.id, workspaceId: workspace.id }),
-  ]);
+  const creativesAccess = await getCreativesAccess({
+    organizationId: organization.id,
+    workspaceId: workspace.id,
+  });
   const isOwnerOrManager = isOwner || isManager;
 
   // Validate that workspace permission exists for members
@@ -115,15 +111,6 @@ export const WorkspaceLayout = async ({ layoutData, cookieStore, children }: Wor
           <LimitsReachedBanner organization={organization} responseCount={responseCount} />
         )}
 
-        <PendingDowngradeBanner
-          organizationId={organization.id}
-          {...getPendingDowngradeSchedule(lastChecked)}
-          isPendingDowngrade={isPendingDowngrade ?? false}
-          active={active}
-          locale={user.locale}
-          status={status}
-        />
-
         {responseWarningThreshold && (
           <TrialResponseWarningModal
             threshold={responseWarningThreshold}
@@ -148,9 +135,6 @@ export const WorkspaceLayout = async ({ layoutData, cookieStore, children }: Wor
             isFormbricksCloud={IS_FORMBRICKS_CLOUD}
             isDevelopment={IS_DEVELOPMENT}
             membershipRole={membership.role}
-            organizationWorkspacesLimit={organizationWorkspacesLimit}
-            isLicenseActive={active}
-            isNoLicense={status === "no-license"}
             isAccessControlAllowed={isAccessControlAllowed}
             responseCount={responseCount}
             isFormbricksSurveysConfigured={IS_FORMBRICKS_SURVEYS_CONFIGURED}
@@ -161,10 +145,6 @@ export const WorkspaceLayout = async ({ layoutData, cookieStore, children }: Wor
             <TopControlBar
               currentOrganizationId={organization.id}
               isMultiOrgEnabled={isMultiOrgEnabled}
-              organizationWorkspacesLimit={organizationWorkspacesLimit}
-              isFormbricksCloud={IS_FORMBRICKS_CLOUD}
-              isLicenseActive={active}
-              isNoLicense={status === "no-license"}
               isOwnerOrManager={isOwnerOrManager}
               isAccessControlAllowed={isAccessControlAllowed}
               membershipRole={membership.role}

@@ -18,7 +18,6 @@ import { canUserNavigateWorkspace } from "@/lib/workspace/auth";
 import { getWorkspace } from "@/lib/workspace/service";
 import { getTranslate } from "@/lingodotdev/server";
 import { getSession } from "@/modules/auth/lib/session";
-import { getEnterpriseLicense } from "@/modules/ee/license-check/lib/license";
 import { getWorkspacePermissionByUserId } from "@/modules/ee/teams/lib/roles";
 import { getTeamPermissionFlags } from "@/modules/ee/teams/utils/teams";
 import { getAccessControlPermission } from "@/modules/features/lib/flags";
@@ -368,10 +367,9 @@ const resolveWorkspaceLayoutData = async (
     return notFound();
   }
 
-  const [isAccessControlAllowed, workspacePermission, license] = await Promise.all([
+  const [isAccessControlAllowed, workspacePermission] = await Promise.all([
     getAccessControlPermission(organization.id),
     getWorkspacePermissionByUserId(userId, workspace.id),
-    getEnterpriseLicense(),
   ]);
 
   let responseCount = 0;
@@ -393,7 +391,6 @@ const resolveWorkspaceLayoutData = async (
     membership,
     isAccessControlAllowed,
     workspacePermission,
-    license,
     responseCount,
   };
 };

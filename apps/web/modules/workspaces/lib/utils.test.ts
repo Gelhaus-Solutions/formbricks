@@ -10,7 +10,6 @@ import { getUser } from "@/lib/user/service";
 import { canUserNavigateWorkspace } from "@/lib/workspace/auth";
 import { getWorkspace } from "@/lib/workspace/service";
 import { getSession } from "@/modules/auth/lib/session";
-import { getEnterpriseLicense } from "@/modules/ee/license-check/lib/license";
 import { getWorkspacePermissionByUserId } from "@/modules/ee/teams/lib/roles";
 import { getAccessControlPermission } from "@/modules/features/lib/flags";
 import { getWorkspaceAuth, getWorkspaceLayoutData, workspaceIdLayoutChecks } from "./utils";
@@ -38,7 +37,6 @@ vi.mock("@/lib/workspace/auth", () => ({ canUserNavigateWorkspace: vi.fn() }));
 vi.mock("@formbricks/database", () => ({ prisma: { workspace: { findUnique: mocks.workspaceFindUnique } } }));
 vi.mock("@/lib/user/service", () => ({ getUser: vi.fn() }));
 vi.mock("@/modules/features/lib/flags", () => ({ getAccessControlPermission: vi.fn() }));
-vi.mock("@/modules/ee/license-check/lib/license", () => ({ getEnterpriseLicense: vi.fn() }));
 vi.mock("@/lib/organization/service", () => ({
   getOrganization: vi.fn(),
   getMonthlyOrganizationResponseCount: vi.fn(),
@@ -288,9 +286,6 @@ describe("layout navigation gates (ENG-1737)", () => {
       });
       vi.mocked(getAccessControlPermission).mockResolvedValue(false);
       vi.mocked(getWorkspacePermissionByUserId).mockResolvedValue("read");
-      vi.mocked(getEnterpriseLicense).mockResolvedValue({ active: false } as Awaited<
-        ReturnType<typeof getEnterpriseLicense>
-      >);
     });
 
     test("asks the navigation question about the resolved workspace and its organization", async () => {
