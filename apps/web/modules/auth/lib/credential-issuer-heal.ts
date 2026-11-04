@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@formbricks/database";
 import { logger } from "@formbricks/logger";
-import type { AuthHookContext } from "@/modules/ee/sso/lib/better-auth-hooks";
+import type { AuthHookContext } from "@/modules/auth/lib/auth-hook-context";
 
 /**
  * The `Account.issuer` a 1.7.0 pod expects on a credential row. Better Auth 1.7.3+ dropped the column from its

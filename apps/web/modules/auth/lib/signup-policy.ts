@@ -3,8 +3,8 @@ import { APIError } from "better-auth/api";
 import { SIGNUP_DISABLED_ERROR_CODE } from "@formbricks/types/errors";
 import { SIGNUP_ENABLED } from "@/lib/constants";
 import { getIsFreshInstance } from "@/lib/instance/service";
+import type { AuthHookContext } from "@/modules/auth/lib/auth-hook-context";
 import { isSignupDomainAllowed } from "@/modules/auth/lib/signup-request-context";
-import type { AuthHookContext } from "@/modules/ee/sso/lib/better-auth-hooks";
 import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 
 /**

@@ -10,8 +10,8 @@ import { DEFAULT_LOCALE } from "@/lib/constants";
 import { deleteOrganization, getOrganizationsWhereUserIsSingleOwner } from "@/lib/organization/service";
 import { capturePostHogEvent } from "@/lib/posthog";
 import { ACCOUNT_DELETION_SOLE_OWNER_BLOCK_MESSAGE } from "@/modules/account/constants";
+import type { AuthHookContext } from "@/modules/auth/lib/auth-hook-context";
 import { deleteBrevoCustomerByEmail } from "@/modules/auth/lib/brevo";
-import type { AuthHookContext } from "@/modules/ee/sso/lib/better-auth-hooks";
 import { sendAccountDeletedEmail } from "@/modules/email";
 import {
   activateEmailAuditErasureIntent,
