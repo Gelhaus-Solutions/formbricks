@@ -34,8 +34,6 @@ on:
         type: boolean
         default: false
     secrets:
-      AWS_ECR_PUSH_ROLE_ARN:
-        required: false
       DUMMY_DATABASE_URL:
         required: false
       DUMMY_ENCRYPTION_KEY:
@@ -52,8 +50,6 @@ on:
         required: false
       SENTRY_AUTH_TOKEN:
         required: false
-      POSTHOG_KEY:
-        required: false
     outputs:
       IMAGE_TAG:
         value: ${{ jobs.prepare.outputs.version }}
@@ -66,11 +62,11 @@ on:
       IMAGE_REF:
         value: ${{ jobs.merge.outputs.image }}
 
-# Build and merge inherit the caller's scoped permissions: ECR needs id-token: write,
-# GHCR needs packages: write. Preparation only needs repository reads.
+# Build and merge inherit the caller's scoped permissions: GHCR needs packages: write.
+# Preparation only needs repository reads.
 
 env:
-  CANDIDATE_TAG: blacksmith-candidate-${{ inputs.registry_type }}-${{ github.run_id }}-${{ github.run_attempt }}
+  CANDIDATE_TAG: candidate-${{ inputs.registry_type }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   prepare:
@@ -106,15 +102,10 @@ jobs:
           deployment_tag: ${{ inputs.deployment_tag }}
           is_prerelease: ${{ inputs.is_prerelease }}
           make_latest: ${{ inputs.make_latest }}
-          ecr_registry: ${{ vars.ECR_REGISTRY }}
-          ecr_repository: ${{ vars.ECR_REPOSITORY }}
-          ecr_region: ${{ vars.ECR_REGION }}
-          aws_role_arn: ${{ secrets.AWS_ECR_PUSH_ROLE_ARN }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
           # Identity only needs presence; keep the upload credential in the build job.
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN != '' && 'enabled' || '' }}
-          POSTHOG_KEY: ${{ inputs.registry_type == 'ecr' && secrets.POSTHOG_KEY || '' }}
 
       - name: Identify candidate repository and tags
         id: candidate
@@ -142,17 +133,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # GitHub's hosted runners (4 vCPU for a public repository), native per architecture.
           - arch: amd64
             machine: x86_64
-            runner: blacksmith-16vcpu-ubuntu-2404
+            runner: ubuntu-24.04
             node_build_jobs: 4
           - arch: arm64
             machine: aarch64
-            runner: blacksmith-32vcpu-ubuntu-2404-arm
-            node_build_jobs: 32
+            runner: ubuntu-24.04-arm
+            node_build_jobs: 4
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -166,16 +161,12 @@ jobs:
       - uses: ./.github/actions/image-registry-login
         with:
           registry_type: ${{ inputs.registry_type }}
-          ecr_region: ${{ vars.ECR_REGION }}
-          aws_role_arn: ${{ secrets.AWS_ECR_PUSH_ROLE_ARN }}
-      - uses: useblacksmith/setup-docker-builder@19215110ab936351210feebdfa5b440b4493e184 # v2.2.0
-        with:
-          # Preserve the validated trial caches at cutover. PR builds use separate keys.
-          cache-key: apps/web/Dockerfile-blacksmith-trial-${{ matrix.arch }}
-          nofallback: true
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # The Node runtime is compiled from source in the Dockerfile, so the layer cache is what keeps a
+      # release build inside the timeout. One GitHub Actions cache scope per architecture.
       - name: Build native candidate
         id: build
-        uses: useblacksmith/build-push-action@9b0579bbec7a6cad2f171596c57e7ac1e7658850 # v2.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: apps/web/Dockerfile
@@ -184,6 +175,8 @@ jobs:
           push: true
           tags: ${{ env.CANDIDATE_REPOSITORY }}:${{ env.CANDIDATE_TAG }}-${{ matrix.arch }}
           labels: ${{ needs.prepare.outputs.labels }}
+          cache-from: type=gha,scope=web-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=web-${{ matrix.arch }}
           build-args: |
             NODE_BUILD_JOBS=${{ matrix.node_build_jobs }}
             FORMBRICKS_DEPLOYMENT_ID=${{ needs.prepare.outputs.identity }}
@@ -198,12 +191,6 @@ jobs:
             cubejs_api_url=${{ secrets.DUMMY_CUBEJS_API_URL }}
             cubejs_api_secret=${{ secrets.DUMMY_CUBEJS_API_SECRET }}
             sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
-            posthog_key=${{ inputs.registry_type == 'ecr' && secrets.POSTHOG_KEY || '' }}
-      - name: Bound persistent build cache
-        if: ${{ !cancelled() && (steps.build.outcome == 'success' || steps.build.outcome == 'failure') }}
-        run: |
-          docker buildx prune --force --max-used-space 30gb
-          docker buildx du >> "$GITHUB_STEP_SUMMARY"
 
   merge:
     needs: [prepare, build]
@@ -225,8 +212,6 @@ jobs:
       - uses: ./.github/actions/image-registry-login
         with:
           registry_type: ${{ inputs.registry_type }}
-          ecr_region: ${{ vars.ECR_REGION }}
-          aws_role_arn: ${{ secrets.AWS_ECR_PUSH_ROLE_ARN }}
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Assemble multi-platform candidate
         id: merge

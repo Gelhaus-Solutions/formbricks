@@ -1,4 +1,4 @@
-name: Build, release & deploy Formbricks images
+name: Build and release GForms images
 
 on:
   release:
@@ -17,7 +17,7 @@ jobs:
     outputs:
       is_latest: ${{ steps.compare_tags.outputs.is_latest }}
     # Decides whether this release was marked "Set as the latest release" by asking the GitHub API
-    # for its isLatest flag. is_latest promotes GHCR :latest, ECR :production and the stable tag,
+    # for its isLatest flag. is_latest promotes GHCR :latest and the stable tag,
     # so the script grants it only on a well-formed answer: an API error or a malformed response
     # fails this job, which holds back the rest of the release until it is re-run, instead of
     # defaulting either way.
@@ -76,7 +76,7 @@ jobs:
           DOCKER_CONFIG="$(mktemp -d)"
           export DOCKER_CONFIG
           if ! docker manifest inspect "$image" > /dev/null; then
-            echo "::error::$image cannot be pulled without credentials. Publish it with cube-image.yml and make the formbricks/cube package public, then re-run this release."
+            echo "::error::$image cannot be pulled without credentials. Publish it with cube-image.yml and make the gforms-cube package public, then re-run this release."
             exit 1
           fi
           echo "$image is publicly pullable."
@@ -106,22 +106,7 @@ jobs:
     needs:
       - docker-build-community
     with:
-      image_ref: ghcr.io/${{ github.repository }}@${{ needs.docker-build-community.outputs.IMAGE_DIGEST }}
-
-  docker-build-cloud:
-    name: Build & push Formbricks Cloud to ECR
-    permissions:
-      contents: read
-      id-token: write
-    uses: ./.github/workflows/build-and-push-ecr.yml
-    secrets: inherit
-    with:
-      image_tag: ${{ needs.docker-build-community.outputs.VERSION }}
-      IS_PRERELEASE: ${{ github.event.release.prerelease }}
-      MAKE_LATEST: ${{ needs.check-latest-release.outputs.is_latest == 'true' }}
-    needs:
-      - check-latest-release
-      - docker-build-community
+      image_ref: ghcr.io/gelhaus-solutions/gforms@${{ needs.docker-build-community.outputs.IMAGE_DIGEST }}
 
   helm-chart-release:
     name: Release Helm Chart
@@ -136,30 +121,6 @@ jobs:
       APP_VERSION: ${{ needs.docker-build-community.outputs.VERSION }}
       VERSION: ${{ needs.docker-build-community.outputs.VERSION }}
 
-  verify-cloud-build:
-    name: Verify Cloud Build Outputs
-    runs-on: ubuntu-latest
-    timeout-minutes: 5 # Simple verification should be quick
-    needs:
-      - docker-build-cloud
-    steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
-        with:
-          egress-policy: audit
-
-      - name: Display ECR build outputs
-        env:
-          IMAGE_TAG: ${{ needs.docker-build-cloud.outputs.IMAGE_TAG }}
-          TAGS: ${{ needs.docker-build-cloud.outputs.TAGS }}
-        run: |
-          set -euo pipefail
-
-          echo "✅ ECR Build Completed Successfully"
-          echo "Image Tag: ${IMAGE_TAG}"
-          echo "ECR Tags:"
-          printf '%s\n' "${TAGS}"
-
   move-stable-tag:
     name: Move stable tag to release
     permissions:
@@ -173,163 +134,3 @@ jobs:
       commit_sha: ${{ github.sha }}
       is_prerelease: ${{ github.event.release.prerelease }}
       make_latest: ${{ needs.check-latest-release.outputs.is_latest == 'true' }}
-
-  update-helm-app-version:
-    name: Create Helm app version update
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs:
-      - docker-build-community
-      - helm-chart-release
-    if: ${{ !github.event.release.prerelease }}
-    permissions:
-      contents: read
-    steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout main
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: main
-          persist-credentials: false
-
-      - name: Install YQ
-        uses: dcarbone/install-yq-action@4075b4dca348d74bd83f2bf82d30f25d7c54539b # v1.3.1
-
-      - name: Prepare Helm app version update
-        id: update
-        env:
-          VERSION: ${{ needs.docker-build-community.outputs.VERSION }}
-        run: |
-          set -euo pipefail
-
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Skipping Helm app version source update for non-stable version: ${VERSION}"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          yq -i ".appVersion = \"${VERSION}\"" charts/formbricks/Chart.yaml
-          perl -0pi -e "s/!\[Version: [^\]]+\]/![Version: ${VERSION}]/" charts/formbricks/README.md
-          perl -0pi -e "s/Version-[0-9A-Za-z._+-]+-informational/Version-${VERSION}-informational/" charts/formbricks/README.md
-          perl -0pi -e "s/!\[AppVersion: [^\]]+\]/![AppVersion: ${VERSION}]/" charts/formbricks/README.md
-          perl -0pi -e "s/AppVersion-[0-9A-Za-z._+-]+-informational/AppVersion-${VERSION}-informational/" charts/formbricks/README.md
-
-          if git diff --quiet -- charts/formbricks/Chart.yaml charts/formbricks/README.md; then
-            echo "Helm chart appVersion already matches ${VERSION}"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-
-      - name: Validate Helm update PR app configuration
-        if: steps.update.outputs.changed == 'true'
-        env:
-          APP_CLIENT_ID: ${{ vars.HELM_APP_VERSION_PR_APP_CLIENT_ID }}
-          APP_PRIVATE_KEY: ${{ secrets.HELM_APP_VERSION_PR_APP_PRIVATE_KEY }}
-        run: |
-          set -euo pipefail
-
-          if [[ -z "$APP_CLIENT_ID" || -z "$APP_PRIVATE_KEY" ]]; then
-            echo "::error::Configure HELM_APP_VERSION_PR_APP_CLIENT_ID as a repository variable and HELM_APP_VERSION_PR_APP_PRIVATE_KEY as a repository secret."
-            exit 1
-          fi
-
-      - name: Create GitHub App token for Helm update PR
-        id: helm-update-pr-token
-        if: steps.update.outputs.changed == 'true'
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        with:
-          client-id: ${{ vars.HELM_APP_VERSION_PR_APP_CLIENT_ID }}
-          private-key: ${{ secrets.HELM_APP_VERSION_PR_APP_PRIVATE_KEY }}
-          permission-contents: write
-          permission-pull-requests: write
-
-      - name: Create Helm app version PR
-        if: steps.update.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ steps.helm-update-pr-token.outputs.token }}
-          VERSION: ${{ needs.docker-build-community.outputs.VERSION }}
-          APP_SLUG: ${{ steps.helm-update-pr-token.outputs.app-slug }}
-        run: |
-          set -euo pipefail
-
-          branch="chore/update-helm-app-version-${VERSION}"
-          title="chore: update Helm app version to ${VERSION}"
-          body_file="$(mktemp)"
-          app_user_id="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
-
-          gh auth setup-git
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${app_user_id}+${APP_SLUG}[bot]@users.noreply.github.com"
-          git checkout -B "$branch"
-          git add charts/formbricks/Chart.yaml charts/formbricks/README.md
-          git commit -m "$title"
-          git push --force-with-lease origin "$branch"
-
-          cat > "$body_file" <<EOF
-          Updates the Helm chart default app version after publishing stable Formbricks release ${VERSION}.
-
-          Release candidates and pre-releases do not create this source update.
-          EOF
-
-          if gh pr view "$branch" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh pr edit "$branch" --repo "$GITHUB_REPOSITORY" --title "$title" --body-file "$body_file" --base main
-          else
-            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" --title "$title" --body-file "$body_file"
-          fi
-
-  linear-release-complete:
-    name: Mark Linear release as complete
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    # Published artifacts only, and only jobs that always run for a stable release.
-    #
-    # update-helm-app-version opens a follow-up PR against main rather than publishing
-    # anything for this tag, so gating completion on it left Linear stuck on every stable
-    # release its appVersion PR job failed.
-    #
-    # move-stable-tag is excluded for a subtler reason: its called job is gated on
-    # `!is_prerelease && make_latest`, so it is legitimately skipped for any stable release
-    # that is not the latest - every patch on an older line. A skipped dependency skips this
-    # job too, so depending on it would keep Linear stuck on exactly those releases.
-    needs:
-      - docker-build-community
-      - docker-build-cloud
-      - helm-chart-release
-    if: ${{ !github.event.release.prerelease }}
-    steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      # A versioned sync targets the release carrying this exact version, or creates it when
-      # none exists - which is what makes patch releases work, since 5.3.4 never had a
-      # planned train of its own. complete then looks that exact version up; it never
-      # assigns one, so the sync has to run first.
-      #
-      # VERSION is this release's tag with any v-prefix stripped and validated as SemVer by
-      # release-docker-github.yml. Using the raw tag_name instead would silently create a
-      # second, v-prefixed Linear release the first time somebody tags v5.6.0.
-      - name: Stamp Linear release version
-        uses: linear/linear-release-action@30f9ae77461ec29f07fffe0c52edd1909bfbb6f5 # v0.18.1
-        with:
-          access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
-          version: ${{ needs.docker-build-community.outputs.VERSION }}
-
-      - name: Complete Linear release
-        uses: linear/linear-release-action@30f9ae77461ec29f07fffe0c52edd1909bfbb6f5 # v0.18.1
-        with:
-          access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
-          command: complete
-          version: ${{ needs.docker-build-community.outputs.VERSION }}

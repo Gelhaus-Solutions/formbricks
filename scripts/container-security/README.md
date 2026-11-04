@@ -12,15 +12,15 @@ review and normal CI remain required. A newer tag is not proof that a CVE is fix
 node scripts/container-security/inventory.mjs /tmp/images.json # Helm and js-yaml required
 SCAN_ENTRY='{"image":"postgres:17-alpine","sources":["manual"]}' \
   node scripts/container-security/scan.mjs /tmp/container-reports/postgres
-GITHUB_REPOSITORY=formbricks/formbricks node scripts/container-security/sync.mjs \
+GITHUB_REPOSITORY=gelhaus-solutions/formbricks node scripts/container-security/sync.mjs \
   /tmp/images.json /tmp/container-reports --dry-run
 pnpm test:root -- scripts/container-security/container-security.test.ts
 ```
 
 The dry run will report an incomplete inventory unless every discovered image has a result. Without a
 Linear key it previews creation only; with a key it also reads existing tickets to preview reconciliation.
-The workflow's manual trigger defaults to dry run. Scheduled runs write tickets. Only main's scheduled
-or manual workflow may write; no PR workflow receives Linear credentials.
+In GForms the workflow always runs the dry run and writes its findings to the job summary; it holds no
+Linear credentials and writes no tickets.
 
 ## Scanning and tickets
 

@@ -171,7 +171,7 @@ describe("release promotion boundary", () => {
       });
       expect(result.status, result.stderr).toBe(0);
       expect(readFileSync(output, "utf8")).toBe(
-        "tags<<EOF\nghcr.io/formbricks/deployment-check:6.1.2\nghcr.io/formbricks/deployment-check:latest\nEOF\n"
+        "tags<<EOF\nghcr.io/gelhaus-solutions/gforms-deployment-check:6.1.2\nghcr.io/gelhaus-solutions/gforms-deployment-check:latest\nEOF\n"
       );
       expect(evaluate(login.with!.registry, { ...inheritedEnv, ...login.env })).toBe("ghcr.io");
     } finally {
@@ -179,19 +179,17 @@ describe("release promotion boundary", () => {
     }
   });
 
-  test("keeps the Blacksmith trial opt-in and outside the publishing path", () => {
-    const experimental = workflow("release-docker-github-experimental");
-    expect(experimental.on?.workflow_dispatch?.inputs?.blacksmith_trial.default).toBe(false);
-    expect(experimental.jobs["blacksmith-trial"].if).toBe("inputs.blacksmith_trial");
-    expect(experimental.jobs["build-community-testing"].if).toBe("${{ !inputs.blacksmith_trial }}");
-    expect(experimental.jobs.validate.needs).toBe("build-community-testing");
-    expect(experimental.jobs.promote.needs).toContain("build-community-testing");
-
-    const trial = workflow("blacksmith-docker-trial");
-    expect(trial.permissions).toEqual({ contents: "read" });
-    const build = trial.jobs.build.steps.find((step) => step.id === "build");
-    expect(build?.with?.push).toBe(false);
-    expect(build?.with?.load).toBe(true);
+  test("builds each architecture natively on GitHub-hosted runners with a per-architecture cache", () => {
+    const { jobs } = workflow("build-docker-candidate");
+    const build = jobs.build.steps.find((step) => step.name === "Build native candidate");
+    expect(jobs.build.strategy?.matrix.include.map((entry) => entry.runner)).toEqual([
+      "ubuntu-24.04",
+      "ubuntu-24.04-arm",
+    ]);
+    expect(jobs.build.steps[0].uses).toMatch(/^step-security\/harden-runner@/);
+    expect(build?.uses).toMatch(/^docker\/build-push-action@/);
+    expect(build?.with?.["cache-from"]).toBe("type=gha,scope=web-${{ matrix.arch }}");
+    expect(build?.with?.["cache-to"]).toBe("type=gha,mode=max,scope=web-${{ matrix.arch }}");
   });
 
   test("uses run-specific tags in the selected release repository until validation", () => {
@@ -218,7 +216,7 @@ describe("release promotion boundary", () => {
     expect(jobs.prepare.outputs?.candidate_tag).toBe("${{ steps.candidate.outputs.tag }}");
   });
 
-  test.each(["build-and-push-ecr", "release-docker-github", "release-docker-github-experimental"])(
+  test.each(["release-docker-github", "release-docker-edge"])(
     "%s gates promotion on both native architectures testing the same digest",
     (name) => {
       const { jobs } = workflow(name);
@@ -311,10 +309,10 @@ describe("release promotion boundary", () => {
   test.each([
     ["registry.example:5000/app:6.1.0\nregistry.example:5000/app:production", "registry.example:5000/app"],
     [
-      "ghcr.io/formbricks/formbricks:6.1.0\nghcr.io/formbricks/formbricks:latest",
-      "ghcr.io/formbricks/formbricks",
+      "ghcr.io/gelhaus-solutions/gforms:6.1.0\nghcr.io/gelhaus-solutions/gforms:latest",
+      "ghcr.io/gelhaus-solutions/gforms",
     ],
-    ["ghcr.io/formbricks/formbricks-experimental:6.1.0-test", "ghcr.io/formbricks/formbricks-experimental"],
+    ["ghcr.io/gelhaus-solutions/gforms:edge", "ghcr.io/gelhaus-solutions/gforms"],
     ["", null],
     ["registry.example/app", null],
   ])("derives the candidate repository from intended release tags: %s", (tags, repository) => {
@@ -330,15 +328,13 @@ describe("release promotion boundary", () => {
         env: {
           PATH: process.env.PATH,
           RELEASE_TAGS: tags!,
-          CANDIDATE_TAG: "blacksmith-candidate-ghcr-123-1",
+          CANDIDATE_TAG: "candidate-ghcr-123-1",
           GITHUB_OUTPUT: output,
         },
       });
       expect(result.status).toBe(repository ? 0 : 1);
       if (repository)
-        expect(readFileSync(output, "utf8")).toBe(
-          `repository=${repository}\ntag=blacksmith-candidate-ghcr-123-1\n`
-        );
+        expect(readFileSync(output, "utf8")).toBe(`repository=${repository}\ntag=candidate-ghcr-123-1\n`);
       else expect(existsSync(output)).toBe(false);
     } finally {
       rmSync(directory, { recursive: true, force: true });
@@ -358,7 +354,7 @@ describe("release promotion boundary", () => {
       expect(logins).toHaveLength(1);
       expect(logins[0].with?.registry_type).toBe("${{ inputs.registry_type }}");
     }
-    for (const name of ["release-docker-github", "release-docker-github-experimental"]) {
+    for (const name of ["release-docker-github", "release-docker-edge"]) {
       const jobs = workflow(name).jobs;
       expect((jobs.build ?? jobs["build-community-testing"]).permissions).toEqual({
         contents: "read",
@@ -368,10 +364,6 @@ describe("release promotion boundary", () => {
       const smoke = jobs.validate.steps.find((step) => step.uses?.endsWith("/test-release-image"));
       expect(smoke?.with?.aws_role_arn).toBeUndefined();
     }
-    expect(workflow("build-and-push-ecr").jobs["build-and-push"].permissions).toEqual({
-      contents: "read",
-      "id-token": "write",
-    });
   });
 });
 

@@ -92,7 +92,8 @@ jobs:
       packages: write
     with:
       registry_type: ghcr
-      ghcr_image_name: ${{ github.repository }}
+      # GForms publishes under its own name, not the repository's (decision D7).
+      ghcr_image_name: gelhaus-solutions/gforms
       version: ${{ needs.resolve-version.outputs.VERSION }}
       is_prerelease: ${{ inputs.IS_PRERELEASE }}
       make_latest: ${{ inputs.MAKE_LATEST }}
@@ -139,11 +140,9 @@ jobs:
         env:
           VERSION: ${{ needs.build.outputs.IMAGE_TAG }}
           PROMOTE_LATEST: ${{ inputs.MAKE_LATEST && !inputs.IS_PRERELEASE }}
-          OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
-          # GHCR requires lower-case repository names.
-          image="${REGISTRY}/${OWNER,,}/deployment-check"
+          image="${REGISTRY}/gelhaus-solutions/gforms-deployment-check"
           {
             echo "tags<<EOF"
             echo "${image}:${VERSION}"

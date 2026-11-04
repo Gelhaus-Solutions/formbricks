@@ -10,7 +10,7 @@ on:
   workflow_call:
     inputs:
       image_ref:
-        description: "Image to scan, pinned by digest (e.g. ghcr.io/formbricks/formbricks@sha256:...)"
+        description: "Image to scan, pinned by digest (e.g. ghcr.io/gelhaus-solutions/gforms@sha256:...)"
         required: true
         type: string
 
@@ -45,7 +45,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ${{ inputs.image_ref || format('ghcr.io/{0}:latest', github.repository) }}
+          image-ref: ${{ inputs.image_ref || 'ghcr.io/gelhaus-solutions/gforms:latest' }}
           format: "sarif"
           output: "trivy-results.sarif"
           severity: "CRITICAL,HIGH,MEDIUM,LOW"

@@ -1,6 +1,6 @@
 name: Cube Image
 
-# Builds ghcr.io/formbricks/cube from docker/cube-image (see its README.md). Pull requests and the merge
+# Builds ghcr.io/gelhaus-solutions/gforms-cube from docker/cube-image (see its README.md). Pull requests and the merge
 # queue build it for amd64, gate it on Trivy and run the smoke test. Pushes to main and manual runs on
 # main also publish it for amd64 and arm64 under its immutable tag plus `latest`, and sign it with cosign.
 on:
@@ -37,7 +37,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  IMAGE: ghcr.io/formbricks/cube
+  IMAGE: ghcr.io/gelhaus-solutions/gforms-cube
 
 jobs:
   verify:
@@ -155,7 +155,7 @@ jobs:
         run: bash docker/cube-image/smoke-test.sh formbricks-cube:ci
 
   publish:
-    name: Publish ghcr.io/formbricks/cube
+    name: Publish ghcr.io/gelhaus-solutions/gforms-cube
     # Only from main: a manual run on another branch would publish unreviewed code under the real tag.
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: verify
@@ -265,7 +265,7 @@ jobs:
           DOCKER_CONFIG="$(mktemp -d)"
           export DOCKER_CONFIG
           if ! docker manifest inspect "$IMAGE:$TAG" > /dev/null; then
-            echo "::error::$IMAGE:$TAG cannot be pulled without credentials. Set the formbricks/cube package to public in its GitHub package settings, then re-run this job."
+            echo "::error::$IMAGE:$TAG cannot be pulled without credentials. Set the gforms-cube package to public in its GitHub package settings, then re-run this job."
             exit 1
           fi
 

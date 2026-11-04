@@ -1,0 +1,99 @@
+name: Edge Docker Image
+
+# Every push to main builds the app image, smoke-tests the same digest natively on amd64 and arm64, and
+# only then points ghcr.io/gelhaus-solutions/gforms:edge (plus `main` and a unique
+# 0.0.0-alpha-main-<timestamp> tag) at it. Versioned releases stay with formbricks-release.yml; edge is
+# for Gelhaus Solutions' own deploys (decision D7).
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Queue rather than cancel: a cancelled run could stop halfway through promotion, and a newer pending run
+# replaces an older pending one, so edge still ends on the latest main.
+concurrency:
+  group: edge-image
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build edge candidate
+    # A manual run on another branch would publish unreviewed code under the edge tag.
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/build-docker-candidate.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      registry_type: ghcr
+      ghcr_image_name: gelhaus-solutions/gforms
+      experimental_mode: true
+    secrets: inherit
+
+  validate:
+    name: Image smoke (${{ matrix.platform }})
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/test-release-image
+        with:
+          image_ref: ${{ needs.build.outputs.IMAGE_REF }}
+          build_identity: ${{ needs.build.outputs.BUILD_IDENTITY }}
+          registry_type: "ghcr"
+          platform: ${{ matrix.platform }}
+
+  promote:
+    name: Promote verified image to edge
+    needs: [build, validate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Add the edge tag
+        id: tags
+        shell: bash
+        env:
+          TAGS: ${{ needs.build.outputs.TAGS }}
+        run: |
+          set -euo pipefail
+          {
+            echo "tags<<EOF"
+            printf '%s\n' "$TAGS" | sed '/^$/d'
+            echo "ghcr.io/gelhaus-solutions/gforms:edge"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/promote-verified-image
+        with:
+          image_ref: ${{ needs.build.outputs.IMAGE_REF }}
+          registry_type: "ghcr"
+          release_tags: ${{ steps.tags.outputs.tags }}

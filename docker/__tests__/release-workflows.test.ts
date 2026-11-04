@@ -1,26 +1,17 @@
 import { load } from "js-yaml";
-import { readFileSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const workflowsDirectory = ".github/workflows";
-const linearSyncWorkflow = `${workflowsDirectory}/linear-release.yml`;
 const formbricksReleaseWorkflow = `${workflowsDirectory}/formbricks-release.yml`;
 const helmReleaseWorkflow = `${workflowsDirectory}/release-helm-chart.yml`;
-const linearSmokeWorkflow = `${workflowsDirectory}/linear-release-smoke.yml`;
-const linearCutWorkflow = `${workflowsDirectory}/linear-release-cut.yml`;
-const releaseWorkflows = [
-  linearSyncWorkflow,
-  formbricksReleaseWorkflow,
-  linearSmokeWorkflow,
-  linearCutWorkflow,
-];
-
-const linearAction = "linear/linear-release-action";
-const linearActionSha = "30f9ae77461ec29f07fffe0c52edd1909bfbb6f5";
-const linearActionVersion = "v0.18.1";
+const edgeWorkflow = `${workflowsDirectory}/release-docker-edge.yml`;
+const releaseWorkflows = [formbricksReleaseWorkflow, helmReleaseWorkflow, edgeWorkflow];
 const releasedVersion = "${{ needs.docker-build-community.outputs.VERSION }}";
 
 type WorkflowStep = {
@@ -30,15 +21,7 @@ type WorkflowStep = {
   name?: string;
   run?: string;
   uses?: string;
-  with?: {
-    "fetch-depth"?: number;
-    access_key?: string;
-    base_ref?: string;
-    command?: string;
-    dry_run?: string;
-    stage?: string;
-    version?: string;
-  };
+  with?: Record<string, string>;
 };
 
 type WorkflowInput = {
@@ -50,22 +33,20 @@ type WorkflowInput = {
 type WorkflowTriggers = {
   push?: { branches?: string[]; paths?: string[] };
   workflow_call?: { inputs?: Record<string, WorkflowInput> };
-  workflow_dispatch?: { inputs?: Record<string, WorkflowInput> };
-  pull_request?: unknown;
-  pull_request_target?: unknown;
+  workflow_dispatch?: { inputs?: Record<string, WorkflowInput> } | null;
 };
 
 type WorkflowJob = {
   if?: string;
-  needs?: string[];
+  needs?: string[] | string;
   outputs?: Record<string, string>;
   steps?: WorkflowStep[];
   uses?: string;
-  with?: Record<string, string>;
+  with?: Record<string, string | boolean>;
 };
 
 type Workflow = {
-  concurrency?: { group?: string; queue?: string; "cancel-in-progress"?: boolean };
+  concurrency?: { group?: string; "cancel-in-progress"?: boolean };
   jobs?: Record<string, WorkflowJob | undefined>;
   on?: WorkflowTriggers;
   // js-yaml 3 resolved the YAML 1.1 truthy key `on:` to boolean `true`; 4.x keeps it a string.
@@ -76,88 +57,40 @@ const readText = (relativePath: string): string => readFileSync(join(repositoryR
 
 const readWorkflow = (relativePath: string): Workflow => load(readText(relativePath)) as Workflow;
 
-const linearSteps = (workflow: Workflow, jobId: string): WorkflowStep[] =>
-  (workflow.jobs?.[jobId]?.steps ?? []).filter((step) => step.uses?.startsWith(`${linearAction}@`));
-
-const linearUses = (workflow: Workflow): string[] =>
-  Object.values(workflow.jobs ?? {})
-    .flatMap((job) => job?.steps ?? [])
-    .map((step) => step.uses)
-    .filter((uses): uses is string => uses?.startsWith(`${linearAction}@`) ?? false);
-
 describe("release workflows", () => {
   test.each(releaseWorkflows)("%s parses as YAML and declares jobs", (path) => {
     expect(Object.keys(readWorkflow(path).jobs ?? {})).not.toHaveLength(0);
   });
 
-  // Every use is checked, not just the first: formbricks-release.yml calls the action twice, so a
-  // `toContain` on the file text would let one correct use mask a second that had drifted.
-  test.each(releaseWorkflows)("pins every Linear release action use by commit SHA in %s", (path) => {
-    const uses = linearUses(readWorkflow(path));
-
-    expect(uses).not.toHaveLength(0);
-    expect(uses).toEqual(uses.map(() => `${linearAction}@${linearActionSha}`));
+  // GForms runs on GitHub's hosted runners and publishes to GHCR only (decision D7): no Formbricks
+  // Cloud ECR push, no Linear release tracking, no Helm app-version PR through a GitHub App.
+  test("releases only through GHCR, the Helm chart and the stable tag", () => {
+    expect(Object.keys(readWorkflow(formbricksReleaseWorkflow).jobs ?? {}).sort()).toEqual([
+      "check-cube-image",
+      "check-latest-release",
+      "docker-build-community",
+      "helm-chart-release",
+      "move-stable-tag",
+      "scan-community-image",
+    ]);
   });
 
-  // Separate from the pin above so a drifted annotation and a drifted pin fail distinguishably, and
-  // counted so one annotated line cannot vouch for an unannotated sibling. The annotation is worth
-  // asserting at all because this repo ran a v0.7.0 pin under a comment describing v0.15.1
-  // behaviour for months, which is the drift that hid the bug these tests guard.
-  test.each(releaseWorkflows)("annotates every pin with its release tag in %s", (path) => {
-    const annotated = readText(path).split(`${linearAction}@${linearActionSha} # ${linearActionVersion}`);
-
-    expect(annotated).toHaveLength(linearUses(readWorkflow(path)).length + 1);
-  });
-
-  test("uses no other ref of the Linear release action across the workflows", () => {
+  test("references no Linear action, AWS credential or Blacksmith runner in any workflow", () => {
     const directory = join(repositoryRoot, workflowsDirectory);
-    const pattern = new RegExp(`${linearAction}@(\\S+)`, "g");
-    const refs = readdirSync(directory)
+    const offenders = readdirSync(directory)
       .filter((entry) => entry.endsWith(".yml") || entry.endsWith(".yaml"))
-      .flatMap((entry) => [...readFileSync(join(directory, entry), "utf8").matchAll(pattern)])
-      .map((match) => match[1]);
+      .filter((entry) => entry !== "docker-build-validation.yml")
+      .filter((entry) =>
+        /linear\/linear-release-action|aws-actions\/|AWS_ECR_PUSH_ROLE_ARN|blacksmith-\d+vcpu/.test(
+          readFileSync(join(directory, entry), "utf8")
+        )
+      );
 
-    expect([...new Set(refs)]).toEqual([linearActionSha]);
+    expect(offenders).toEqual([]);
   });
 
-  test("completes the Linear release once the published artifacts are out", () => {
-    const needs = readWorkflow(formbricksReleaseWorkflow).jobs?.["linear-release-complete"]?.needs;
-
-    expect(needs).toEqual(
-      expect.arrayContaining(["docker-build-community", "docker-build-cloud", "helm-chart-release"])
-    );
-    // Exactly three, so a future non-publishing dependency cannot slip in and reintroduce the
-    // bug from a direction the named exclusions below do not anticipate.
-    expect(needs).toHaveLength(3);
-    // Neither of these publishes anything for the released tag, and a skipped or failed
-    // dependency skips this job, so either one gates Linear completion on unrelated work:
-    // update-helm-app-version opens a follow-up PR against main and fails without its
-    // credentials, and move-stable-tag is skipped by design for any stable release that is
-    // not the latest - i.e. every patch on an older line.
-    expect(needs).not.toContain("update-helm-app-version");
-    expect(needs).not.toContain("move-stable-tag");
-  });
-
-  // The smoke job holds a pipeline-mutating Linear key, so it must only ever run main's copy of
-  // itself. Any path that executes a branch's copy - a pull request, or a dispatch aimed at that
-  // ref - would let whoever pushed it drop dry_run or add an exfiltration step.
-  test("only ever runs the credentialed smoke dry-run from main", () => {
-    const workflow = readWorkflow(linearSmokeWorkflow);
-    const triggers = workflow.on ?? workflow.true;
-
-    expect(triggers).not.toHaveProperty("pull_request");
-    expect(triggers).not.toHaveProperty("pull_request_target");
-    expect(triggers?.push?.branches).toEqual(["main"]);
-    // Required, not incidental: dispatch is the only way to check the pipeline between release
-    // flow changes, and dropping it would quietly remove that without failing anything else.
-    expect(triggers).toHaveProperty("workflow_dispatch");
-    // workflow_dispatch runs the file as it exists on the caller's chosen ref, so the trigger
-    // list alone is not enough - the job itself has to refuse any ref but main.
-    expect(workflow.jobs?.["linear-release-smoke"]?.if).toBe("github.ref == 'refs/heads/main'");
-  });
-
-  // is_latest promotes GHCR :latest, ECR :production and the stable tag. The script is what fails
-  // closed on an API error (ENG-2927), so the decision has to go through it and nowhere else.
+  // is_latest promotes GHCR :latest and the stable tag. The script is what fails closed on an API
+  // error, so the decision has to go through it and nowhere else.
   test("decides latest-release promotion only through the fail-closed script", () => {
     const jobs = readWorkflow(formbricksReleaseWorkflow).jobs;
     const steps = jobs?.["check-latest-release"]?.steps ?? [];
@@ -178,15 +111,15 @@ describe("release workflows", () => {
     expect(decide?.if).toBe("${{ !github.event.release.prerelease }}");
 
     expect(jobs?.["docker-build-community"]?.with?.MAKE_LATEST).toBe(promote);
-    expect(jobs?.["docker-build-cloud"]?.with?.MAKE_LATEST).toBe(promote);
     expect(jobs?.["move-stable-tag"]?.with?.make_latest).toBe(promote);
   });
 
-  test("stamps the released version on Linear before completing the release", () => {
-    const steps = linearSteps(readWorkflow(formbricksReleaseWorkflow), "linear-release-complete");
+  test("scans the GForms image by the digest the release built", () => {
+    const scan = readWorkflow(formbricksReleaseWorkflow).jobs?.["scan-community-image"];
 
-    expect(steps.map((step) => step.with?.version)).toEqual([releasedVersion, releasedVersion]);
-    expect(steps.map((step) => step.with?.command)).toEqual([undefined, "complete"]);
+    expect(scan?.with?.image_ref).toBe(
+      "ghcr.io/gelhaus-solutions/gforms@${{ needs.docker-build-community.outputs.IMAGE_DIGEST }}"
+    );
   });
 
   test("can publish a chart patch without inventing a new application image", () => {
@@ -194,12 +127,10 @@ describe("release workflows", () => {
     const triggers = workflow.on ?? workflow.true;
     const reusableInputs = triggers?.workflow_call?.inputs;
     const manualInputs = triggers?.workflow_dispatch?.inputs;
-    const updateStep = workflow.jobs?.publish?.steps?.find(
-      (step) => step.name === "Update Chart.yaml with new version"
-    );
-    const imageStep = workflow.jobs?.publish?.steps?.find(
-      (step) => step.name === "Validate default Formbricks image tag"
-    );
+    const steps = workflow.jobs?.publish?.steps ?? [];
+    const updateStep = steps.find((step) => step.name === "Update Chart.yaml with new version");
+    const imageStep = steps.find((step) => step.name === "Validate default GForms image tag");
+    const pushStep = steps.find((step) => step.name === "Push Helm chart to GitHub Container Registry");
 
     expect(reusableInputs?.VERSION?.required).toBe(true);
     expect(reusableInputs?.APP_VERSION?.required).toBe(true);
@@ -207,121 +138,54 @@ describe("release workflows", () => {
     expect(manualInputs?.APP_VERSION?.required).toBe(true);
     expect(updateStep?.run).toContain('yq -i ".version = \\"${VERSION}\\""');
     expect(updateStep?.run).toContain('yq -i ".appVersion = \\"${APP_VERSION}\\""');
-    expect(imageStep?.run).toContain("formbricks/formbricks:${APP_VERSION}");
+    expect(imageStep?.run).toContain('expected_image="ghcr.io/gelhaus-solutions/gforms:${APP_VERSION}"');
+    expect(pushStep?.run).toContain("oci://ghcr.io/gelhaus-solutions/helm-charts");
 
     expect(readWorkflow(formbricksReleaseWorkflow).jobs?.["helm-chart-release"]?.with).toMatchObject({
       APP_VERSION: releasedVersion,
       VERSION: releasedVersion,
     });
   });
+});
 
-  test("skips the Linear completion for prereleases", () => {
-    expect(readWorkflow(formbricksReleaseWorkflow).jobs?.["linear-release-complete"]?.if).toBe(
-      "${{ !github.event.release.prerelease }}"
-    );
-  });
-
-  test("keeps the unversioned Linear sync on pushes to main", () => {
-    const workflow = readWorkflow(linearSyncWorkflow);
-    const checkout = workflow.jobs?.["linear-release"]?.steps?.find((step) =>
-      step.uses?.startsWith("actions/checkout@")
-    );
-
-    expect((workflow.on ?? workflow.true)?.push?.branches).toContain("main");
-    expect(checkout?.with?.["fetch-depth"]).toBe(0);
-    // No version input: this train is the started release that `command: complete` later looks up.
-    expect(linearSteps(workflow, "linear-release").map((step) => step.with?.version)).toEqual([undefined]);
-  });
-
-  // The cut workflow holds the same pipeline-mutating key as the smoke job, and unlike the smoke
-  // job it runs on branches anyone with push access can create.
-  test("only runs the release-cut sync on release branches and dispatches from main", () => {
-    const workflow = readWorkflow(linearCutWorkflow);
+describe("edge image", () => {
+  test("builds from main only and never cancels a run halfway through promotion", () => {
+    const workflow = readWorkflow(edgeWorkflow);
     const triggers = workflow.on ?? workflow.true;
 
-    expect(triggers).not.toHaveProperty("pull_request");
-    expect(triggers).not.toHaveProperty("pull_request_target");
-    expect(triggers?.push?.branches).toEqual(["release/**"]);
-    expect(triggers).toHaveProperty("workflow_dispatch");
-    expect(workflow.jobs?.["linear-release-cut"]?.if).toBe("github.event_name == 'push'");
-    expect(workflow.jobs?.["linear-release-dispatch"]?.if).toBe(
-      "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'"
-    );
+    expect(triggers?.push?.branches).toEqual(["main"]);
+    expect(workflow.jobs?.build?.if).toBe("github.ref == 'refs/heads/main'");
+    expect(workflow.jobs?.build?.with).toMatchObject({
+      registry_type: "ghcr",
+      ghcr_image_name: "gelhaus-solutions/gforms",
+      experimental_mode: true,
+    });
+    expect(workflow.concurrency).toEqual({ group: "edge-image", "cancel-in-progress": false });
   });
 
-  // Every run writes a scan baseline to the same pipeline. The default single-slot queue cancels
-  // an older pending run when a newer one arrives, which for a pending cut means its freeze,
-  // create and start never happen; max keeps every run and serialises them.
-  test("serialises every Linear mutation in one queue that drops nothing", () => {
-    const concurrency = readWorkflow(linearCutWorkflow).concurrency;
+  test("adds the edge tag to the validated candidate's tags", () => {
+    const promote = readWorkflow(edgeWorkflow).jobs?.promote;
+    const tagStep = promote?.steps?.find((step) => step.id === "tags");
+    const promoteStep = promote?.steps?.find((step) => step.uses?.endsWith("/promote-verified-image"));
+    const directory = mkdtempSync(join(tmpdir(), "edge-tags-"));
+    const output = join(directory, "output");
+    try {
+      const result = spawnSync("/bin/bash", ["-c", tagStep!.run!], {
+        encoding: "utf8",
+        env: {
+          PATH: process.env.PATH,
+          GITHUB_OUTPUT: output,
+          TAGS: "ghcr.io/gelhaus-solutions/gforms:main\nghcr.io/gelhaus-solutions/gforms:0.0.0-alpha-main-1\n",
+        },
+      });
 
-    expect(concurrency?.group).toBe("linear-release-cut");
-    expect(concurrency?.queue).toBe("max");
-    // Omitted and explicit false are the same behaviour; only true is disallowed with queue: max.
-    expect(concurrency?.["cancel-in-progress"] ?? false).toBe(false);
-  });
-
-  // The dispatch form cannot express "stage is required only for update"; the action fails on
-  // that combination with a less helpful message, so the job rejects it first.
-  test("rejects a dispatch with a malformed version or an update without a stage", () => {
-    const steps = readWorkflow(linearCutWorkflow).jobs?.["linear-release-dispatch"]?.steps ?? [];
-    const validateIndex = steps.findIndex((step) => step.name === "Validate the inputs");
-    const actionIndex = steps.findIndex((step) => step.uses?.startsWith(`${linearAction}@`));
-
-    expect(steps[validateIndex]?.run).toContain("^[0-9]+\\.[0-9]+\\.[0-9]+$");
-    expect(steps[validateIndex]?.run).toContain('"$COMMAND" == "update" && -z "$STAGE"');
-    // Validation has to precede the credentialed step, not follow it.
-    expect(validateIndex).toBeGreaterThanOrEqual(0);
-    expect(validateIndex).toBeLessThan(actionIndex);
-  });
-
-  // release/6.0 ships as 6.0.0, 6.0.1, ...; a release called "6.0" is the minor-only record
-  // ENG-2475 had to cancel. The branch name is also untrusted input to a credentialed job.
-  test("derives the train from a strictly validated release branch name", () => {
-    const derive = readWorkflow(linearCutWorkflow).jobs?.["linear-release-cut"]?.steps?.find(
-      (step) => step.id === "train"
-    );
-
-    expect(derive?.run).toContain("^[0-9]+\\.[0-9]+$");
-    expect(derive?.run).toContain("exit 1");
-    // Stable tags only, so RC tags on the branch do not stop the stabilisation sync early.
-    expect(derive?.run).toContain('\\.[0-9]+$"');
-  });
-
-  // Order matters: the outgoing train must be frozen before the next one is started, or the
-  // unversioned main sync has two started releases to pick from. base_ref on the creating
-  // sync is what keeps the frozen train's commits out of the new one.
-  test("freezes the cut train, then creates and starts the next one, then syncs stabilisation", () => {
-    const steps = linearSteps(readWorkflow(linearCutWorkflow), "linear-release-cut");
-    const current = "${{ steps.train.outputs.current }}";
-    const next = "${{ steps.train.outputs.next }}";
-
-    expect(steps.map((step) => step.with?.command)).toEqual(["update", undefined, "update", undefined]);
-    expect(steps.map((step) => step.with?.stage)).toEqual([
-      "Code Freeze",
-      undefined,
-      "In Progress",
-      undefined,
-    ]);
-    expect(steps.map((step) => step.with?.version)).toEqual([current, next, next, current]);
-    expect(steps[1]?.with?.base_ref).toBe("${{ github.sha }}");
-    expect(steps.slice(0, 3).map((step) => step.if)).toEqual(Array(3).fill("github.event.created"));
-    expect(steps[3]?.if).toBe("${{ !github.event.created && steps.train.outputs.shipped == 'false' }}");
-  });
-
-  test("dry-runs the cut steps in the smoke canary and re-runs it when the cut workflow changes", () => {
-    const workflow = readWorkflow(linearSmokeWorkflow);
-    const steps = linearSteps(workflow, "linear-release-smoke");
-
-    expect((workflow.on ?? workflow.true)?.push?.paths).toContain(linearCutWorkflow);
-    expect(steps.map((step) => step.with?.dry_run)).toEqual(Array(steps.length).fill("true"));
-    // Bound per step, so `Code Freeze` on a sync or `base_ref` on an update cannot satisfy this.
-    const configs = steps.map((step) => ({
-      command: step.with?.command,
-      stage: step.with?.stage,
-      baseRef: step.with?.base_ref,
-    }));
-    expect(configs).toContainEqual({ command: "update", stage: "Code Freeze", baseRef: undefined });
-    expect(configs).toContainEqual({ command: undefined, stage: undefined, baseRef: "${{ github.sha }}" });
+      expect(result.status, result.stderr).toBe(0);
+      expect(readFileSync(output, "utf8")).toBe(
+        "tags<<EOF\nghcr.io/gelhaus-solutions/gforms:main\nghcr.io/gelhaus-solutions/gforms:0.0.0-alpha-main-1\nghcr.io/gelhaus-solutions/gforms:edge\nEOF\n"
+      );
+      expect(promoteStep?.with?.release_tags).toBe("${{ steps.tags.outputs.tags }}");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

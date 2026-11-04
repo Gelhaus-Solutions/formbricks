@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: "30 3 * * *"
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: "Scan and report without changing Linear tickets"
-        type: boolean
-        default: true
 
 permissions:
   contents: read
@@ -152,12 +147,10 @@ jobs:
         with:
           pattern: container-scan-*
           path: reports
-      - name: Reconcile critical/high vulnerabilities with Linear
-        env:
-          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
-          LINEAR_ACCESS_KEY: ${{ secrets.LINEAR_ACCESS_KEY }}
-          DRY_RUN: ${{ inputs.dry_run || false }}
+      # GForms keeps no ticket tracker in CI: the sync runs as a dry run and its findings land in the
+      # job summary. It still fails the run on an incomplete inventory.
+      - name: Report critical/high vulnerabilities
         run: |
-          args=()
-          if [[ "$DRY_RUN" == "true" ]]; then args+=(--dry-run); fi
-          node scripts/container-security/sync.mjs inventory/image-inventory.json reports "${args[@]}"
+          set -o pipefail
+          node scripts/container-security/sync.mjs inventory/image-inventory.json reports --dry-run \
+            | tee -a "$GITHUB_STEP_SUMMARY"

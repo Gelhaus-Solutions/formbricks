@@ -523,7 +523,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          docker tag "formbricks-test:$GITHUB_SHA" ghcr.io/formbricks/formbricks:latest
+          docker tag "formbricks-test:$GITHUB_SHA" ghcr.io/gelhaus-solutions/gforms:latest
           trap 'rm -f docker/.env' EXIT
           printf '%s\n' \
             'WEBAPP_URL=http://localhost:3000' \

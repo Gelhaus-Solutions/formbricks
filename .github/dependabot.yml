@@ -29,7 +29,7 @@ updates:
       - dependencies
       - github_actions
 
-  # The digest-pinned base images of ghcr.io/formbricks/cube, daily because new digests are where OS
+  # The digest-pinned base images of ghcr.io/gelhaus-solutions/gforms-cube, daily because new digests are where OS
   # security fixes arrive. A new digest changes the image, so the PR also needs a
   # docker/cube-image/REVISION bump: cube-image.yml fails until it has one.
   - package-ecosystem: docker
@@ -46,7 +46,7 @@ updates:
     labels:
       - dependencies
 
-  # The Cube version inside ghcr.io/formbricks/cube. The server and its driver must move together, and a
+  # The Cube version inside ghcr.io/gelhaus-solutions/gforms-cube. The server and its driver must move together, and a
   # new version also needs its native-module checksums (see "Bumping Cube" in docker/cube-image/README.md).
   - package-ecosystem: npm
     directory: "/docker/cube-image"
