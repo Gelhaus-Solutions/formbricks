@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@formbricks/database";
+import { isStorageAvailable } from "@formbricks/storage";
 import { AuthenticationError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { SurveyAnalysisNavigation } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/components/SurveyAnalysisNavigation";
 import { ResponsePage } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/responses/components/ResponsePage";
@@ -8,7 +9,6 @@ import { getAISmartToolsUnavailableReason, getOrganizationAIConfig } from "@/lib
 import {
   ENTERPRISE_LICENSE_REQUEST_FORM_URL,
   IS_FORMBRICKS_CLOUD,
-  IS_STORAGE_CONFIGURED,
   RESPONSES_PER_PAGE,
 } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
@@ -100,7 +100,7 @@ const Page = async (props: Readonly<{ params: Promise<{ workspaceId: string; sur
             segments={segments}
             isContactsEnabled={isContactsEnabled}
             isFormbricksCloud={IS_FORMBRICKS_CLOUD}
-            isStorageConfigured={IS_STORAGE_CONFIGURED}
+            isStorageConfigured={isStorageAvailable()}
             enterpriseLicenseRequestFormUrl={ENTERPRISE_LICENSE_REQUEST_FORM_URL}
             aiUnavailableReason={aiUnavailableReason}
           />

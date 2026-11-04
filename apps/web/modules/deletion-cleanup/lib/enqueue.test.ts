@@ -9,10 +9,8 @@ import {
 
 vi.mock("server-only", () => ({}));
 const storage = vi.hoisted(() => ({ configured: true, auditConfigured: false }));
+vi.mock("@formbricks/storage", () => ({ isStorageAvailable: () => storage.configured }));
 vi.mock("@/lib/constants", () => ({
-  get IS_STORAGE_CONFIGURED() {
-    return storage.configured;
-  },
   get EMAIL_SEND_AUDIT_BUCKET() {
     return storage.auditConfigured ? "private-audit-bucket" : undefined;
   },

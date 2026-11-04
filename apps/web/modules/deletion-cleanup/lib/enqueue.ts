@@ -1,6 +1,7 @@
 import "server-only";
 import type { DeletionCleanupCreateManyInput, Prisma } from "@formbricks/database/prisma";
-import { EMAIL_SEND_AUDIT_BUCKET, IS_STORAGE_CONFIGURED } from "@/lib/constants";
+import { isStorageAvailable } from "@formbricks/storage";
+import { EMAIL_SEND_AUDIT_BUCKET } from "@/lib/constants";
 import type { TDeletedSurveyResponses } from "@/lib/response/delete-responses";
 import { CLEANUP_SETTLE_MS, STORAGE_CLEANUP_CHUNK_SIZE } from "./constants";
 
@@ -29,8 +30,9 @@ export type TSurveyDeletionCleanupInput = {
  * `CLEANUP_SETTLE_MS` for what can still land after the delete: the Hub cleanup, for records on their way
  * to the Hub, and a second sweep of the upload folder, for an upload signed before the delete.
  *
- * Without file storage (no `S3_BUCKET_NAME`, a supported setup with uploads off) no storage row is
- * queued: nothing can have been uploaded, and a row could never succeed, so it would be retried forever.
+ * Without file storage (no S3 bucket and no writable uploads directory, a supported setup with uploads
+ * off) no storage row is queued: nothing can have been uploaded, and a row could never succeed, so it would
+ * be retried forever.
  */
 export const enqueueSurveyDeletionCleanups = async (
   tx: Prisma.TransactionClient,
@@ -46,10 +48,10 @@ export const enqueueSurveyDeletionCleanups = async (
   const scope = { organizationId, workspaceId, surveyId };
   const settledAt = new Date(Date.now() + CLEANUP_SETTLE_MS);
 
-  const drainNow: DeletionCleanupCreateManyInput[] = IS_STORAGE_CONFIGURED
+  const drainNow: DeletionCleanupCreateManyInput[] = isStorageAvailable()
     ? [{ ...scope, kind: "storageSurveyFolder" }, ...storageFileRows(scope, fileUrls)]
     : [];
-  const drainLater: DeletionCleanupCreateManyInput[] = IS_STORAGE_CONFIGURED
+  const drainLater: DeletionCleanupCreateManyInput[] = isStorageAvailable()
     ? [{ ...scope, kind: "storageSurveyFolder", nextAttemptAt: settledAt }]
     : [];
   if (tenantIds.length > 0) {
@@ -94,7 +96,7 @@ export const enqueueResponsesDeletionCleanups = async (
   const drainLater: DeletionCleanupCreateManyInput[] = [];
   for (const { surveyId, responseIds, fileUrls } of deleted) {
     const scope = { organizationId, workspaceId, surveyId };
-    if (IS_STORAGE_CONFIGURED) drainNow.push(...storageFileRows(scope, fileUrls));
+    if (isStorageAvailable()) drainNow.push(...storageFileRows(scope, fileUrls));
     if (tenantIds.length > 0) {
       drainLater.push({
         ...scope,
@@ -130,7 +132,7 @@ export const enqueueResponseFilesDeletionCleanup = async (
   tx: Prisma.TransactionClient,
   { organizationId, workspaceId, surveyId, fileUrls }: TResponseFilesDeletionCleanupInput
 ): Promise<void> => {
-  if (!IS_STORAGE_CONFIGURED || fileUrls.length === 0) return;
+  if (!isStorageAvailable() || fileUrls.length === 0) return;
 
   await insertCleanups(tx, storageFileRows({ organizationId, workspaceId, surveyId }, fileUrls), []);
 };

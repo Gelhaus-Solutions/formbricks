@@ -1,16 +1,12 @@
 import { notFound } from "next/navigation";
+import { isStorageAvailable } from "@formbricks/storage";
 import { AuthenticationError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { SurveyAnalysisNavigation } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/components/SurveyAnalysisNavigation";
 import { SummaryPage } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/SummaryPage";
 import { SurveyAnalysisCTA } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/SurveyAnalysisCTA";
 import { getSurveySummary } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/lib/surveySummary";
 import { getAISmartToolsUnavailableReason, getOrganizationAIConfig } from "@/lib/ai/service";
-import {
-  DEFAULT_LOCALE,
-  ENTERPRISE_LICENSE_REQUEST_FORM_URL,
-  IS_FORMBRICKS_CLOUD,
-  IS_STORAGE_CONFIGURED,
-} from "@/lib/constants";
+import { DEFAULT_LOCALE, ENTERPRISE_LICENSE_REQUEST_FORM_URL, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
 import { getSurvey } from "@/lib/survey/service";
 import { getUserVisibleSurveyWhere } from "@/lib/survey/visibility/actor-context";
@@ -100,7 +96,7 @@ const SurveyPage = async (
             segments={segments}
             isContactsEnabled={isContactsEnabled}
             isFormbricksCloud={IS_FORMBRICKS_CLOUD}
-            isStorageConfigured={IS_STORAGE_CONFIGURED}
+            isStorageConfigured={isStorageAvailable()}
             enterpriseLicenseRequestFormUrl={ENTERPRISE_LICENSE_REQUEST_FORM_URL}
             aiUnavailableReason={aiUnavailableReason}
           />

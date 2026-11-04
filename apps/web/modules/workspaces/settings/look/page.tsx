@@ -1,13 +1,9 @@
 import { notFound } from "next/navigation";
+import { isStorageAvailable } from "@formbricks/storage";
 import { sanitizeThemeStyling } from "@formbricks/types/styling-values";
 import { SettingsCard } from "@/app/(app)/workspaces/[workspaceId]/settings/components/SettingsCard";
 import { cn } from "@/lib/cn";
-import {
-  IS_FORMBRICKS_CLOUD,
-  IS_STORAGE_CONFIGURED,
-  SURVEY_BG_COLORS,
-  UNSPLASH_ACCESS_KEY,
-} from "@/lib/constants";
+import { IS_FORMBRICKS_CLOUD, SURVEY_BG_COLORS, UNSPLASH_ACCESS_KEY } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
 import { getWorkspace } from "@/lib/workspace/service";
 import { getTranslate } from "@/lingodotdev/server";
@@ -41,6 +37,7 @@ export const WorkspaceLookSettingsPage = async (props: {
 
   const isCustomCssPlanAllowed = await getCustomCssPlanAllowed(organization.id);
   const publicDomain = getPublicDomain();
+  const isStorageConfigured = isStorageAvailable();
 
   // Mirrors the server's checks for `PATCH …/custom-css` (ENG-2949), which stay authoritative.
   const customCssAccess: TWorkspaceCustomCssAccess = {
@@ -54,7 +51,7 @@ export const WorkspaceLookSettingsPage = async (props: {
   return (
     <PageContentWrapper>
       <PageHeader pageTitle={t("common.appearance")} />
-      {!IS_STORAGE_CONFIGURED && (
+      {!isStorageConfigured && (
         <Alert variant="warning" role="status">
           <AlertDescription>{t("common.storage_not_configured")}</AlertDescription>
         </Alert>
@@ -72,7 +69,7 @@ export const WorkspaceLookSettingsPage = async (props: {
             colors={SURVEY_BG_COLORS}
             isUnsplashConfigured={!!UNSPLASH_ACCESS_KEY}
             isReadOnly={isReadOnly}
-            isStorageConfigured={IS_STORAGE_CONFIGURED}
+            isStorageConfigured={isStorageConfigured}
             publicDomain={publicDomain}
             customCssAccess={customCssAccess}
           />
@@ -83,7 +80,7 @@ export const WorkspaceLookSettingsPage = async (props: {
           workspace={workspace}
           workspaceId={params.workspaceId}
           isReadOnly={isReadOnly}
-          isStorageConfigured={IS_STORAGE_CONFIGURED}
+          isStorageConfigured={isStorageConfigured}
         />
       </SettingsCard>
       <SettingsCard

@@ -1,12 +1,12 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { isStorageAvailable } from "@formbricks/storage";
 import { ResourceNotFoundError } from "@formbricks/types/errors";
 import { type TSurvey } from "@formbricks/types/surveys/types";
 import {
   DEFAULT_LOCALE,
   ENTERPRISE_LICENSE_REQUEST_FORM_URL,
   IS_FORMBRICKS_CLOUD,
-  IS_STORAGE_CONFIGURED,
   MAIL_FROM,
   SURVEY_BG_COLORS,
   UNSPLASH_ACCESS_KEY,
@@ -52,7 +52,7 @@ import { getUserLocale } from "./lib/user";
 
 type TSurveyEditorPageParams = { params: Promise<{ workspaceId: string; surveyId: string }> };
 
-// Re-exported by the /edit route file — Next only reads metadata from the route segment's own module.
+// Re-exported by the /edit route file: Next only reads metadata from the route segment's own module.
 export const generateSurveyEditorMetadata = async (props: TSurveyEditorPageParams): Promise<Metadata> => {
   const params = await props.params;
   const t = await getTranslate();
@@ -203,7 +203,7 @@ export const SurveyEditorPage = async (props: {
       isWorkflowsAllowed={isWorkflowsAllowed}
       userEmail={userEmail}
       teamMemberDetails={teamMemberDetails}
-      isStorageConfigured={IS_STORAGE_CONFIGURED}
+      isStorageConfigured={isStorageAvailable()}
       isQuotasAllowed={isQuotasAllowed}
       quotas={quotas}
       isExternalUrlsAllowed={isExternalUrlsAllowed}
@@ -223,7 +223,7 @@ export const SurveyEditorPage = async (props: {
 /**
  * What the survey's Custom CSS card needs (ENG-3553), mirroring the server's own rules: the inherited
  * workspace CSS as source (read-only) and as delivered compiled output (for the preview), the health
- * of both saved values, the plan gate, and — self-hosted only — whether either set of Custom Head
+ * of both saved values, the plan gate, and (self-hosted only) whether either set of Custom Head
  * Scripts already adds page styles. Survey edit permission is the editor's own: reaching it is it.
  */
 const getSurveyCustomCssEditorConfig = async (params: {

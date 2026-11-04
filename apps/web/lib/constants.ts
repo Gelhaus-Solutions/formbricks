@@ -98,7 +98,7 @@ export const SMTP_PORT = env.SMTP_PORT;
 
 /**
  * Whether the mailer can actually send. `sendEmail` returns `false` without throwing when this is
- * false, which callers must treat as a failure (ENG-2091) — so it lives here next to the values it
+ * false, which callers must treat as a failure (ENG-2091), so it lives here next to the values it
  * derives from rather than being recomputed per call site.
  */
 export const IS_SMTP_CONFIGURED = Boolean(env.SMTP_HOST && env.SMTP_PORT);
@@ -116,21 +116,21 @@ export const MAIL_FROM_NAME = env.MAIL_FROM_NAME;
  *
  * `BETTER_AUTH_*` are the documented names. `NEXTAUTH_*` are a deliberately UNDOCUMENTED
  * backward-compatible alias: ENG-1054 shipped them as the canonical names, and ENG-2599 flipped the docs
- * without dropping them. The alias is permanent, not a deprecation window — nothing ever rewrites an
+ * without dropping them. The alias is permanent, not a deprecation window: nothing ever rewrites an
  * existing install's env. A Compose install keeps a literal `NEXTAUTH_SECRET:` in its customized
  * `docker-compose.yml` and `update_formbricks()` never touches it, so removing the fallback would break
  * every instance that upgraded from v5.1 or earlier.
  *
  * Resolve here, never at the call site. The secret signs Better Auth's session cookies (auth.ts), the
- * forward-auth proxy's verification of them (session-cookie.ts), and every app JWT — invites, email
- * verification, email change, survey PIN tokens, gateway service tokens (lib/jwt.ts). A divergence
+ * forward-auth proxy's verification of them (session-cookie.ts), and every app JWT (invites, email
+ * verification, email change, survey PIN tokens, gateway service tokens: lib/jwt.ts). A divergence
  * between any two of those is an outage, and it surfaces only as an opaque `state_security_mismatch`
  * (better-auth-observability.ts).
  *
  * `firstConfigured` treats a blank value as unset, which `??` does not: `"" ?? env.NEXTAUTH_SECRET` is
  * `""`, which is falsy and would fail every guard below while shadowing a perfectly good legacy secret.
  * `env.ts` already normalizes blank to undefined for both names, so this is the second line of defence
- * rather than the first — kept because the invariant belongs next to the resolution, not in a distant
+ * rather than the first, kept because the invariant belongs next to the resolution, not in a distant
  * schema. It selects a value, never rewrites one: trimming a secret would re-key the instance.
  *
  * Note these constant names collide with env vars Better Auth reads on its own
@@ -148,11 +148,11 @@ export const AUTH_URL = firstConfigured(env.BETTER_AUTH_URL, env.NEXTAUTH_URL);
  * Every configured auth origin, not just the winning one: an instance mid-rename has both set, and both
  * have to stay trusted or Better Auth's CSRF/origin check rejects requests arriving on the other.
  *
- * De-duplicated because the managed paths set both names to the same value — the chart writes both keys
- * from one `$webappUrl`, and the one-click installer seds both to the same domain — so the common case is
+ * De-duplicated because the managed paths set both names to the same value: the chart writes both keys
+ * from one `$webappUrl`, and the one-click installer seds both to the same domain, so the common case is
  * one origin listed twice.
  *
- * The explicit type predicate is load-bearing — `.filter(Boolean)` does not narrow
+ * The explicit type predicate is load-bearing: `.filter(Boolean)` does not narrow
  * `(string | undefined)[]` to the `string[]` that `trustedOrigins` requires.
  */
 export const AUTH_TRUSTED_ORIGINS = [
@@ -209,7 +209,6 @@ export const MAX_FILE_UPLOAD_SIZES = {
   standard: 1024 * 1024 * 10, // 10MB
   big: 1024 * 1024 * 1024, // 1GB
 } as const;
-export const IS_STORAGE_CONFIGURED = Boolean(S3_BUCKET_NAME);
 
 // Colors for Survey Bg
 export const SURVEY_BG_COLORS = [
@@ -252,8 +251,8 @@ export const RATE_LIMITING_DISABLED = env.RATE_LIMITING_DISABLED === "1";
 /**
  * Number of reverse proxies in front of the app whose `X-Forwarded-For` entries may be believed.
  *
- * Defaults to 1 because that matches every supported topology — the Helm chart's Traefik/Envoy ingress,
- * docker-compose behind a proxy, and Formbricks Cloud — and because Next 16 gives route handlers no
+ * Defaults to 1 because that matches every supported topology (the Helm chart's Traefik/Envoy ingress,
+ * docker-compose behind a proxy, and Formbricks Cloud), and because Next 16 gives route handlers no
  * socket peer address to fall back on, so a default of 0 would leave IP-based rate limiting unable to
  * tell clients apart until an operator set this. Deployments with a longer proxy chain must raise it;
  * setting it higher than the real chain lets a caller spoof the address by prepending entries.
