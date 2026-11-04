@@ -3,7 +3,7 @@ import { getV3AuthorizationActor, requireV3WorkspaceAccess } from "@/app/api/v3/
 import type { TV3Authentication } from "@/app/api/v3/lib/types";
 import type { V3WorkspaceContext } from "@/app/api/v3/lib/workspace-context";
 import { can } from "@/lib/authorization";
-import { getIsFeedbackDirectoriesEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 import { getSessionUserId, requireUnifyDirectoryAccess, requireUnifyDirectoryMutationAccess } from "./access";
 
 vi.mock("server-only", () => ({}));
@@ -15,7 +15,7 @@ vi.mock("@/app/api/v3/lib/auth", () => ({
 
 vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getIsFeedbackDirectoriesEnabled: vi.fn(),
 }));
 

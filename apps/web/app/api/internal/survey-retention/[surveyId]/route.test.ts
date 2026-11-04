@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/app/api/v3/surveys/authorization", () => ({ getAuthorizedV3Survey: mocks.authorizeSurvey }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsDataRetentionEnabled: mocks.isEnabled }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsDataRetentionEnabled: mocks.isEnabled }));
 vi.mock("@/modules/ee/data-retention/lib/survey-retention-service", () => ({
   getSurveyRetentionPolicies: mocks.policies,
   getSurveyRetentionFacts: mocks.facts,

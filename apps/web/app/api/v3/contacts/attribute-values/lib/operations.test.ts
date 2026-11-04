@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@formbricks/database";
 import { requireV3WorkspaceAccess } from "@/app/api/v3/lib/auth";
-import { getIsContactsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { buildAttributeValuesQuery, listV3ContactAttributeValues } from "./operations";
 import { ZV3ContactAttributeValuesQuery } from "./schemas";
 
@@ -13,7 +13,7 @@ vi.mock("@formbricks/database", () => ({
 }));
 
 vi.mock("@/app/api/v3/lib/auth", () => ({ requireV3WorkspaceAccess: vi.fn() }));
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({ getIsContactsEnabled: vi.fn() }));
+vi.mock("@/modules/features/lib/flags", () => ({ getIsContactsEnabled: vi.fn() }));
 
 const workspaceId = "clws0000000000000000000001";
 const attributeKeyId = "clak0000000000000000000001";

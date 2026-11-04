@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DatabaseError } from "@formbricks/types/errors";
 import { requireV3WorkspaceAccess } from "@/app/api/v3/lib/auth";
 import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
-import { getIsContactsEnabled } from "@/modules/ee/license-check/lib/utils";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { listV3ContactAttributeKeys } from "./operations";
 
 vi.mock("server-only", () => ({}));
@@ -15,7 +15,7 @@ vi.mock("@/modules/ee/contacts/lib/contact-attribute-keys", () => ({
   getContactAttributeKeys: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/license-check/lib/utils", () => ({
+vi.mock("@/modules/features/lib/flags", () => ({
   getIsContactsEnabled: vi.fn(),
 }));
 
