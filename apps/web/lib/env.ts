@@ -25,7 +25,7 @@ const isLoopbackHost = (hostname: string): boolean =>
   hostname === "::1";
 
 // Mirrors isSecureCredentialUrl in packages/ai: the client secret is sent to this URL, so plain http is
-// only acceptable on loopback. Not imported from @formbricks/ai on purpose — next.config.mjs and the
+// only acceptable on loopback. Not imported from @formbricks/ai on purpose: next.config.mjs and the
 // pre-build scripts load this module, and that package drags the whole AI SDK graph in with it. The
 // two copies are held together by `env.test.ts` ("agrees with @formbricks/ai"), which checks startup
 // validation against the package's predicate over the same table of URLs.
@@ -59,7 +59,7 @@ const ZMcpOauthJwksUrl = z.url().refine(isValidMcpOauthJwksUrl, {
  * An exact redirect URI an operator lets anonymous MCP client registration claim (ENG-3471). On top of
  * the JWKS URL rules (a host, no credentials): https only, because a registered callback is where
  * authorization codes are delivered; no fragment at all, not even an empty `#` (RFC 6749 §3.1.2); no
- * `*`, so nobody configures a wildcard expecting it to match — the allowlist compares exact strings;
+ * `*`, so nobody configures a wildcard expecting it to match: the allowlist compares exact strings;
  * and not a loopback host, because Better Auth refuses loopback redirects for the `web` clients these
  * register as, so such an entry could never be used.
  */
@@ -371,8 +371,8 @@ const emptyStringToUndefined = (value: unknown) =>
   typeof value === "string" && value.trim() === "" ? undefined : value;
 const ZOptionalNonEmptyString = z.preprocess(emptyStringToUndefined, z.string().trim().min(1).optional());
 /**
- * Blank normalizes to unset, but a non-blank value is kept VERBATIM — no `.trim()`, which in zod is a
- * transform and would rewrite the parsed value. For a secret that is fatal: an instance whose value
+ * Blank normalizes to unset, but a non-blank value is kept VERBATIM (no `.trim()`, which in zod is a
+ * transform and would rewrite the parsed value). For a secret that is fatal: an instance whose value
  * carries a trailing newline (what `kubectl create secret --from-file` stores, and what the chart
  * faithfully round-trips through `b64dec`) has been signing with the untrimmed string, so trimming it
  * here would invalidate every session and every outstanding invite and verification link.
@@ -502,7 +502,7 @@ const validateAuthConfiguration = (values: TAuthConfigurationEnv, ctx: z.Refinem
 
   // The length floor, kept where it still buys something and dropped only where it would trap someone.
   //
-  // It applies when BETTER_AUTH_SECRET is the ONLY secret set — a fresh install, which has no migration
+  // It applies when BETTER_AUTH_SECRET is the ONLY secret set: a fresh install, which has no migration
   // constraint and would otherwise lose a guard it used to have: Better Auth's own sub-32 check is a
   // `logger.warn` that scrolls past, and those characters become the HMAC key for session cookies and
   // for every invite, verification, email-change and survey-PIN token.
@@ -510,7 +510,7 @@ const validateAuthConfiguration = (values: TAuthConfigurationEnv, ctx: z.Refinem
   // It does NOT apply when NEXTAUTH_SECRET is also set. That is the rename-in-progress shape this
   // ticket exists to support: an operator copying a shorter legacy secret onto the new name must not be
   // forced to change its value, because changing it signs everyone out and voids outstanding links.
-  // A legacy-only instance is likewise left alone — it boots today with no floor at all.
+  // A legacy-only instance is likewise left alone: it boots today with no floor at all.
   if (
     hasValue(betterAuthSecret) &&
     !hasValue(legacySecret) &&
@@ -631,7 +631,7 @@ const parsedEnv = createEnv({
     AUTHZED_SYSTEM_KEY: ZAuthzedSystemKey,
     AUTHZED_TOKEN: ZAuthzedToken,
     // Cloud-only: when "1", the personal-email sign-up block also applies to invited users.
-    // Default (unset/"0") exempts invites — see isSignupEmailDomainBlocked.
+    // Default (unset/"0") exempts invites; see isSignupEmailDomainBlocked.
     SIGNUP_DOMAIN_CHECK_ON_INVITES: z.enum(["1", "0"]).optional(),
     /**
      * Grace window for single-use links minted before the ENG-2758 fix, which carry no `suToken`.
@@ -730,13 +730,13 @@ const parsedEnv = createEnv({
     //
     // `ZOptionalNonEmptyString`, not `z.string().optional()`: a blank value has to normalize to
     // *unset* so it falls through to the other variable. `.env.example` ships these keys empty, and an
-    // empty secret is not "no secret" — it is a falsy one, which Better Auth silently replaces with
+    // empty secret is not "no secret": it is a falsy one, which Better Auth silently replaces with
     // its own hardcoded default. `assertAuthRuntimeConfiguration` then refuses to start if neither is
     // actually set, so blank fails loudly at boot instead of quietly at the first invite.
     NEXTAUTH_URL: z.url().optional(),
     NEXTAUTH_SECRET: ZOptionalVerbatimSecret,
     // No length floor: Better Auth itself only warns below 32 characters, and a hard failure here
-    // would trap an operator renaming a shorter legacy secret — the one fix available to them would be
+    // would trap an operator renaming a shorter legacy secret: the one fix available to them would be
     // changing its value, which invalidates every session and outstanding token. Warned about at boot
     // instead (`warnOnAuthSecretRisks`).
     BETTER_AUTH_SECRET: ZOptionalVerbatimSecret,
@@ -769,7 +769,7 @@ const parsedEnv = createEnv({
     // forwarding header at all. See resolveClientIp in lib/utils/client-ip.ts.
     // Preprocessed because `z.coerce.number()` turns "" into 0, and 0 is a *valid* value here (the
     // explicit "trust nothing" opt-out) rather than something `.min()` would reject. A deployment that
-    // renders the variable empty when unset — the common docker-compose / Helm shape — would otherwise
+    // renders the variable empty when unset (the common docker-compose / Helm shape) would otherwise
     // silently opt out of trusting any forwarding header, collapsing every request into one rate-limit
     // bucket. The neighbouring numeric vars only fail loudly on "" because their minimums exceed 0.
     TRUSTED_PROXY_HOP_COUNT: z.preprocess(
@@ -783,6 +783,8 @@ const parsedEnv = createEnv({
     S3_SECRET_KEY: z.string().optional(),
     S3_ENDPOINT_URL: z.string().optional(),
     S3_FORCE_PATH_STYLE: z.enum(["1", "0"]).optional(),
+    // Read by @formbricks/storage: the local-disk backend's root when no S3 bucket is set (GFORMS-36).
+    UPLOADS_DIR: z.string().optional(),
     SAML_DATABASE_URL: z.string().optional(),
     SENTRY_DSN: z.string().optional(),
     SLACK_CLIENT_ID: z.string().optional(),
@@ -993,6 +995,7 @@ const parsedEnv = createEnv({
     S3_SECRET_KEY: process.env.S3_SECRET_KEY,
     S3_ENDPOINT_URL: process.env.S3_ENDPOINT_URL,
     S3_FORCE_PATH_STYLE: process.env.S3_FORCE_PATH_STYLE,
+    UPLOADS_DIR: process.env.UPLOADS_DIR,
     SAML_DATABASE_URL: process.env.SAML_DATABASE_URL,
     SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID,
     SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET,
@@ -1064,7 +1067,7 @@ export const assertAuthzedRuntimeConfiguration = (): void => {
     validateAuthzedConfiguration({ ...values, AUTHZED_ENABLED: "true" }, ctx);
     if (values.AUTHZED_CONSISTENCY !== "fully_consistent") {
       // Name the value found: a pre-v6 .env carries `minimize_latency`, and the fix is a one-line edit.
-      // Safe to echo — the schema has already narrowed it to an enum member or undefined.
+      // Safe to echo: the schema has already narrowed it to an enum member or undefined.
       const current =
         values.AUTHZED_CONSISTENCY === undefined ? "is not set" : `is "${values.AUTHZED_CONSISTENCY}"`;
       addEnvIssue(
@@ -1083,7 +1086,7 @@ export const assertAuthzedRuntimeConfiguration = (): void => {
 /**
  * Refuse to start without an auth secret.
  *
- * Deliberately a runtime assertion rather than a module-eval refinement — see
+ * Deliberately a runtime assertion rather than a module-eval refinement; see
  * `ZAuthConfigurationEnv`. Called from `instrumentation.ts` (behind the build-phase guard) and from
  * `scripts/docker/validate-env.ts --server`, which the container entrypoint runs before migrations.
  * Without it, a fresh install that set neither variable signs in and only then discovers that invites
@@ -1126,8 +1129,8 @@ export const warnOnAuthSecretRisks = (): void => {
   if (resolvedSecret && resolvedSecret.length < 32) {
     logger.warn(
       "The configured auth secret is shorter than the recommended 32 characters. It signs session " +
-        "cookies and every invite, verification and email-change token, so a short one is worth rotating " +
-        "— generate a replacement with `openssl rand -hex 32`. Rotating invalidates existing sessions and links."
+        "cookies and every invite, verification and email-change token, so a short one is worth rotating. " +
+        "Generate a replacement with `openssl rand -hex 32`. Rotating invalidates existing sessions and links."
     );
   }
 };

@@ -37,6 +37,8 @@ vi.mock("@formbricks/storage", () => ({
   getSignedUploadUrl: vi.fn(),
 }));
 
+vi.mock("@/lib/getPublicUrl", () => ({ getPublicDomain: () => "https://surveys.example.com" }));
+
 // Import mocked dependencies
 const { logger } = await import("@formbricks/logger");
 const storageModule = await import("@formbricks/storage");
@@ -60,6 +62,22 @@ describe("storage service", () => {
   });
 
   describe("getSignedUrlForUpload", () => {
+    test("makes the local-disk backend's upload path absolute on the public domain", async () => {
+      vi.mocked(getSignedUploadUrl).mockResolvedValue({
+        ok: true,
+        data: { signedUrl: "/storage/upload", presignedFields: { policy: "p" } },
+      } as MockedSignedUploadReturn);
+
+      const result = await getSignedUrlForUpload(
+        "photo.png",
+        "env-123",
+        "image/png",
+        "public" as TAccessType
+      );
+
+      expect(result.ok && result.data.signedUrl).toBe("https://surveys.example.com/storage/upload");
+    });
+
     test("should generate signed URL for upload with unique filename", async () => {
       const mockSignedUrlResponse = {
         ok: true,
@@ -616,7 +634,7 @@ describe("storage service", () => {
   describe("getFileStreamForDownload", () => {
     // Regression: `fileName` comes from the `[...filePath]` route param and the key is
     // `${id}/${accessType}/${fileName}`, so a `..` segment let a caller name an object outside their
-    // own workspace prefix — reachable with no auth at all through the `public/` access type, which
+    // own workspace prefix: reachable with no auth at all through the `public/` access type, which
     // skips authorizePrivateDownload. The `%252e`/`%2e` cases cover the extra decodeURIComponent the
     // handler applies on top of Next's own param decoding.
     test.each([

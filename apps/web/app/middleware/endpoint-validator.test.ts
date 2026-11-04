@@ -292,6 +292,14 @@ describe("endpoint-validator", () => {
       expect(isPublicDomainRoute("/storage/env123/public/folder/image.png")).toBe(true);
     });
 
+    test("lets the local-disk upload route through on both domains, and its download route on the admin one only", () => {
+      expect(isRouteAllowedForDomain("/storage/upload", true)).toBe(true);
+      expect(isRouteAllowedForDomain("/storage/upload", false)).toBe(true);
+      expect(isRouteAllowedForDomain("/storage/upload/extra", true)).toBe(false);
+      expect(isRouteAllowedForDomain("/storage/download", true)).toBe(false);
+      expect(isRouteAllowedForDomain("/storage/download", false)).toBe(true);
+    });
+
     test("should return false for private storage routes", () => {
       expect(isPublicDomainRoute("/storage/env123/private/file.jpg")).toBe(false);
       expect(isPublicDomainRoute("/storage/env123")).toBe(false);

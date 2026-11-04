@@ -20,6 +20,9 @@ const COMMON_ROUTES = {
   HEALTH_ROUTES: [/^\/health$/], // /health endpoint
   PUBLIC_STORAGE_ROUTES: [
     /^\/storage\/[^/]+\/public\//, // /storage/[environmentId]/public/** - public storage
+    // Local-disk uploads (GFORMS-36): the presigned POST target, which surveys reach on the public domain and
+    // the app's own uploads on the admin domain.
+    /^\/storage\/upload$/,
   ],
 } as const;
 

@@ -210,7 +210,7 @@ const v1ClientEndpoints = {
       security: [],
       summary: "Upload Private File",
       description:
-        "API endpoint for uploading private files. Uploaded files are kept private so that only users with access to the specified environment can retrieve them. The endpoint validates the survey ID, file name, and file type from the request body, and returns a signed URL for S3 uploads along with a local upload URL.",
+        "API endpoint for uploading private files. Uploaded files are kept private so that only users with access to the specified environment can retrieve them. The endpoint validates the survey ID, file name, and file type from the request body, and returns a presigned POST for the upload (to the S3 bucket, or to this instance's `/storage/upload` route when no bucket is configured) along with the file's storage URL.",
       tags: ["Client API - File Upload"],
       parameters: [
         {
@@ -266,12 +266,14 @@ const v1ClientEndpoints = {
                     properties: {
                       signedUrl: {
                         type: "string",
-                        description: "Presigned POST URL for uploading the file to S3-compatible storage.",
+                        description:
+                          "Presigned POST URL for uploading the file: the S3-compatible bucket, or this instance's `/storage/upload` route when no bucket is configured.",
                       },
                       presignedFields: {
                         type: "object",
                         additionalProperties: { type: "string" },
-                        description: "Presigned POST form fields required by S3-compatible storage.",
+                        description:
+                          "Presigned POST form fields to send with the file, before it, in a multipart/form-data body.",
                       },
 
                       updatedFileName: {

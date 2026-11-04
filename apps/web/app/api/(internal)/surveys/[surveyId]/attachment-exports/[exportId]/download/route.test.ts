@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { WEBAPP_URL } from "@/lib/constants";
 import { GET } from "./route";
 
 const mocks = vi.hoisted(() => ({
@@ -89,6 +90,17 @@ beforeEach(() => {
 });
 
 describe("GET /api/surveys/{surveyId}/attachment-exports/{exportId}/download", () => {
+  test("makes the local-disk backend's signed path absolute on the app's own URL", async () => {
+    mocks.getExport.mockResolvedValue(completedRow());
+    mocks.sign.mockResolvedValue({ ok: true, data: "/storage/download?token=t&signature=s" });
+
+    const response = await GET(request("/download"), props);
+
+    expect(await response.json()).toEqual({
+      data: { url: `${WEBAPP_URL}/storage/download?token=t&signature=s` },
+    });
+  });
+
   test("signs a download URL that saves under the archive's name", async () => {
     mocks.getExport.mockResolvedValue(completedRow());
 

@@ -27,7 +27,7 @@ export const OPTIONS = async (): Promise<Response> => {
   );
 };
 
-// api endpoint for getting a s3 signed url for uploading private files
+// api endpoint for getting a presigned POST (S3 bucket, or the local-disk /storage/upload route) for uploading private files
 // uploaded files will be private, only the user who has access to the environment can access the file
 // uploading private files requires no authentication
 // use this to let users upload files to a file upload element response for example

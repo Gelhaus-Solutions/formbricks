@@ -11,7 +11,7 @@ import {
 } from "@formbricks/storage";
 import { Result, err, ok } from "@formbricks/types/error-handlers";
 import { type TAccessType } from "@formbricks/types/storage";
-import { sanitizeFileName } from "./utils";
+import { resolveStorageUrl, sanitizeFileName } from "./utils";
 
 const SAFE_FILE_PATH_SEGMENT = /^[A-Za-z0-9_-]+$/;
 
@@ -20,7 +20,7 @@ const SAFE_FILE_PATH_SEGMENT = /^[A-Za-z0-9_-]+$/;
  *
  * Download/delete keys are built as `${id}/${accessType}/${fileName}`, and `fileName` arrives from the
  * `[...filePath]` route param, so `..` segments let a caller step out of their own
- * `workspaceId/accessType/` prefix and name another tenant's object — including a `private/` one via
+ * `workspaceId/accessType/` prefix and name another tenant's object, including a `private/` one, via
  * the unauthenticated `public/` route. Object stores treat keys opaquely and SigV4 signs the
  * unnormalized path, so this does not resolve on a stock S3/MinIO backend; but whether one tenant can
  * name another's file must not depend on how the storage backend or any proxy in front of it happens
@@ -72,7 +72,9 @@ export const getSignedUrlForUpload = async (
 
     // Return relative path - can be resolved to absolute URL at runtime when needed
     return ok({
-      signedUrl: signedUrlResult.data.signedUrl,
+      // The local-disk backend answers with this app's own `/storage/upload` path; S3's URL is absolute and
+      // passes through. Resolved on the public domain, the one the survey bundle on another site can reach.
+      signedUrl: resolveStorageUrl(signedUrlResult.data.signedUrl, "public"),
       presignedFields: signedUrlResult.data.presignedFields,
       fileUrl: `/storage/${workspaceId}/${accessType}/${[
         ...encodedFilePathSegments,
@@ -155,7 +157,7 @@ export const deleteFile = async (
   return result;
 };
 
-// Deletes all files for a workspace — cleans up both workspaceId-prefixed (new uploads) and
+// Deletes all files for a workspace, cleans up both workspaceId-prefixed (new uploads) and
 // environmentId-prefixed (legacy uploads) paths. Errors are not thrown; callers should check results.
 export const deleteFilesByWorkspaceId = async (workspaceId: string, environmentIds: string[]) => {
   const results = await Promise.all([
@@ -178,7 +180,7 @@ export const deleteFilesByWorkspaceId = async (workspaceId: string, environmentI
  *
  * Both callers (workspace deletion and organization deletion) run this *after* the database cascade
  * has committed, so there is nothing left to roll back and no row left pointing at these objects.
- * A storage failure — S3 unconfigured, bucket unreachable, objects already gone — is therefore
+ * A storage failure (S3 unconfigured, bucket unreachable, objects already gone) is therefore
  * logged and swallowed: reporting the deletion as failed would be a lie, since the records really
  * are gone. The cost of that choice is orphaned objects when storage is down, which is the same
  * trade-off `deleteWorkspace` has always made.

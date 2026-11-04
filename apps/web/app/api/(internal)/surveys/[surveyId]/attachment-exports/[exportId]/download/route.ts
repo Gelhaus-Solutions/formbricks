@@ -17,6 +17,7 @@ import {
   buildAttachmentArchiveFileName,
 } from "@/modules/storage/attachment-export/export-attachments";
 import { getAttachmentExport } from "@/modules/storage/attachment-export/service";
+import { resolveStorageUrl } from "@/modules/storage/utils";
 
 /**
  * `GET /api/surveys/{surveyId}/attachment-exports/{exportId}/download`: a presigned URL for a completed
@@ -99,6 +100,7 @@ export const GET = withV3ApiWrapper({
       return problemInternalError(requestId, "The download link could not be created. Try again.", instance);
     }
 
-    return successResponse({ url: signed.data }, { requestId });
+    // The local-disk backend signs a path on this app (GFORMS-36); S3's absolute URL passes through.
+    return successResponse({ url: resolveStorageUrl(signed.data, "private") }, { requestId });
   },
 });
