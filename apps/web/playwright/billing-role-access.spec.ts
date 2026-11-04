@@ -5,8 +5,8 @@ import { test } from "./lib/fixtures";
 
 // ENG-1763 regression: a billing-role member must not reach workspace product data (contacts PII,
 // survey summaries/responses, dashboards) by direct navigation. getWorkspaceAuth is the single choke
-// point every product page flows through, so it bounces billing users to their org billing/enterprise
-// home instead. The owner test guards against a naive "redirect everyone" fix regressing product
+// point every product page flows through, so it bounces billing users to their billing home instead
+// (the organization billing page on Cloud, their own profile on self-hosted). The owner test guards against a naive "redirect everyone" fix regressing product
 // access for legitimate roles.
 
 // Creates an organization (owned by `owner`) with a workspace holding product data, plus a second
@@ -50,7 +50,9 @@ const setupOrgWithBillingMember = async (users: UsersFixture) => {
 };
 
 test.describe("Billing-role workspace access (ENG-1763)", () => {
-  const billingHomeUrl = /\/organizations\/[^/]+\/settings\/(billing|enterprise)/;
+  // Cloud sends billing members to the organization billing page; self-hosted GForms has no billing
+  // page and sends them to their own profile (GFORMS-2).
+  const billingHomeUrl = /\/organizations\/[^/]+\/settings\/billing|\/account\/settings\/profile/;
 
   test("redirects a billing member off product pages to the billing home", async ({ page, users }) => {
     const { billingUser, productUrls } = await setupOrgWithBillingMember(users);

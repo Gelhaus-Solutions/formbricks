@@ -7,8 +7,8 @@ describe("getBillingFallbackPath", () => {
     expect(path).toBe("/organizations/org_123/settings/billing");
   });
 
-  test("returns enterprise settings path for self-hosted", () => {
+  test("returns the account profile for self-hosted, which has no billing page", () => {
     const path = getBillingFallbackPath("org_123", false);
-    expect(path).toBe("/organizations/org_123/settings/enterprise");
+    expect(path).toBe("/account/settings/profile");
   });
 });

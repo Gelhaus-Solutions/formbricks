@@ -12,7 +12,8 @@ export const accountSettingsPath = (slug: string): string => `/account/settings/
 export const workspaceSettingsPath = (workspaceId: string, slug: string): string =>
   `/workspaces/${workspaceId}/settings/workspace/${slug}`;
 
-// Where billing-role users (and other "you can't see this settings page" cases) get sent. Billing is an
-// organization-level concern, so it resolves to the org-scoped billing/enterprise page.
+// Where billing-role users (and other "you can't see this settings page" cases) get sent. On Cloud that
+// is the organization's billing page. GForms has no license page and no billing on self-hosted
+// (GFORMS-2), so there it is the user's own profile, which every signed-in user can open.
 export const getOrganizationBillingPath = (organizationId: string, isFormbricksCloud: boolean): string =>
-  organizationSettingsPath(organizationId, isFormbricksCloud ? "billing" : "enterprise");
+  isFormbricksCloud ? organizationSettingsPath(organizationId, "billing") : accountSettingsPath("profile");

@@ -16,7 +16,6 @@ import {
   KeyIcon,
   LanguagesIcon,
   ListChecksIcon,
-  ShieldIcon,
   TagIcon,
   UnplugIcon,
   UserCircleIcon,
@@ -389,14 +388,6 @@ export const SettingsSidebarContent = ({
       href: organizationSettingsPath(organizationId, "billing"),
       icon: <CreditCardIcon className={iconClassName} />,
       hidden: !isFormbricksCloud,
-    },
-    {
-      id: "org-enterprise",
-      label: t("common.enterprise_license"),
-      href: organizationSettingsPath(organizationId, "enterprise"),
-      icon: <ShieldIcon className={iconClassName} />,
-      hidden: isFormbricksCloud,
-      disabled: isMember || isBilling,
     },
     {
       id: "org-usage",
