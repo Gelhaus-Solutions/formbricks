@@ -19,7 +19,8 @@ For a Formbricks v5 cluster setup, plan for:
 
 - shared PostgreSQL for Formbricks and Hub, with `pgvector` support if Hub shares the same database
 - shared Redis/Valkey for caching, rate limiting, and audit-related flows
-- shared S3-compatible storage if you use file uploads or organization branding assets
+- shared S3-compatible storage if you use file uploads or organization branding assets (or one
+  `ReadWriteMany` volume mounted at `UPLOADS_DIR` on every app pod)
 - a load balancer or ingress layer in front of the app
 - Formbricks Hub as part of the runtime
 - Cube, either bundled or externally managed

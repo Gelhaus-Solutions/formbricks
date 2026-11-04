@@ -18,7 +18,7 @@ Use this page to choose which Formbricks services to run and prepare your contai
 | [SpiceDB](https://github.com/authzed/spicedb) | Always in v6: permission checks | An external AuthZed endpoint |
 | [SpiceDB operator](https://github.com/authzed/spicedb-operator) | Kubernetes-managed SpiceDB only | An existing compatible operator, or external AuthZed |
 | Edge gateway ([Envoy](https://github.com/envoyproxy/gateway) or equivalent) | Public routing and edge rate limiting | A gateway providing [equivalent coverage](/self-hosting/configuration/rate-limiting) |
-| S3-compatible storage | File uploads, images and branding | [Amazon S3 or another S3-compatible service](/self-hosting/configuration/file-uploads) |
+| S3-compatible storage | File uploads, images and branding, when several app servers share no volume; one server keeps them on its own disk | [Amazon S3 or another S3-compatible service](/self-hosting/configuration/file-uploads) |
 | [Taxonomy](/self-hosting/configuration/ai-features), [embeddings](https://github.com/huggingface/text-embeddings-inference) and [LLM runtimes](https://github.com/vllm-project/vllm) | Enabled AI features only | Hosted inference endpoints replace model runtimes; taxonomy still needs its service |
 | SMTP | Sending email | [An SMTP provider](/self-hosting/configuration/smtp), including Amazon SES |
 

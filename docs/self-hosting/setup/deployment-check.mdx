@@ -95,7 +95,7 @@ one root cause instead of a wall of errors.
 | `key lacks access to workspace`        | Key does not cover the workspace.                                      | Give the key write access to the Deployment check workspace.         |
 | `survey page ... ending card`          | Survey bundle, client API, or database write failing.                  | Check the app logs for `/api/v1/client/.../responses`.               |
 | `SDK API ... returned HTTP 404`        | Split domain: the proxy does not forward client routes to `PUBLIC_URL`. | Forward `/api/v1/client/*` and `/js/*` on the public domain.         |
-| `File storage ... signed URL`          | Bucket endpoint not reachable from outside the app.                    | Check `S3_ENDPOINT_URL` and network access.                          |
+| `File storage ... signed URL`          | Upload endpoint not reachable from outside the app.                    | Check `S3_ENDPOINT_URL`, or, without S3, that the proxy forwards `/storage/upload`. |
 
 ## What It Creates
 
