@@ -141,7 +141,11 @@ x-environment: &environment
 
     ################################################### OPTIONAL (STORAGE) ###################################################
 
-    # Set S3 Storage configuration (required for the file upload in serverless environments)
+    # Without S3, uploads are stored in the `uploads` volume below, at the image's UPLOADS_DIR
+    # (/home/nextjs/apps/web/uploads). Change it only together with that mount.
+    # UPLOADS_DIR: /home/nextjs/apps/web/uploads
+
+    # Set S3 Storage configuration to store uploads in a bucket instead (required for serverless deployments)
     # S3_ACCESS_KEY:
     # S3_SECRET_KEY:
     # S3_REGION:
@@ -402,6 +406,8 @@ services:
       - 3000:3000
     volumes:
       - ./saml-connection:/home/nextjs/apps/web/saml-connection
+      # File uploads when no S3 bucket is configured (local-disk storage).
+      - uploads:/home/nextjs/apps/web/uploads
     environment:
       <<: *app-environment
       SKIP_STARTUP_MIGRATION: "true"
@@ -474,7 +480,7 @@ services:
   # Run Hub DB migrations (goose + river) before the API starts. Uses same image; migrations are idempotent.
   # Default tracks :latest so self-host updates (compose pull) advance Hub alongside the app image.
   # Operators who want an immutable pin can set HUB_IMAGE_REF in docker/.env to either ":<tag>"
-  # (e.g. ":0.3.0") or "@sha256:<digest>". hub, hub-worker, and hub-migrate share the same value — no drift.
+  # (e.g. ":0.3.0") or "@sha256:<digest>". hub, hub-worker, and hub-migrate share the same value, so they never drift.
   hub-migrate:
     image: ghcr.io/formbricks/hub${HUB_IMAGE_REF:-:latest}
     restart: "no"
@@ -614,6 +620,8 @@ volumes:
   postgres:
     driver: local
   redis:
+    driver: local
+  uploads:
     driver: local
   qwen-model-cache:
     driver: local

@@ -1039,13 +1039,10 @@ EOT
 
   # Prompt for file upload setup
   echo ""
-  echo "📁 Do you want to configure file uploads?"
-  echo "   If you skip this, the following features will be disabled:"
-  echo "   - Adding images to surveys (e.g., in questions or as background)"
-  echo "   - 'File Upload' and 'Picture Selection' question types"
-  echo "   - Workspace logos"
-  echo "   - Custom organization logo in emails"
-  read -p "Configure file uploads now? [Y/n] " configure_uploads
+  echo "📁 Do you want to store file uploads in S3-compatible object storage?"
+  echo "   If you skip this, uploads (survey images, file upload answers, logos) are stored on this"
+  echo "   server's disk, in the 'uploads' Docker volume."
+  read -p "Configure S3-compatible storage now? [Y/n] " configure_uploads
   configure_uploads=$(echo "$configure_uploads" | tr '[:upper:]' '[:lower:]')
   if [[ -z $configure_uploads ]]; then configure_uploads="y"; fi
 
@@ -1085,7 +1082,7 @@ EOT
   else
     rustfs_storage="n"
     use_external_s3="n"
-    echo "⚠️ File uploads are disabled. Proceeding without S3-compatible storage configuration."
+    echo "📁 File uploads will be stored on this server's disk (the 'uploads' volume)."
   fi
 
   echo "📥 Downloading docker-compose.yml from the GForms GitHub repository..."
@@ -1116,7 +1113,7 @@ EOT
   sed -i "/BETTER_AUTH_SECRET:$/s/BETTER_AUTH_SECRET:.*/BETTER_AUTH_SECRET: $auth_secret/" docker-compose.yml
   sed -i "/NEXTAUTH_SECRET:$/s/NEXTAUTH_SECRET:.*/NEXTAUTH_SECRET: $auth_secret/" docker-compose.yml
   # Report what actually landed. This script patches a docker-compose.yml downloaded from `stable`, so an
-  # older one carries only the legacy key and the first sed matches nothing — claiming success either way
+  # older one carries only the legacy key and the first sed matches nothing; claiming success either way
   # would hide an install left with an empty secret.
   if grep -q "BETTER_AUTH_SECRET: $auth_secret" docker-compose.yml; then
     echo "🚗 BETTER_AUTH_SECRET updated successfully!"

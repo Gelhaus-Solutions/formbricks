@@ -54,7 +54,7 @@ ARG NODE_OPTIONS="--max_old_space_size=8192"
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 # pnpm 11 checks node_modules against the manifests before every `pnpm run` and, by default,
-# silently re-installs on drift — without --ignore-scripts or the store mount below. Fail instead.
+# silently re-installs on drift (without --ignore-scripts or the store mount below). Fail instead.
 ENV pnpm_config_verify_deps_before_run=error
 
 # Set the working directory
@@ -399,5 +399,9 @@ RUN mkdir -p /home/nextjs/apps/web/uploads/ && \
 
 VOLUME /home/nextjs/apps/web/uploads/
 VOLUME /home/nextjs/apps/web/saml-connection
+
+# Local-disk file storage when no S3 bucket is configured (GFORMS-36). Set here because the server runs from
+# /home/nextjs, where the default ./uploads would miss the volume above.
+ENV UPLOADS_DIR=/home/nextjs/apps/web/uploads
 
 CMD ["/home/nextjs/start.sh"]

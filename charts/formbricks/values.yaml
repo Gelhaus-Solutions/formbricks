@@ -137,13 +137,15 @@ deployment:
   env:
     # The app sits behind exactly one reverse proxy (Traefik/Envoy) in this chart, so the client address
     # is the last X-Forwarded-For entry. Pinned here rather than relying on the code default (also 1) so
-    # the assumption is visible next to the ingress it describes. Raise it if you put further proxies —
-    # a CDN, a corporate load balancer — in front of the ingress; setting it higher than the real chain
+    # the assumption is visible next to the ingress it describes. Raise it if you put further proxies
+    # (a CDN, a corporate load balancer) in front of the ingress; setting it higher than the real chain
     # lets callers spoof their address by prepending entries.
     TRUSTED_PROXY_HOP_COUNT: "1"
 
   # Additional pod volumes and app container mounts. These are useful for custom CA bundles and
   # provider-specific runtime files without placing their contents directly in Helm values.
+  # Without S3, file uploads need a writable UPLOADS_DIR (/home/nextjs/apps/web/uploads) that every
+  # replica shares: mount a ReadWriteMany volume there, or uploads stay off on a read-only root filesystem.
   extraVolumes: []
   extraVolumeMounts: []
 
@@ -417,13 +419,13 @@ pdb:
   minAvailable: 1
 
   # Maximum pods that can be unavailable during disruptions.
-  # Mutually exclusive with minAvailable — uncomment and set
+  # Mutually exclusive with minAvailable: uncomment and set
   # minAvailable to null to use this instead.
   # maxUnavailable: 1
 
   # Eviction policy for unhealthy pods (Kubernetes 1.27+).
-  # "IfHealthy"    — unhealthy pods count toward the budget (default).
-  # "AlwaysAllow"  — unhealthy pods can always be evicted,
+  # "IfHealthy":   unhealthy pods count toward the budget (default).
+  # "AlwaysAllow": unhealthy pods can always be evicted,
   #                  preventing them from blocking node drain.
   # unhealthyPodEvictionPolicy: AlwaysAllow
 
@@ -545,7 +547,7 @@ authzed:
     # CREATE DATABASE ... OWNER also requires being able to SET ROLE to the
     # owner, which CREATEROLE alone does not give, so the Job grants itself the
     # `spicedb` role first. From PostgreSQL 16 that works only for a role it
-    # holds ADMIN OPTION on — which creating the role confers, so the only
+    # holds ADMIN OPTION on, which creating the role confers, so the only
     # unsupported case is a `spicedb` role someone else already created. See the
     # chart README.
     #
@@ -557,7 +559,7 @@ authzed:
     adminUsername: postgres
     adminDatabase: postgres
     # Where that role's password lives. Both default to the bundled PostgreSQL
-    # admin credentials, so overriding adminUsername alone is not enough — set
+    # admin credentials, so overriding adminUsername alone is not enough: set
     # these too whenever the role is not the bundled `postgres` superuser.
     # Setting the name without the key is refused as well: the key would
     # otherwise fall back to the subchart's own key name and be looked up inside
