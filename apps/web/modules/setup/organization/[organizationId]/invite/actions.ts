@@ -7,7 +7,7 @@ import { AuthenticationError } from "@formbricks/types/errors";
 import { ZUserEmail, ZUserName } from "@formbricks/types/user";
 import { INVITE_DISABLED } from "@/lib/constants";
 import { authenticatedActionClient } from "@/lib/utils/action-client";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { sendInviteMemberEmail } from "@/modules/email";
 import {
   reserveInviteRateLimit,

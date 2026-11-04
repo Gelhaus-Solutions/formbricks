@@ -23,7 +23,7 @@ vi.mock("@/modules/auth/lib/session", () => ({ getSession: mocks.getSession }));
 vi.mock("@/app/api/v1/auth", () => ({ authenticateRequest: vi.fn() }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: vi.fn() }));
 vi.mock("@/modules/core/rate-limit/rate-limit", () => ({ checkRateLimit: mocks.checkRateLimit }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({ queueAuditEvent: mocks.queueAuditEvent }));
+vi.mock("@/modules/audit-log/lib/handler", () => ({ queueAuditEvent: mocks.queueAuditEvent }));
 vi.mock("@formbricks/logger", () => ({
   logger: {
     error: vi.fn(),

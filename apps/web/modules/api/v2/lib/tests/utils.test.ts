@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 import { logger } from "@formbricks/logger";
 import { TApiAuditLog } from "@/app/lib/api/with-api-logging";
 import { ApiErrorResponseV2 } from "@/modules/api/v2/types/api-error";
-import { queueAuditEvent } from "@/modules/ee/audit-logs/lib/handler";
+import { queueAuditEvent } from "@/modules/audit-log/lib/handler";
 import { formatZodError, handleApiError, logApiError, logApiRequest } from "../utils";
 
 const mockRequest = new Request("http://localhost/api/v2/test");
@@ -31,7 +31,7 @@ vi.mock("@/lib/constants", async (importOriginal) => {
   };
 });
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEvent: vi.fn(),
 }));
 

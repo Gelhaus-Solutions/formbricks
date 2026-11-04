@@ -6,8 +6,8 @@ import { APIError } from "better-auth/api";
 import { genericOAuth } from "better-auth/plugins/generic-oauth";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { logger } from "@formbricks/logger";
-import { queueAuditEventBackground } from "@/modules/ee/audit-logs/lib/handler";
-import { UNKNOWN_DATA } from "@/modules/ee/audit-logs/types/audit-log";
+import { queueAuditEventBackground } from "@/modules/audit-log/lib/handler";
+import { UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
 import {
   auditFailedAuthAfter,
   auditPasswordReset,
@@ -26,7 +26,7 @@ import { finalizeSuccessfulSignIn } from "./sign-in-tracking";
 import { SSO_PROVISIONING_REJECT_REASONS } from "./sso-provisioning-reject-reasons";
 import { logAuthAttempt, shouldLogAuthFailure } from "./utils";
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEventBackground: vi.fn(),
 }));
 

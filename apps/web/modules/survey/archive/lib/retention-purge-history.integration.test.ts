@@ -11,7 +11,7 @@ vi.mock("@/modules/storage/service", () => ({
   deleteFile: vi.fn(),
   deleteSurveyUploadFolder: vi.fn().mockResolvedValue(true),
 }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEventWithoutRequest: vi.fn().mockResolvedValue(undefined),
 }));
 

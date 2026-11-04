@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@formbricks/database";
 import { ResourceNotFoundError } from "@formbricks/types/errors";
-import { queueAuditEventWithoutRequest } from "@/modules/ee/audit-logs/lib/handler";
+import { queueAuditEventWithoutRequest } from "@/modules/audit-log/lib/handler";
 import { SURVEY_ARCHIVE_PURGE_BATCH_SIZE } from "@/modules/survey/archive/lib/constants";
 import { deleteSurvey } from "@/modules/survey/lib/surveys";
 import { getSurveyArchivePurgeCutoff, purgeExpiredArchivedSurveys } from "./process-survey-archive-purge-job";
@@ -32,7 +32,7 @@ const history = vi.hoisted(() => ({
 }));
 vi.mock("./retention-purge-history", () => ({ createRetentionPurgeHistory: vi.fn(() => history) }));
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEventWithoutRequest: vi.fn().mockResolvedValue(undefined),
 }));
 

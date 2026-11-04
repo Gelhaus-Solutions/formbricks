@@ -11,9 +11,9 @@ import { capturePostHogEvent, getEmailDomain, groupIdentifyPostHog } from "@/lib
 import { updateUser } from "@/lib/user/service";
 import { authenticatedActionClient } from "@/lib/utils/action-client";
 import { DEFAULT_WORKSPACE_NAME } from "@/lib/workspace/constants";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
 import { ensureCloudStripeSetupForOrganization } from "@/modules/ee/billing/lib/organization-billing";
 import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { createWorkspace } from "@/modules/workspaces/settings/lib/workspace";

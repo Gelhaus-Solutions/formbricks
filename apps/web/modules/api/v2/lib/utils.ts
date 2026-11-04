@@ -5,7 +5,7 @@ import { logger } from "@formbricks/logger";
 import { TApiAuditLog } from "@/app/lib/api/with-api-logging";
 import { responses } from "@/modules/api/v2/lib/response";
 import { ApiErrorResponseV2 } from "@/modules/api/v2/types/api-error";
-import { queueAuditEvent } from "@/modules/ee/audit-logs/lib/handler";
+import { queueAuditEvent } from "@/modules/audit-log/lib/handler";
 import { logApiErrorEdge } from "./utils-edge";
 
 export const handleApiError = (

@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { logger } from "@formbricks/logger";
 import { TooManyRequestsError } from "@formbricks/types/errors";
 import { hasCredentialAccount } from "@/lib/user/password";
+import { queueAuditEventWithoutRequest } from "@/modules/audit-log/lib/handler";
 import { sendSsoSignInHint } from "@/modules/auth/forgot-password/lib/sso-sign-in-hint";
 import { auth } from "@/modules/auth/lib/auth";
 import { getUserByEmail } from "@/modules/auth/lib/user";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
-import { queueAuditEventWithoutRequest } from "@/modules/ee/audit-logs/lib/handler";
 import { processPasswordResetRequest } from "./password-reset-request";
 
 const mocks = vi.hoisted(() => ({
@@ -31,7 +31,7 @@ vi.mock("@/modules/auth/lib/user", () => ({ getUserByEmail: vi.fn() }));
 vi.mock("@/modules/auth/lib/auth", () => ({ auth: { api: { requestPasswordReset: vi.fn() } } }));
 vi.mock("@/modules/auth/forgot-password/lib/sso-sign-in-hint", () => ({ sendSsoSignInHint: vi.fn() }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: vi.fn() }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({ queueAuditEventWithoutRequest: vi.fn() }));
+vi.mock("@/modules/audit-log/lib/handler", () => ({ queueAuditEventWithoutRequest: vi.fn() }));
 vi.mock("@formbricks/logger", () => ({ logger: { error: vi.fn(), warn: vi.fn() } }));
 
 type TFoundUser = NonNullable<Awaited<ReturnType<typeof getUserByEmail>>>;

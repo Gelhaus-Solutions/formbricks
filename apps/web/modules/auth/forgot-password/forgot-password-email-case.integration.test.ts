@@ -46,8 +46,8 @@ vi.mock("@/lib/constants", async (importOriginal) => ({
   EMAIL_AUTH_ENABLED: true,
 }));
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/modules/ee/audit-logs/lib/handler")>();
+vi.mock("@/modules/audit-log/lib/handler", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/audit-log/lib/handler")>();
   return { ...actual, queueAuditEventBackground: vi.fn(async () => undefined) };
 });
 

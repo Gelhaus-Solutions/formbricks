@@ -18,7 +18,7 @@ vi.mock("@/lib/utils/action-client", () => ({
   },
 }));
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_action, _target, fn) => fn),
 }));
 

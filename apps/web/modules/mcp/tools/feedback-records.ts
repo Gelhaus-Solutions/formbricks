@@ -14,8 +14,8 @@ import {
 } from "@/app/api/v3/feedbackRecords/lib/operations";
 import { buildV3AuditLog, queueV3AuditLog } from "@/app/api/v3/lib/audit";
 import type { TV3AuditLog, TV3Authentication } from "@/app/api/v3/lib/types";
+import { UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
 import { getMcpResourceUrl } from "@/modules/auth/lib/oauth-urls";
-import { UNKNOWN_DATA } from "@/modules/ee/audit-logs/types/audit-log";
 import { MCP_API_ROUTE } from "@/modules/mcp/constants";
 import { type TMcpToolContext, getMcpAuthentication, getMcpRequestId, getMcpToolAuthInfo } from "../auth";
 import { responseToMcpToolResult } from "../errors";

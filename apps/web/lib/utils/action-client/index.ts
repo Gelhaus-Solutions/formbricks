@@ -6,11 +6,11 @@ import { AuthenticationError, AuthorizationError, isExpectedError } from "@formb
 import { withAuthorizationSurface } from "@/lib/authorization/context";
 import { AUDIT_LOG_ENABLED } from "@/lib/constants";
 import { getUser } from "@/lib/user/service";
-import { getSession } from "@/modules/auth/lib/session";
 import {
   UNKNOWN_AUDIT_REQUEST_METADATA,
   getAuditRequestMetadata,
-} from "@/modules/ee/audit-logs/lib/request-metadata";
+} from "@/modules/audit-log/lib/request-metadata";
+import { getSession } from "@/modules/auth/lib/session";
 import { ActionClientCtx } from "./types/context";
 
 export const actionClient = createSafeActionClient({

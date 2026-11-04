@@ -8,7 +8,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/utils/action-client", () => ({
   authenticatedActionClient: { inputSchema: vi.fn().mockReturnThis(), action: vi.fn((fn) => fn) },
 }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_action, _target, fn) => fn),
 }));
 vi.mock("@/lib/authorization", () => ({ assertCan: vi.fn() }));

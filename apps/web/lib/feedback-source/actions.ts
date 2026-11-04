@@ -20,9 +20,9 @@ import {
   getOrganizationIdFromWorkspaceId,
   getWorkspaceIdFromSurveyId,
 } from "@/lib/utils/helper";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
 import { getContactIdsByUserIds } from "@/modules/ee/unify-feedback/lib/contacts";
 import { assertFeedbackSourceDirectoryAccess } from "./access";
 import { importHistoricalResponses } from "./import";

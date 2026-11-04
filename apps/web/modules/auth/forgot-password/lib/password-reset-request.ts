@@ -4,14 +4,14 @@ import { logger } from "@formbricks/logger";
 import { TooManyRequestsError } from "@formbricks/types/errors";
 import { EMAIL_AUTH_ENABLED, WEBAPP_URL } from "@/lib/constants";
 import { hasCredentialAccount } from "@/lib/user/password";
+import { queueAuditEventWithoutRequest } from "@/modules/audit-log/lib/handler";
+import { UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
+import type { TAuditRequestMetadata } from "@/modules/audit-log/types/request-metadata";
 import { sendSsoSignInHint } from "@/modules/auth/forgot-password/lib/sso-sign-in-hint";
 import { auth } from "@/modules/auth/lib/auth";
 import { getUserByEmail } from "@/modules/auth/lib/user";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { queueAuditEventWithoutRequest } from "@/modules/ee/audit-logs/lib/handler";
-import { UNKNOWN_DATA } from "@/modules/ee/audit-logs/types/audit-log";
-import type { TAuditRequestMetadata } from "@/modules/ee/audit-logs/types/request-metadata";
 
 /**
  * Whether this user has a password to reset. Pure SSO users do not: they get a mail naming their identity

@@ -2,8 +2,8 @@ import "server-only";
 import { skipV3AuditLog } from "@/app/api/v3/lib/audit";
 import { problemUnprocessableContent } from "@/app/api/v3/lib/response";
 import type { TV3AuditLog, TV3Authentication } from "@/app/api/v3/lib/types";
-import { queueAuditEventWithoutRequest } from "@/modules/ee/audit-logs/lib/handler";
-import { getAuditRequestMetadata } from "@/modules/ee/audit-logs/lib/request-metadata";
+import { queueAuditEventWithoutRequest } from "@/modules/audit-log/lib/handler";
+import { getAuditRequestMetadata } from "@/modules/audit-log/lib/request-metadata";
 import { requireRetentionOrgAccess } from "@/modules/ee/data-retention/lib/api-access";
 import {
   countRetentionExportRows,

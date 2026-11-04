@@ -19,7 +19,7 @@ vi.mock("@/app/api/v1/auth", () => ({ authenticateRequest: vi.fn() }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({
   applyRateLimit: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({ queueAuditEvent: vi.fn() }));
+vi.mock("@/modules/audit-log/lib/handler", () => ({ queueAuditEvent: vi.fn() }));
 vi.mock("@formbricks/logger", () => ({
   logger: { withContext: vi.fn(() => ({ error: vi.fn(), warn: vi.fn(), info: vi.fn() })), error: vi.fn() },
 }));

@@ -4,9 +4,9 @@ import { TooManyRequestsError } from "@formbricks/types/errors";
 import { resetDb } from "@/integration/reset-db";
 import { WEBAPP_URL } from "@/lib/constants";
 import { capturePostHogEvent } from "@/lib/posthog";
+import { queueAuditEventBackground } from "@/modules/audit-log/lib/handler";
 import { auth } from "@/modules/auth/lib/auth";
 import * as brevo from "@/modules/auth/lib/brevo";
-import { queueAuditEventBackground } from "@/modules/ee/audit-logs/lib/handler";
 import {
   sendPasswordResetLinkEmail,
   sendPasswordResetNotifyEmail,
@@ -21,8 +21,8 @@ vi.mock("@/modules/auth/lib/brevo", async (importOriginal) => {
 
 // Spy queueAuditEventBackground (the `signedIn` audit, `signInAuditPlugin`) so the auto-login-after-
 // verification path can be asserted without depending on the real setImmediate/headers() emission.
-vi.mock("@/modules/ee/audit-logs/lib/handler", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/modules/ee/audit-logs/lib/handler")>();
+vi.mock("@/modules/audit-log/lib/handler", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/audit-log/lib/handler")>();
   return { ...actual, queueAuditEventBackground: vi.fn().mockResolvedValue(undefined) };
 });
 

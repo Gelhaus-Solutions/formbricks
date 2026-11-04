@@ -7,10 +7,10 @@ import { OperationNotAllowedError } from "@formbricks/types/errors";
 import { ZUserEmail } from "@formbricks/types/user";
 import { PASSWORD_RESET_DISABLED } from "@/lib/constants";
 import { actionClient } from "@/lib/utils/action-client";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { processPasswordResetRequest } from "@/modules/auth/forgot-password/lib/password-reset-request";
 import { applyIPRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
 
 const ZForgotPasswordAction = z.object({
   email: ZUserEmail,

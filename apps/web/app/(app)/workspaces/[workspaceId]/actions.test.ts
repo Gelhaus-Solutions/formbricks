@@ -20,7 +20,7 @@ vi.mock("@/lib/utils/action-client", () => ({
     })),
   },
 }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_eventName, _objectType, fn) => fn),
 }));
 vi.mock("@/lib/authorization", () => ({ assertCan: mocks.assertCan }));

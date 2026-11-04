@@ -8,8 +8,8 @@ import type {
 } from "@modelcontextprotocol/server";
 import { logger } from "@formbricks/logger";
 import { buildV3AuditLog, queueV3AuditLog } from "@/app/api/v3/lib/audit";
+import type { TAuditAction, TAuditTarget } from "@/modules/audit-log/types/audit-log";
 import { getMcpResourceUrl } from "@/modules/auth/lib/oauth-urls";
-import type { TAuditAction, TAuditTarget } from "@/modules/ee/audit-logs/types/audit-log";
 import {
   type TMcpToolContext,
   createMcpInsufficientScopeResponse,

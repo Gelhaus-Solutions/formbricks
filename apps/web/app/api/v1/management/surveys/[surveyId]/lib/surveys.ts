@@ -1,5 +1,5 @@
 import type { TApiAuditLog } from "@/app/lib/api/with-api-logging";
-import { queueAuditEvent } from "@/modules/ee/audit-logs/lib/handler";
+import { queueAuditEvent } from "@/modules/audit-log/lib/handler";
 import { toUnlinkedCreativeAuditEvents } from "@/modules/ee/creatives/lib/linked-creatives";
 import { deleteSurvey as deleteSharedSurvey } from "@/modules/survey/lib/surveys";
 

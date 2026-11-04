@@ -129,7 +129,7 @@ vi.mock("./posthog", () => ({
   captureSurveyResponsePostHogEvent: mockCaptureSurveyResponsePostHogEvent,
 }));
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEventWithoutRequest: mockQueueAuditEventWithoutRequest,
 }));
 

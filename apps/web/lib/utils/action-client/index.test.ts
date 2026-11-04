@@ -18,8 +18,8 @@ import {
   isExpectedError,
 } from "@formbricks/types/errors";
 import { RequestBodyTooLargeError } from "@/app/lib/api/request-body";
+import { getAuditRequestMetadata } from "@/modules/audit-log/lib/request-metadata";
 import { getSession } from "@/modules/auth/lib/session";
-import { getAuditRequestMetadata } from "@/modules/ee/audit-logs/lib/request-metadata";
 
 // Mock Sentry
 vi.mock("@sentry/nextjs", () => ({
@@ -45,7 +45,7 @@ vi.mock("@/lib/user/service", () => ({
 }));
 
 // Mock metadata snapshots, independently of the IP capture preference.
-vi.mock("@/modules/ee/audit-logs/lib/request-metadata", () => ({
+vi.mock("@/modules/audit-log/lib/request-metadata", () => ({
   getAuditRequestMetadata: vi.fn().mockResolvedValue({ ipAddress: "unknown", userAgent: "Agent/1" }),
   UNKNOWN_AUDIT_REQUEST_METADATA: { ipAddress: "unknown", userAgent: "unknown" },
 }));
@@ -65,7 +65,7 @@ vi.mock("@/lib/constants", () => ({
 }));
 
 // Mock audit log types
-vi.mock("@/modules/ee/audit-logs/types/audit-log", () => ({
+vi.mock("@/modules/audit-log/types/audit-log", () => ({
   UNKNOWN_DATA: "unknown",
 }));
 

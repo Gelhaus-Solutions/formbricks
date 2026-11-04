@@ -40,7 +40,7 @@ vi.mock("@/lib/workspace/service", () => ({
   getWorkspace: mocks.getWorkspace,
 }));
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_eventName, _objectType, fn) => fn),
 }));
 

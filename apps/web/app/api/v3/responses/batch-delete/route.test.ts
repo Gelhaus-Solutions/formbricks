@@ -20,7 +20,7 @@ vi.mock("@/app/api/v1/auth", () => ({ authenticateRequest: mockAuthenticateReque
 vi.mock("@/modules/core/rate-limit/helpers", () => ({
   applyRateLimit: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEvent: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("@/app/lib/api/with-api-logging", () => ({

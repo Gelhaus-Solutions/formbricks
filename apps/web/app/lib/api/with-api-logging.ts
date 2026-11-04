@@ -13,6 +13,8 @@ import {
 } from "@/app/middleware/endpoint-validator";
 import { withAuthorizationSurface } from "@/lib/authorization/context";
 import { getApiKeyFromHeaders } from "@/modules/api/lib/api-key-auth";
+import { queueAuditEvent } from "@/modules/audit-log/lib/handler";
+import { TAuditAction, TAuditTarget, UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
 import { getSession } from "@/modules/auth/lib/session";
 import {
   TEnvoyRateLimitAuthType,
@@ -21,8 +23,6 @@ import {
 import { applyIPRateLimit, applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import { TRateLimitConfig } from "@/modules/core/rate-limit/types/rate-limit";
-import { queueAuditEvent } from "@/modules/ee/audit-logs/lib/handler";
-import { TAuditAction, TAuditTarget, UNKNOWN_DATA } from "@/modules/ee/audit-logs/types/audit-log";
 
 export type TApiAuditLog = Parameters<typeof queueAuditEvent>[0];
 export type TApiV1Authentication = TAuthenticationApiKey | Session | null;

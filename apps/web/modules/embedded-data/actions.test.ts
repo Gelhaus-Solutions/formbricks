@@ -59,7 +59,7 @@ vi.mock("@/lib/utils/helper", () => ({
   getOrganizationIdFromWorkspaceId: mocks.getOrganizationIdFromWorkspaceId,
 }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: mocks.applyRateLimit }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_action, _target, handler) => handler),
 }));
 vi.mock("@/modules/embedded-data/lib/library", () => ({

@@ -29,7 +29,7 @@ vi.mock("@/modules/ee/data-retention/lib/runs-service", () => ({
   countRetentionExportRows: mockCount,
   iterateRetentionExportRows: mockIterate,
 }));
-vi.mock("@/modules/ee/audit-logs/lib/request-metadata", () => ({
+vi.mock("@/modules/audit-log/lib/request-metadata", () => ({
   getAuditRequestMetadata: mockGetRequestMetadata,
 }));
 vi.mock("@/modules/auth/lib/session", () => ({ getSession: mockGetSession }));
@@ -37,7 +37,7 @@ vi.mock("@/app/api/v1/auth", () => ({ authenticateRequest: vi.fn() }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({
   applyRateLimit: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEvent: mockQueueAuditEvent,
   queueAuditEventWithoutRequest: mockQueueAuditEventWithoutRequest,
 }));

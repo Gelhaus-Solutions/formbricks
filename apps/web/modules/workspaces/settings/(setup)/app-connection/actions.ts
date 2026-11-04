@@ -10,7 +10,7 @@ import { getSurveysByActionClassId } from "@/lib/survey/service";
 import { getUserVisibleSurveyWhere } from "@/lib/survey/visibility/actor-context";
 import { actionClient, authenticatedActionClient } from "@/lib/utils/action-client";
 import { getOrganizationIdFromActionClassId, getWorkspaceIdFromActionClassId } from "@/lib/utils/helper";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { getLatestStableFbRelease } from "./lib/github";
 
 const ZDeleteActionClassAction = z.object({

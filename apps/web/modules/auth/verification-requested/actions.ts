@@ -13,6 +13,7 @@ import { ZUserEmail } from "@formbricks/types/user";
 import { WEBAPP_URL } from "@/lib/constants";
 import { actionClient } from "@/lib/utils/action-client";
 import { MAX_CALLBACK_URL_LENGTH, getValidatedCallbackUrl } from "@/lib/utils/url";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { auth } from "@/modules/auth/lib/auth";
 import {
   SIGNUP_INTENT_COOKIE_NAME,
@@ -28,7 +29,6 @@ import {
 } from "@/modules/auth/lib/verification-links";
 import { applyIPRateLimit, applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
 import {
   type TSsoRecoveryIntent,
   getSsoRecoveryPairedTtlSeconds,

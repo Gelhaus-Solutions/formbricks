@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { queueV3AuditLog } from "@/app/api/v3/lib/audit";
 import type { ActionClientCtx } from "@/lib/utils/action-client/types/context";
 import { getClientIpFromHeaders } from "@/lib/utils/client-ip";
 import { getIsAuditLogsEnabled } from "@/modules/ee/license-check/lib/utils";
@@ -521,36 +520,4 @@ describe("withAuditLogging", () => {
     expect(callArgs.target.type).toBe("dashboardWidget");
     expect(callArgs.target.id).toBe("widget-1");
   });
-});
-
-describe("v3 and MCP audit emission", () => {
-  beforeEach(clearAllMockHandles);
-
-  test.each(["success", "failure"] as const)(
-    "retains metadata for %s API-key and MCP events",
-    async (status) => {
-      const { logger } = await import("@formbricks/logger");
-      await queueV3AuditLog(
-        {
-          ...baseEventParams,
-          userId: "api-key-1",
-          userType: "api",
-          status,
-          apiUrl: "https://app.example.com/api/mcp",
-        },
-        "request-1",
-        logger.withContext({})
-      );
-      await flushAfter();
-      expect(serviceLogAuditEventMockHandle).toHaveBeenCalledWith(
-        expect.objectContaining({
-          actor: { id: "api-key-1", type: "api" },
-          status,
-          ipAddress: "127.0.0.1",
-          userAgent: "audit-test-agent",
-          ...(status === "failure" ? { eventId: "request-1" } : {}),
-        })
-      );
-    }
-  );
 });

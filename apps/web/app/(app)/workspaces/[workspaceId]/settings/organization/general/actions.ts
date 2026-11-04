@@ -10,7 +10,7 @@ import { deleteOrganization, getOrganization, updateOrganization } from "@/lib/o
 import { authenticatedActionClient } from "@/lib/utils/action-client";
 import { AuthenticatedActionClientCtx } from "@/lib/utils/action-client/types/context";
 import { getTranslate } from "@/lingodotdev/server";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import {
   ZOrganizationAISettingsInput,

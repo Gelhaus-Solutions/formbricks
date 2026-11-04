@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { queueAuditEvent } from "@/modules/ee/audit-logs/lib/handler";
+import { queueAuditEvent } from "@/modules/audit-log/lib/handler";
 import { deleteSurvey } from "./surveys";
 
 const { mockDeleteSharedSurvey } = vi.hoisted(() => ({
@@ -10,7 +10,7 @@ vi.mock("@/modules/survey/lib/surveys", () => ({
   deleteSurvey: mockDeleteSharedSurvey,
 }));
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEvent: vi.fn(),
 }));
 

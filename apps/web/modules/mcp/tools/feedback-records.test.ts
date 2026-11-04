@@ -21,7 +21,7 @@ import {
   successListResponse,
   successResponse,
 } from "@/app/api/v3/lib/response";
-import { UNKNOWN_DATA } from "@/modules/ee/audit-logs/types/audit-log";
+import { UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
 import { registerFeedbackRecordTools } from "./feedback-records";
 import { ZMcpUpdateFeedbackRecordInput } from "./schemas";
 import { type ToolCallEra, callToolOverHttp, errorText } from "./test-utils";

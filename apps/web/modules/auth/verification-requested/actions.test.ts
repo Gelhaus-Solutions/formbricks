@@ -4,12 +4,12 @@ import {
   SSO_RECOVERY_LINK_EXPIRED_ERROR_CODE,
   TooManyRequestsError,
 } from "@formbricks/types/errors";
+import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { auth } from "@/modules/auth/lib/auth";
 import { getUserByEmail } from "@/modules/auth/lib/user";
 // Import mocked functions
 import { applyIPRateLimit, applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { withAuditLogging } from "@/modules/ee/audit-logs/lib/handler";
 import { sendVerificationEmail } from "@/modules/email";
 import { resendVerificationEmailAction } from "./actions";
 
@@ -85,7 +85,7 @@ vi.mock("@/lib/constants", async (importOriginal) => {
   };
 });
 
-vi.mock("@/modules/ee/audit-logs/lib/handler", () => ({
+vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_type: string, _object: string, fn: Function) => fn),
 }));
 
