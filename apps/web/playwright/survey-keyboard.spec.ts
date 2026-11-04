@@ -874,7 +874,6 @@ test.describe("Survey validation error announcement @slow", () => {
       window.formbricksSurveys.renderSurvey({
         survey,
         styling: {},
-        isBrandingEnabled: false,
         languageCode: "default",
         mode: "modal",
         isPreviewMode: true,

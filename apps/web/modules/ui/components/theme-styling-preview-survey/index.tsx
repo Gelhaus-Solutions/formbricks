@@ -189,7 +189,6 @@ export const ThemeStylingPreviewSurvey = ({
           customCss={customCss}
           survey={toJsWorkspaceStateSurvey({ ...survey, type: "app" })}
           appearance={appearance}
-          isBrandingEnabled={workspace.inAppSurveyBranding}
           isRedirectDisabled={true}
           onFileUpload={async (file) => file.name}
           styling={styling}
@@ -239,7 +238,6 @@ export const ThemeStylingPreviewSurvey = ({
               isPreviewMode={true}
               customCss={customCss}
               survey={toJsWorkspaceStateSurvey({ ...survey, type: "link" })}
-              isBrandingEnabled={workspace.linkSurveyBranding}
               isRedirectDisabled={true}
               onFileUpload={async (file) => file.name}
               responseCount={42}

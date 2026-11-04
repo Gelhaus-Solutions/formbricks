@@ -264,7 +264,6 @@ test.describe("Survey renderer under a customer-style CSP", () => {
             w.formbricksSurveys.renderSurveyInline({
               survey,
               styling: {},
-              isBrandingEnabled: false,
               languageCode: "default",
               containerId: container.id,
               isPreviewMode: true,

@@ -39,7 +39,6 @@ export interface TSurveyCardRect {
 export interface SurveyBaseProps {
   survey: TJsWorkspaceStateSurvey;
   styling: TSurveyStyling | TWorkspaceStyling;
-  isBrandingEnabled: boolean;
   getSetIsError?: (getSetError: (value: boolean) => void) => void;
   getSetIsResponseSendingFinished?: (getSetIsResponseSendingFinished: (value: boolean) => void) => void;
   getSetBlockId?: (getSetBlockId: (value: string) => void) => void;

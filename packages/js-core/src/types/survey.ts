@@ -5,7 +5,6 @@ import type { TFileUploadParams, TUploadFileConfig } from "@/types/storage";
 export interface SurveyBaseProps {
   survey: TWorkspaceStateSurvey;
   styling: TSurveyStyling | TWorkspaceStyling;
-  isBrandingEnabled: boolean;
   getSetIsError?: (getSetError: (value: boolean) => void) => void;
   getSetIsResponseSendingFinished?: (getSetIsResponseSendingFinished: (value: boolean) => void) => void;
   getSetResponseData?: (getSetResponseData: (value: TResponseData) => void) => void;

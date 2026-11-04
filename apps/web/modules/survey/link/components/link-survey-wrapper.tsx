@@ -29,7 +29,6 @@ interface LinkSurveyWrapperProps {
   TERMS_URL?: string;
   IS_FORMBRICKS_CLOUD: boolean;
   publicDomain: string;
-  isBrandingEnabled: boolean;
   dir?: "ltr" | "rtl" | "auto";
 }
 
@@ -49,7 +48,6 @@ export const LinkSurveyWrapper = ({
   TERMS_URL,
   IS_FORMBRICKS_CLOUD,
   publicDomain,
-  isBrandingEnabled,
   dir = "auto",
 }: Readonly<LinkSurveyWrapperProps>) => {
   const { t } = useTranslation();
@@ -79,10 +77,7 @@ export const LinkSurveyWrapper = ({
 
   const renderEmbeddedLayout = () => (
     <div className={cn("h-full w-full overflow-auto", !isCardless && "overflow-clip")}>
-      <SurveyLoadingAnimation
-        isWelcomeCardEnabled={isWelcomeCardEnabled}
-        isBrandingEnabled={isBrandingEnabled}
-      />
+      <SurveyLoadingAnimation isWelcomeCardEnabled={isWelcomeCardEnabled} />
       <main
         className={cn(
           "flex h-full w-full flex-col",
@@ -102,7 +97,6 @@ export const LinkSurveyWrapper = ({
       <SurveyLoadingAnimation
         isWelcomeCardEnabled={isWelcomeCardEnabled}
         isBackgroundLoaded={isBackgroundLoaded}
-        isBrandingEnabled={isBrandingEnabled}
       />
       <MediaBackground
         surveyType={surveyType}

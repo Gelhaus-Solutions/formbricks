@@ -114,14 +114,13 @@ export const renderSurvey = async ({
         status={survey.status}
         isScheduled={isScheduled}
         surveyClosedMessage={survey.surveyClosedMessage}
-        workspace={workspace}
       />
     );
   }
 
   // Check if single-use survey has already been completed
   if (singleUseResponse?.finished) {
-    return <SurveyCompletedMessage singleUseMessage={survey.singleUse} workspace={workspace} />;
+    return <SurveyCompletedMessage singleUseMessage={survey.singleUse} />;
   }
 
   // Handle email verification flow if enabled

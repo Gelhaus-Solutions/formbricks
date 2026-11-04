@@ -276,7 +276,6 @@ export const SurveyClientWrapper = ({
         IMPRINT_URL={IMPRINT_URL}
         PRIVACY_URL={PRIVACY_URL}
         TERMS_URL={TERMS_URL}
-        isBrandingEnabled={workspace.linkSurveyBranding}
         dir={logoDir}>
         <SurveyInline
           appUrl={publicDomain}
@@ -290,7 +289,6 @@ export const SurveyClientWrapper = ({
           languageCode={languageCode}
           onLanguageChange={setCurrentLanguageCode}
           onPageChange={handlePageChange}
-          isBrandingEnabled={workspace.linkSurveyBranding}
           shouldResetQuestionId={false}
           autoFocus={autoFocus}
           prefillResponseData={prefillValue}

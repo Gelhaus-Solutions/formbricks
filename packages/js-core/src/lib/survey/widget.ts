@@ -195,7 +195,6 @@ export const renderWidget = async (
   const clickOutside = workspaceOverwrites.clickOutsideClose ?? settings.clickOutsideClose;
   const overlay = workspaceOverwrites.overlay ?? settings.overlay;
   const placement = workspaceOverwrites.placement ?? settings.placement;
-  const isBrandingEnabled = settings.inAppSurveyBranding;
 
   let formbricksSurveys: TFormbricksSurveys;
   try {
@@ -279,7 +278,6 @@ export const renderWidget = async (
       // The visit at the moment the survey shows (ENG-3876), saved as the response's visit fields.
       visit: getVisitSnapshot() ?? undefined,
       survey,
-      isBrandingEnabled,
       clickOutside,
       overlay,
       languageCode,

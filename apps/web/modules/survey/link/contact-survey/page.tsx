@@ -11,7 +11,6 @@ import { getServableLinkSurvey } from "@/modules/survey/link/lib/servable-survey
 import { getLinkSurveySingleUseAccess } from "@/modules/survey/link/lib/single-use-link";
 import type { TLinkSurveySearchParams } from "@/modules/survey/link/lib/types";
 import { getWorkspaceContextForLinkSurvey } from "@/modules/survey/link/lib/workspace";
-import { getWorkspaceById } from "@/modules/survey/link/lib/workspace";
 import { getGenericSurveyMetadata, getMetadataForContactSurvey } from "@/modules/survey/link/metadata";
 
 interface ContactSurveyPageProps {
@@ -73,8 +72,7 @@ export const ContactSurveyPage = async (props: ContactSurveyPageProps) => {
     if (!survey) {
       notFound();
     }
-    const workspace = await getWorkspaceById(survey.workspaceId);
-    return <SurveyInactive status="response submitted" workspace={workspace || undefined} />;
+    return <SurveyInactive status="response submitted" />;
   }
 
   const isPreview = preview === "true";
@@ -85,8 +83,7 @@ export const ContactSurveyPage = async (props: ContactSurveyPageProps) => {
 
   const singleUse = getLinkSurveySingleUseAccess({ survey, suId, suToken, surface: "contact_link_page" });
   if (!singleUse.allowed) {
-    const workspaceContext = await getWorkspaceContextForLinkSurvey(survey.workspaceId);
-    return <SurveyInactive status="link invalid" workspace={workspaceContext.workspace} />;
+    return <SurveyInactive status="link invalid" />;
   }
   const { singleUseId } = singleUse;
 

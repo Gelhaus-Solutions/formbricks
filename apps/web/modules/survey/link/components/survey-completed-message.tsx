@@ -1,20 +1,12 @@
 import { CheckCircle2Icon } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { Workspace } from "@formbricks/database/prisma-browser";
 import { TSurveySingleUse } from "@formbricks/types/surveys/types";
 import { getTranslate } from "@/lingodotdev/server";
-import footerLogo from "../lib/footerlogo.svg";
 
 interface SurveyCompletedMessageProps {
   readonly singleUseMessage: TSurveySingleUse | null;
-  readonly workspace?: Pick<Workspace, "linkSurveyBranding">;
 }
 
-export const SurveyCompletedMessage = async ({
-  singleUseMessage,
-  workspace,
-}: SurveyCompletedMessageProps) => {
+export const SurveyCompletedMessage = async ({ singleUseMessage }: SurveyCompletedMessageProps) => {
   const t = await getTranslate();
   const defaultHeading = t("s.survey_already_answered_heading");
   const defaultSubheading = t("s.survey_already_answered_subheading");
@@ -28,13 +20,6 @@ export const SurveyCompletedMessage = async ({
           {singleUseMessage?.subheading ?? defaultSubheading}
         </p>
       </div>
-      {(!workspace || workspace.linkSurveyBranding) && (
-        <div>
-          <Link href="https://formbricks.com?utm_source=formbricks-app&utm_medium=survey&utm_campaign=survey_completed">
-            <Image src={footerLogo} alt="Brand logo" className="mx-auto w-40" />
-          </Link>
-        </div>
-      )}
     </div>
   );
 };

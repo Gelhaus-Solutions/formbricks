@@ -118,10 +118,6 @@ vi.mock("@/components/general/response-error-component", () => ({
   ResponseErrorComponent: () => <div>Response Error</div>,
 }));
 
-vi.mock("@/components/general/formbricks-branding", () => ({
-  FormbricksBranding: () => null,
-}));
-
 vi.mock("@/components/general/language-switch", () => ({
   LanguageSwitch: () => null,
 }));
@@ -235,7 +231,6 @@ const renderSurvey = () =>
       workspaceId="ws1234567890123456789012"
       survey={baseSurvey}
       styling={{} as any}
-      isBrandingEnabled={false}
       languageCode="en"
       offlineSupport
       isSpamProtectionEnabled={false}

@@ -85,9 +85,7 @@ export const LinkSurveyPage = async (props: LinkSurveyPageProps) => {
     surface: "link_page",
   });
   if (!singleUse.allowed) {
-    // Need to fetch workspace for error page - fetch environmentContext for it
-    const environmentContext = await getWorkspaceContextForLinkSurvey(survey.workspaceId);
-    return <SurveyInactive status="link invalid" workspace={environmentContext.workspace} />;
+    return <SurveyInactive status="link invalid" />;
   }
   const { singleUseId } = singleUse;
 

@@ -60,7 +60,6 @@ const renderInline = (overrides: Partial<SurveyContainerProps> = {}) =>
     containerId: "survey-container",
     languageCode: "default",
     styling: {},
-    isBrandingEnabled: false,
     survey: { id: "survey-1", type: "link", languages: [] },
     ...overrides,
   } as unknown as SurveyContainerProps);
@@ -114,7 +113,6 @@ describe("renderSurvey custom CSS teardown", () => {
       mode: "modal",
       languageCode: "default",
       styling: {},
-      isBrandingEnabled: false,
       survey: { id: "survey-1", type: "app", languages: [] },
       customCss,
       onClose,
