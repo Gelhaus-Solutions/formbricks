@@ -310,41 +310,6 @@ services:
     environment:
       <<: *hub-runtime-environment
 
-  # Optional AI taxonomy beta service. Enable with COMPOSE_PROFILES=taxonomy.
-  taxonomy:
-    image: ghcr.io/formbricks/taxonomy${TAXONOMY_IMAGE_REF:-:latest}
-    profiles: ["taxonomy"]
-    depends_on:
-      hub:
-        condition: service_started
-    environment:
-      APP_ENV: production
-      TAXONOMY_SERVICE_TOKEN: ${TAXONOMY_SERVICE_TOKEN:-}
-      HUB_INTERNAL_API_URL: http://hub:8080
-      HUB_INTERNAL_API_TOKEN: ${HUB_INTERNAL_API_TOKEN:-}
-      TAXONOMY_LLM_PROVIDER: ${TAXONOMY_LLM_PROVIDER:-openai-compatible}
-      TAXONOMY_LLM_MODEL: ${TAXONOMY_LLM_MODEL:-}
-      TAXONOMY_LLM_BASE_URL: ${TAXONOMY_LLM_BASE_URL:-}
-      TAXONOMY_LLM_API_KEY: ${TAXONOMY_LLM_API_KEY:-}
-      TAXONOMY_VERTEX_PROJECT: ${TAXONOMY_VERTEX_PROJECT:-}
-      TAXONOMY_VERTEX_LOCATION: ${TAXONOMY_VERTEX_LOCATION:-}
-      TAXONOMY_GOOGLE_CLOUD_CREDENTIALS_JSON: ${TAXONOMY_GOOGLE_CLOUD_CREDENTIALS_JSON:-}
-      TAXONOMY_MAX_RECORDS: ${TAXONOMY_MAX_RECORDS:-10000}
-      AWS_REGION: ${AWS_REGION:-}
-      AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
-
   # Optional bundled Qwen/vLLM OpenAI-compatible runtime. Enable with COMPOSE_PROFILES=qwen.
   vllm:
     image: ${QWEN_VLLM_IMAGE:-vllm/vllm-openai:v0.32.0}
@@ -399,7 +364,7 @@ services:
       start_period: 10m
 
   # Upstream image on purpose, at the Cube version docker/cube-image ships: dev mode (schema reload,
-  # Playground) runs its refresh keys on an embedded Cube Store, which ghcr.io/formbricks/cube leaves
+  # Playground) runs its refresh keys on an embedded Cube Store, which ghcr.io/gelhaus-solutions/gforms-cube leaves
   # out. cube.js refuses to start without CUBEJS_API_SECRET.
   cube:
     image: cubejs/cube:v1.8.8

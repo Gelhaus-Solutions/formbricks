@@ -1,7 +1,7 @@
 {
   "name": "formbricks-cube-image",
   "private": true,
-  "description": "Runtime dependencies of ghcr.io/formbricks/cube. Not a pnpm workspace; see README.md.",
+  "description": "Runtime dependencies of ghcr.io/gelhaus-solutions/gforms-cube. Not a pnpm workspace; see README.md.",
   "dependencies": {
     "@cubejs-backend/postgres-driver": "1.8.8",
     "@cubejs-backend/server": "1.8.8"

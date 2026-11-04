@@ -7,7 +7,7 @@ multi_arch_valkey_image="valkey/valkey@sha256:418652cfb58ef879d4978c33553735d714
 # such as the redirect every OAuth/SSO callback answers with, into a 500 (traefik#11568, ENG-3977).
 # docker/traefik-auth-smoke.sh runs this image with the installer's static config and labels.
 traefik_image="traefik:v3.6.25"
-stable_docker_files_url="https://raw.githubusercontent.com/formbricks/formbricks/stable/docker"
+stable_docker_files_url="https://raw.githubusercontent.com/Gelhaus-Solutions/formbricks/stable/docker"
 # Cube reads its model from these files, bind-mounted out of the installation directory.
 bundled_cube_files=("cube/cube.js" "cube/schema/FeedbackRecords.js")
 
@@ -1088,13 +1088,13 @@ EOT
     echo "⚠️ File uploads are disabled. Proceeding without S3-compatible storage configuration."
   fi
 
-  echo "📥 Downloading docker-compose.yml from Formbricks GitHub repository..."
-  curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/formbricks/formbricks/stable/docker/docker-compose.yml
+  echo "📥 Downloading docker-compose.yml from the GForms GitHub repository..."
+  curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/Gelhaus-Solutions/formbricks/stable/docker/docker-compose.yml
   echo "📥 Downloading AuthZed database bootstrap helper..."
   authzed_bootstrap_commit="10d5ad908491a8a818aef3c6ada91fa4fdc30b03"
   authzed_bootstrap_sha256="70975701cdf0dcffef5d3573a7514360e87428bb07cc4bfb4dbf47ae0c2e93a5"
   curl -fsSL -o authzed-postgres-bootstrap.sh \
-    "https://raw.githubusercontent.com/formbricks/formbricks/${authzed_bootstrap_commit}/docker/authzed-postgres-bootstrap.sh"
+    "https://raw.githubusercontent.com/Gelhaus-Solutions/formbricks/${authzed_bootstrap_commit}/docker/authzed-postgres-bootstrap.sh"
   printf '%s  %s\n' "$authzed_bootstrap_sha256" authzed-postgres-bootstrap.sh | sha256sum --check --status -
   chmod 700 authzed-postgres-bootstrap.sh
   mkdir -p cube/schema
@@ -2132,15 +2132,15 @@ enable_compose_ipv6() {
 formbricks_release_ref() {
   local images tag
 
-  images=$(sudo docker compose config --images 2>/dev/null | grep -E '^ghcr\.io/formbricks/formbricks([:@]|$)' | sort -u) || true
+  images=$(sudo docker compose config --images 2>/dev/null | grep -E '^ghcr\.io/gelhaus-solutions/gforms([:@]|$)' | sort -u) || true
   # The app, migration and AuthZed services share the image; if they disagree there is no one release to match.
   [[ -n "$images" && "$images" != *$'\n'* ]] || return 0
 
   case "$images" in
-    ghcr.io/formbricks/formbricks | ghcr.io/formbricks/formbricks:latest) echo "stable" ;;
-    ghcr.io/formbricks/formbricks:*)
+    ghcr.io/gelhaus-solutions/gforms | ghcr.io/gelhaus-solutions/gforms:latest) echo "stable" ;;
+    ghcr.io/gelhaus-solutions/gforms:*)
       # A tag that also carries a digest runs whatever the digest names, so it is not trusted as the release.
-      tag="${images#ghcr.io/formbricks/formbricks:}"
+      tag="${images#ghcr.io/gelhaus-solutions/gforms:}"
       if [[ "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then echo "$tag"; fi
       ;;
   esac
@@ -2181,7 +2181,7 @@ refresh_bundled_cube_files() {
     echo "   To match them to your image: https://formbricks.com/docs/self-hosting/advanced/migration#cube-model-files-for-docker"
     return 1
   fi
-  files_url="https://raw.githubusercontent.com/formbricks/formbricks/$release_ref/docker"
+  files_url="https://raw.githubusercontent.com/Gelhaus-Solutions/formbricks/$release_ref/docker"
 
   rm -rf "$staging_dir"
   for cube_file in "${bundled_cube_files[@]}"; do

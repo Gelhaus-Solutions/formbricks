@@ -366,7 +366,7 @@ services:
 
   # Run Formbricks Prisma migrations before Hub writes tables to the shared database.
   formbricks-migrate:
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
     restart: "no"
     env_file:
       - path: .env
@@ -387,7 +387,7 @@ services:
 
   formbricks:
     restart: always
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
     env_file:
       - path: .env
         required: false
@@ -416,7 +416,7 @@ services:
   # the normal stack. Example: docker compose --profile authzed-ops run --rm authzed-ops health
   authzed-ops:
     profiles: ["authzed-ops"]
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
     entrypoint: ["formbricks-authzed"]
     command: ["health"]
     environment:
@@ -446,7 +446,7 @@ services:
   # readiness, or liveness depend on SpiceDB. Existing installations are gated by formbricks.sh and
   # the explicit v6 migration acknowledgement before this release is started.
   authzed-initialize:
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
     restart: "no"
     entrypoint: ["formbricks-authzed"]
     command: ["upgrade", "prepare"]
@@ -516,42 +516,6 @@ services:
       disable: true
     environment: *hub-runtime-environment
 
-  # Optional AI taxonomy beta service. Enable with COMPOSE_PROFILES=taxonomy.
-  taxonomy:
-    restart: always
-    profiles: ["taxonomy"]
-    image: ghcr.io/formbricks/taxonomy${TAXONOMY_IMAGE_REF:-:latest}
-    depends_on:
-      hub:
-        condition: service_started
-    environment:
-      APP_ENV: production
-      TAXONOMY_SERVICE_TOKEN: ${TAXONOMY_SERVICE_TOKEN:-}
-      HUB_INTERNAL_API_URL: http://hub:8080
-      HUB_INTERNAL_API_TOKEN: ${HUB_INTERNAL_API_TOKEN:-}
-      TAXONOMY_LLM_PROVIDER: ${TAXONOMY_LLM_PROVIDER:-openai-compatible}
-      TAXONOMY_LLM_MODEL: ${TAXONOMY_LLM_MODEL:-}
-      TAXONOMY_LLM_BASE_URL: ${TAXONOMY_LLM_BASE_URL:-}
-      TAXONOMY_LLM_API_KEY: ${TAXONOMY_LLM_API_KEY:-}
-      TAXONOMY_VERTEX_PROJECT: ${TAXONOMY_VERTEX_PROJECT:-}
-      TAXONOMY_VERTEX_LOCATION: ${TAXONOMY_VERTEX_LOCATION:-}
-      TAXONOMY_GOOGLE_CLOUD_CREDENTIALS_JSON: ${TAXONOMY_GOOGLE_CLOUD_CREDENTIALS_JSON:-}
-      TAXONOMY_MAX_RECORDS: ${TAXONOMY_MAX_RECORDS:-10000}
-      AWS_REGION: ${AWS_REGION:-}
-      AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
-
   # Optional bundled Qwen/vLLM OpenAI-compatible runtime. Enable with COMPOSE_PROFILES=qwen.
   vllm:
     restart: always
@@ -611,7 +575,7 @@ services:
   # "CUBEJS_API_SECRET is required to run Cube" when the secret is empty.
   cube:
     restart: always
-    image: ghcr.io/formbricks/cube:1.8.8-2
+    image: ghcr.io/gelhaus-solutions/gforms-cube:1.8.8-2
     depends_on:
       hub-migrate:
         condition: service_completed_successfully

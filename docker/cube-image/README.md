@@ -1,4 +1,4 @@
-# ghcr.io/formbricks/cube
+# ghcr.io/gelhaus-solutions/gforms-cube
 
 The Cube image the Formbricks Compose files and Helm chart run by default. It holds the Cube API server
 (`@cubejs-backend/server`) and its Postgres driver on `gcr.io/distroless/nodejs24-debian13:nonroot`, for
@@ -114,7 +114,7 @@ To check a published image's signature, pin the exact workflow identity, so a fo
 satisfy it:
 
 ```bash
-cosign verify ghcr.io/formbricks/cube:1.8.8-2 \
-  --certificate-identity https://github.com/formbricks/formbricks/.github/workflows/cube-image.yml@refs/heads/main \
+cosign verify ghcr.io/gelhaus-solutions/gforms-cube:1.8.8-2 \
+  --certificate-identity https://github.com/Gelhaus-Solutions/formbricks/.github/workflows/cube-image.yml@refs/heads/main \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```

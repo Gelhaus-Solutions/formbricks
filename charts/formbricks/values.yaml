@@ -161,7 +161,7 @@ deployment:
 
   # Application container image
   image:
-    repository: "ghcr.io/formbricks/formbricks"
+    repository: "ghcr.io/gelhaus-solutions/gforms"
     tag: "" # Defaults to appVersion if not set
     digest: "" # If set, digest takes precedence over the tag
     pullPolicy: IfNotPresent
@@ -354,205 +354,6 @@ llm:
       httpGet:
         path: /health
         port: router-port
-
-##########################################################
-# Optional AI taxonomy service
-##########################################################
-taxonomy:
-  # Deploy the standalone taxonomy service. Disabled by default.
-  enabled: false
-  replicas: 1
-
-  # When enabled, automatically points Hub API at the in-cluster taxonomy service.
-  # Disable only when you want to wire Hub manually through hub.env.
-  autoConfigureHub: true
-
-  image:
-    repository: "ghcr.io/formbricks/taxonomy"
-    tag: "0.1.15"
-    digest: ""
-    pullPolicy: IfNotPresent
-
-  port: 8000
-
-  service:
-    type: ClusterIP
-    port: 8000
-    annotations: {}
-    additionalLabels: {}
-
-  # Dedicated ServiceAccount for the taxonomy pod, so a cloud workload identity (EKS Pod Identity,
-  # IRSA, GKE Workload Identity) can be bound to taxonomy alone instead of to rbac.serviceAccount,
-  # which the web app and migration job share.
-  serviceAccount:
-    # Create `name`, or `<nameOverride or chart name>-taxonomy` (formbricks-taxonomy by default).
-    # When false, `name` selects an existing ServiceAccount; leaving both unset keeps the
-    # namespace default ServiceAccount.
-    create: false
-    name: ""
-    # Applied only when create=true, e.g. eks.amazonaws.com/role-arn for IRSA.
-    annotations: {}
-    additionalLabels: {}
-    # Taxonomy does not call the Kubernetes API. IRSA and Pod Identity project their own token.
-    automountServiceAccountToken: false
-
-  auth:
-    # Existing secret must contain serviceTokenKey and hubInternalApiTokenKey.
-    existingSecret: ""
-    serviceTokenKey: TAXONOMY_SERVICE_TOKEN
-    hubInternalApiTokenKey: HUB_INTERNAL_API_TOKEN
-    serviceToken: ""
-    hubInternalApiToken: ""
-
-  llm:
-    # Select the taxonomy runtime adapter. The chart defaults to the provider-neutral
-    # OpenAI-compatible protocol; Vertex and Bedrock settings are rendered only when selected.
-    # Supported values: openai-compatible, bedrock, vertex-gemini.
-    provider: openai-compatible
-    # Provider/deployment-specific model identifier. Override this for the selected LLM.
-    model: qwen3-14b-awq
-    # Defaults to the bundled vLLM router URL when llm.enabled=true. Required otherwise.
-    baseUrl: ""
-    # Selects the enabled llm.servingEngineSpec.modelSpec entry used by taxonomy. It may
-    # remain empty only when exactly one bundled model is enabled.
-    bundledModelSpecName: ""
-    # Existing secret must contain apiKeySecretKey. When unset, the chart creates a non-empty dummy key.
-    existingSecret: ""
-    apiKeySecretKey: TAXONOMY_LLM_API_KEY
-    apiKey: ""
-    temperature: "0.1"
-    # auto delegates the output mode to the selected runtime adapter. Set json-schema
-    # explicitly only when the exact provider/model deployment passes preflight.
-    structuredOutputMode: auto
-    # Must match the exact configured provider/model deployment. Taxonomy validates its
-    # complete prompt/output budget during startup and readiness. It may remain empty while
-    # taxonomy is disabled, but is required when taxonomy.enabled=true.
-    contextWindowTokens: ""
-    labelMaxTokens: "4096"
-    treeMaxTokens: "16384"
-    promptTokenReserve: "4096"
-    providerMaxAttempts: "3"
-    # Semantic repair attempts across branch plans, assignments, and hierarchy plans.
-    maxAttempts: "4"
-    timeoutSeconds: "60"
-    bedrock:
-      region: ""
-    vertex:
-      project: ""
-      location: ""
-      thinkingBudget: "0"
-      # Optional thinking level; when set, replaces thinkingBudget in the request.
-      thinkingLevel: ""
-      # Existing secret must contain credentialsJsonSecretKey.
-      existingSecret: ""
-      credentialsJsonSecretKey: TAXONOMY_GOOGLE_CLOUD_CREDENTIALS_JSON
-      credentialsJson: ""
-
-  embeddingDimension: "768"
-  minEmbeddedRecords: "20"
-  maxRecords: "10000"
-  # Kept as a chart value for configuration compatibility. Production Taxonomy images
-  # enforce the 80-cluster quality invariant at startup.
-  maxClusters: "80"
-  randomSeed: "42"
-  hubClientTimeoutSeconds: "120"
-  hubClientMaxAttempts: "3"
-  # Set to 0 only when intentionally disabling Taxonomy heartbeats. Keep the default well
-  # below hubStaleRunTimeoutSeconds for normal production operation.
-  heartbeatIntervalSeconds: "30"
-  runDeadlineSeconds: "900"
-  # Keep this compatible with the default v0.1.0 image, which does not heartbeat through
-  # terminal Hub callbacks. The chart requires it to exceed runDeadlineSeconds while that
-  # image is pinned; relax that guard when moving to a heartbeat-capable image.
-  hubStaleRunTimeoutSeconds: "1800"
-  hubReaperIntervalSeconds: "60"
-  terminationGracePeriodSeconds: 930
-
-  envFrom: []
-  # The v0.1.0 image runs uv at startup, which needs a writable cache as a non-root user.
-  env:
-    UV_CACHE_DIR: /tmp/uv-cache
-
-  resources:
-    requests:
-      cpu: "1"
-      memory: 2Gi
-    limits:
-      memory: 4Gi
-
-  autoscaling:
-    enabled: false
-    additionalLabels: {}
-    annotations: {}
-    minReplicas: 1
-    maxReplicas: 3
-    metrics:
-      - type: Resource
-        resource:
-          name: cpu
-          target:
-            type: Utilization
-            averageUtilization: 70
-      - type: Resource
-        resource:
-          name: memory
-          target:
-            type: Utilization
-            averageUtilization: 80
-    behavior: {}
-
-  # Disabled by default because the default taxonomy replica count is 1.
-  pdb:
-    enabled: false
-    additionalLabels: {}
-    annotations: {}
-    minAvailable: 1
-    # maxUnavailable: 1
-    # unhealthyPodEvictionPolicy: AlwaysAllow
-
-  probes:
-    startupProbe:
-      failureThreshold: 30
-      periodSeconds: 10
-      httpGet:
-        path: /health
-        port: http
-    readinessProbe:
-      failureThreshold: 6
-      periodSeconds: 10
-      timeoutSeconds: 5
-      httpGet:
-        # The default v0.1.0 image exposes /health. Override this to /ready only
-        # when using a taxonomy image that implements the readiness contract.
-        path: /health
-        port: http
-    livenessProbe:
-      failureThreshold: 6
-      periodSeconds: 20
-      timeoutSeconds: 5
-      httpGet:
-        path: /health
-        port: http
-
-  podAnnotations: {}
-  podLabels: {}
-  podSecurityContext:
-    fsGroup: 65532
-    seccompProfile:
-      type: RuntimeDefault
-  securityContext:
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
-    readOnlyRootFilesystem: true
-    runAsNonRoot: true
-    runAsUser: 65532
-    runAsGroup: 65532
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  topologySpreadConstraints: []
 
 ##########################################################
 # Horizontal Pod Autoscaler (HPA)
@@ -1100,7 +901,7 @@ cube:
   # Formbricks' distroless Cube build (docker/cube-image), without a shell or Cube Store. Pointing
   # repository and tag back at an upstream "cubejs/cube" release is supported.
   image:
-    repository: "ghcr.io/formbricks/cube"
+    repository: "ghcr.io/gelhaus-solutions/gforms-cube"
     tag: "1.8.8-2"
     digest: ""
     pullPolicy: IfNotPresent

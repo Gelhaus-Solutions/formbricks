@@ -3,10 +3,6 @@ formbricks:
   webappUrl: https://security-scan.invalid
 llm:
   enabled: true
-taxonomy:
-  enabled: true
-  llm:
-    contextWindowTokens: "8192"
 hub:
   embeddings:
     enabled: true

@@ -1,5 +1,5 @@
 # Post-deployment health check. Build from the repository root:
-#   docker build -f apps/deployment-check/Dockerfile -t ghcr.io/formbricks/deployment-check .
+#   docker build -f apps/deployment-check/Dockerfile -t ghcr.io/gelhaus-solutions/gforms-deployment-check .
 #
 # The base image tag must match the `@playwright/test` entry in the pnpm catalog: the browsers baked into
 # the image are only usable by that exact Playwright version.

@@ -1,4 +1,4 @@
-# ghcr.io/formbricks/cube: the Cube API server and its Postgres driver on a distroless Node runtime.
+# ghcr.io/gelhaus-solutions/gforms-cube: the Cube API server and its Postgres driver on a distroless Node runtime.
 # It carries no shell, package manager, Python or Cube Store. See README.md for what is left out and
 # why, and for how to bump it.
 
@@ -43,7 +43,7 @@ RUN set -eu; \
 
 FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:78f07ef1b5ea71ad7c055df15d0dd8997f2d288f9158623c4d4ae3d765b7d50d
 
-LABEL org.opencontainers.image.source="https://github.com/formbricks/formbricks" \
+LABEL org.opencontainers.image.source="https://github.com/Gelhaus-Solutions/formbricks" \
   org.opencontainers.image.description="Cube API server for Formbricks analytics, on a distroless Node runtime"
 
 # /nodejs/bin on PATH lets `node -e ...` healthchecks resolve `node` without a shell. NODE_PATH mirrors

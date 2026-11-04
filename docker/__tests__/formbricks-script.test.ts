@@ -397,8 +397,11 @@ describe("docker/docker-compose.yml Cube configuration", () => {
       cube?: { image?: { repository?: string; tag?: string } };
     };
 
-    expect(compose.services?.cube?.image).toBe(`ghcr.io/formbricks/cube:${tag}`);
-    expect(chartValues.cube?.image).toMatchObject({ repository: "ghcr.io/formbricks/cube", tag });
+    expect(compose.services?.cube?.image).toBe(`ghcr.io/gelhaus-solutions/gforms-cube:${tag}`);
+    expect(chartValues.cube?.image).toMatchObject({
+      repository: "ghcr.io/gelhaus-solutions/gforms-cube",
+      tag,
+    });
     // Dev mode needs the embedded Cube Store only upstream ships, so dev runs upstream at the same version.
     expect(devCompose.services?.cube?.image).toBe(`cubejs/cube:v${cubeVersion}`);
     // The image has no shell and its entrypoint is node, so a `sh -c` command fails with "Cannot find
@@ -1429,7 +1432,7 @@ describe("docker/formbricks.sh loopback-only app port (ENG-3983)", () => {
         ports:
             - 3000:3000
     formbricks:
-        image: ghcr.io/formbricks/formbricks:latest
+        image: ghcr.io/gelhaus-solutions/gforms:latest
         ports:
             - 3000:3000
         environment:
@@ -1511,7 +1514,7 @@ describe("docker/formbricks.sh loopback-only app port (ENG-3983)", () => {
   spicedb:
   hub-worker:
   formbricks:
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
     ports:
       - 3000:3000
 `;
@@ -1679,7 +1682,7 @@ exit 0
 
   const realComposeFile = `services:
   formbricks:
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
     ports:
       - 3000:3000
 `;
@@ -2112,7 +2115,7 @@ volumes:
 });
 
 describe("docker/formbricks.sh Cube model refresh (ENG-3951)", () => {
-  const releaseUrl = "https://raw.githubusercontent.com/formbricks/formbricks/stable/docker";
+  const releaseUrl = "https://raw.githubusercontent.com/Gelhaus-Solutions/formbricks/stable/docker";
   const previousModel = { config: "// previous cube.js\n", schema: "// previous model\n" };
   const releaseModel = { config: "// release cube.js\n", schema: "// release FeedbackRecords.js\n" };
 
@@ -2123,7 +2126,7 @@ describe("docker/formbricks.sh Cube model refresh (ENG-3951)", () => {
     replaceFails = "",
     restoreFails = "",
     backupBlocked = false,
-    formbricksImage = "ghcr.io/formbricks/formbricks:latest",
+    formbricksImage = "ghcr.io/gelhaus-solutions/gforms:latest",
   }: {
     withCubeFiles: boolean;
     // Fails every download whose URL contains this.
@@ -2335,9 +2338,9 @@ describe("docker/formbricks.sh Cube model refresh (ENG-3951)", () => {
   test("serves the model of the release the Formbricks image is pinned to", () => {
     const { result, commands, model } = runUpdate({
       withCubeFiles: true,
-      formbricksImage: "ghcr.io/formbricks/formbricks:6.0.2",
+      formbricksImage: "ghcr.io/gelhaus-solutions/gforms:6.0.2",
     });
-    const pinnedUrl = "https://raw.githubusercontent.com/formbricks/formbricks/6.0.2/docker";
+    const pinnedUrl = "https://raw.githubusercontent.com/Gelhaus-Solutions/formbricks/6.0.2/docker";
 
     expect(result.status).toBe(0);
     expect(commands.filter((command) => command.startsWith("curl "))).toEqual([
@@ -2349,8 +2352,8 @@ describe("docker/formbricks.sh Cube model refresh (ENG-3951)", () => {
 
   // A tag next to a digest is only a label: the digest decides what runs.
   test.each([
-    `ghcr.io/formbricks/formbricks@sha256:${"a".repeat(64)}`,
-    `ghcr.io/formbricks/formbricks:6.0.2@sha256:${"a".repeat(64)}`,
+    `ghcr.io/gelhaus-solutions/gforms@sha256:${"a".repeat(64)}`,
+    `ghcr.io/gelhaus-solutions/gforms:6.0.2@sha256:${"a".repeat(64)}`,
   ])("leaves the model alone when the image names no release: %s", (formbricksImage) => {
     const { result, commands, model } = runUpdate({ withCubeFiles: true, formbricksImage });
 
@@ -2580,7 +2583,7 @@ describe("docker/formbricks.sh Traefik label injection", () => {
       composePath,
       `services:
   formbricks:
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
 `
     );
 
@@ -2718,7 +2721,7 @@ describe("docker/formbricks.sh IPv6 Compose network (ENG-3897)", () => {
       composePath,
       `services:
   formbricks:
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
 networks:
     # Shared with the reverse proxy.
     proxy:
@@ -2799,7 +2802,7 @@ volumes:
   spicedb:
   hub-worker:
   formbricks:
-    image: ghcr.io/formbricks/formbricks:latest
+    image: ghcr.io/gelhaus-solutions/gforms:latest
     ports:
       - "127.0.0.1:3000:3000"
 `;

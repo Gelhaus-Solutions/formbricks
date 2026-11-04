@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prints the immutable tag of ghcr.io/formbricks/cube: "<Cube version>-<revision>", from the
+# Prints the immutable tag of ghcr.io/gelhaus-solutions/gforms-cube: "<Cube version>-<revision>", from the
 # @cubejs-backend/server version pinned in package.json and the number in REVISION.
 #
 #   docker/cube-image/image-tag.sh            # from the working tree

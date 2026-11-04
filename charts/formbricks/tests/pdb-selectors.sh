@@ -11,11 +11,6 @@ rendered_pdbs="$(helm template qa "${CHART_DIR}" \
   --set hub.worker.pdb.enabled=true \
   --set hub.embeddings.enabled=true \
   --set hub.embeddings.pdb.enabled=true \
-  --set taxonomy.enabled=true \
-  --set taxonomy.pdb.enabled=true \
-  --set taxonomy.llm.model=test-model \
-  --set taxonomy.llm.baseUrl=https://llm.example.com/v1 \
-  --set-string taxonomy.llm.contextWindowTokens=65536 \
   --show-only templates/hub-pdb.yaml)"
 
 assert_pdb_component() {
@@ -30,7 +25,7 @@ assert_pdb_component() {
   fi
 }
 
-for component in hub hub-worker hub-embeddings taxonomy; do
+for component in hub hub-worker hub-embeddings; do
   assert_pdb_component "${component}"
 done
 
@@ -42,17 +37,12 @@ fi
 rendered_workloads="$(helm template qa "${CHART_DIR}" \
   --set formbricks.webappUrl=https://qa.example.com \
   --set hub.embeddings.enabled=true \
-  --set taxonomy.enabled=true \
-  --set taxonomy.llm.model=test-model \
-  --set taxonomy.llm.baseUrl=https://llm.example.com/v1 \
-  --set-string taxonomy.llm.contextWindowTokens=65536 \
   --show-only templates/hub-deployment.yaml \
   --show-only templates/hub-worker-deployment.yaml \
   --show-only templates/hub-embeddings-deployment.yaml \
-  --show-only templates/taxonomy-deployment.yaml \
   --show-only templates/hub-migration-job.yaml)"
 
-for component in hub hub-worker hub-embeddings taxonomy hub-migration; do
+for component in hub hub-worker hub-embeddings hub-migration; do
   if ! grep -q "app.kubernetes.io/component: ${component}$" <<<"${rendered_workloads}"; then
     printf 'Expected rendered workload component label %s\n' "${component}" >&2
     exit 1

@@ -15,7 +15,7 @@ Before you proceed, make sure you have the following:
 Copy and paste the following command into your terminal:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/formbricks/formbricks/stable/docker/formbricks.sh -o formbricks.sh && chmod +x formbricks.sh && ./formbricks.sh install
+curl -fsSL https://raw.githubusercontent.com/Gelhaus-Solutions/formbricks/stable/docker/formbricks.sh -o formbricks.sh && chmod +x formbricks.sh && ./formbricks.sh install
 ```
 
 The script will prompt you for the following information:
@@ -58,7 +58,7 @@ default, and all three services start as part of the baseline `docker compose up
   continues when the worker is absent, and the next major release will require it. See the
   [migration guide](../docs/self-hosting/advanced/migration.mdx#hub-worker-for-docker). Also add
   `CUBEJS_EXTERNAL_DEFAULT: ${CUBEJS_EXTERNAL_DEFAULT:-false}` to the Cube service's `environment` block when
-  upgrading a Compose file that predates that default. The bundled Cube image is now `ghcr.io/formbricks/cube`
+  upgrading a Compose file that predates that default. The bundled Cube image is now `ghcr.io/gelhaus-solutions/gforms-cube`
   (built from [`cube-image/`](cube-image/README.md)), which has no shell, so replace the whole `cube` service
   rather than only its `image:`; see the
   [migration guide](../docs/self-hosting/advanced/migration.mdx#bundled-cube-image-action-required-for-some-deployments).
@@ -199,72 +199,7 @@ QWEN_VLLM_PORT=8000
 
 If you run your own Qwen/vLLM service, do not enable the `qwen` profile. Set `AI_PROVIDER=openai-compatible`, `AI_MODEL`, and `AI_OPENAI_COMPATIBLE_BASE_URL` to your endpoint instead.
 
-## AI Taxonomy Beta
-
-The standalone AI taxonomy service is included as an opt-in Docker Compose profile. Baseline installs are unchanged: `docker compose up -d` starts Formbricks, Hub, and Cube, but not taxonomy.
-
-To enable taxonomy in Docker Compose, add the required values to `.env`:
-
-```bash
-# Use COMPOSE_PROFILES=taxonomy when taxonomy points at your own LLM endpoint.
-# Use COMPOSE_PROFILES=qwen,taxonomy when taxonomy should share the bundled Qwen/vLLM service.
-COMPOSE_PROFILES=qwen,taxonomy
-TAXONOMY_SERVICE_URL=http://taxonomy:8000
-TAXONOMY_SERVICE_TOKEN=<random-strong-secret>
-HUB_INTERNAL_API_TOKEN=<random-strong-secret>
-TAXONOMY_IMAGE_REF=:v0.1.0
-TAXONOMY_LLM_PROVIDER=openai-compatible
-TAXONOMY_LLM_MODEL=qwen3-14b-awq
-TAXONOMY_LLM_BASE_URL=http://vllm:8000/v1
-TAXONOMY_LLM_API_KEY=<api-key-or-dummy-value>
-```
-
-Replace `:v0.1.0` with the current released `ghcr.io/formbricks/taxonomy` image tag for your Formbricks version. Production installs should pin a release tag instead of relying on `:latest`.
-
-If you run your own OpenAI-compatible endpoint, keep only the `taxonomy` profile and point `TAXONOMY_LLM_BASE_URL` at that `/v1` endpoint. The selected model must reliably return strict JSON because taxonomy generation validates an exact 5-level tree.
-
-Secret wiring is server-side only: Hub receives `TAXONOMY_SERVICE_URL`, `TAXONOMY_SERVICE_TOKEN`, and `HUB_INTERNAL_API_TOKEN`; taxonomy receives `TAXONOMY_SERVICE_TOKEN`, `HUB_INTERNAL_API_URL`, `HUB_INTERNAL_API_TOKEN`, and the LLM settings. Formbricks Web continues to call Hub with `HUB_API_KEY` and never receives taxonomy service credentials.
-
-To use Amazon Bedrock instead of an OpenAI-compatible endpoint, set:
-
-```bash
-TAXONOMY_LLM_PROVIDER=bedrock
-TAXONOMY_LLM_MODEL=eu.anthropic.claude-sonnet-4-5-20250929-v1:0
-AWS_REGION=eu-north-1
-AWS_BEARER_TOKEN_BEDROCK=<bedrock-api-key>
-```
-
-To use Gemini on Vertex AI instead, set:
-
-```bash
-TAXONOMY_LLM_PROVIDER=vertex-gemini
-TAXONOMY_LLM_MODEL=gemini-2.5-flash
-TAXONOMY_VERTEX_PROJECT=<google-cloud-project>
-TAXONOMY_VERTEX_LOCATION=<vertex-location>
-TAXONOMY_GOOGLE_CLOUD_CREDENTIALS_JSON=<service-account-json>
-```
-
-Then start the stack after updating `.env`:
-
-```bash
-docker compose up -d
-docker compose ps
-docker compose logs taxonomy hub
-```
-
-If you enabled the bundled Qwen profile, also check `docker compose logs vllm`.
-
-Run the authenticated preflight after startup to verify Hub internal auth and LLM reachability:
-
-```bash
-docker compose --profile taxonomy exec -T taxonomy python -c 'import os, urllib.request; req = urllib.request.Request("http://127.0.0.1:8000/v1/preflight", headers={"Authorization": "Bearer " + os.environ["TAXONOMY_SERVICE_TOKEN"]}); print(urllib.request.urlopen(req, timeout=10).read().decode())'
-```
-
-The taxonomy service remains internal to the compose network by default. `TAXONOMY_MAX_RECORDS` defaults to `10000`; change it only after sizing CPU, memory, and LLM capacity.
-
-For local unreleased taxonomy testing, build the taxonomy image as `ghcr.io/formbricks/taxonomy:local`, set `TAXONOMY_IMAGE_REF=:local` and `COMPOSE_PROFILES=taxonomy` in `.env`, and start the stack.
-
-The one-click installer does not prompt for taxonomy settings. One-click users can enable the beta later by editing `./formbricks/.env`, adding the variables above, and restarting with `docker compose up -d`.
+## Hub and FeedbackRecords routing
 
 In development, Hub is exposed locally on port **8080** and Cube on **4000** (with the Cube playground on **4001**). In production Docker Compose, both stay internal to the compose network at `http://hub:8080` and `http://cube:4000`.
 
