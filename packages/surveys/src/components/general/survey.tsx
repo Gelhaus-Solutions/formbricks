@@ -23,7 +23,7 @@ import type {
   TResponseVariables,
 } from "@formbricks/types/responses";
 import { TUploadFileConfig } from "@formbricks/types/storage";
-import { getLinkSurveyCardMaxWidth } from "@formbricks/types/styling";
+import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
 import { TSurveyBlock } from "@formbricks/types/surveys/blocks";
 import { TSurveyElement } from "@formbricks/types/surveys/elements";
 import { BlockConditional } from "@/components/general/block-conditional";
@@ -433,11 +433,13 @@ export function Survey({
 
   const cardArrangement = useMemo(() => {
     if (localSurvey.type === "link") {
-      return styling.cardArrangement?.linkSurveys ?? "straight";
+      // Focus is the GForms default for link surveys (one question per screen, no card).
+      return styling.cardArrangement?.linkSurveys ?? "focus";
     }
     return styling.cardArrangement?.appSurveys ?? "straight";
   }, [localSurvey.type, styling.cardArrangement?.linkSurveys, styling.cardArrangement?.appSurveys]);
-  const isCardless = cardArrangement === "cardless";
+  const isCardless = isFullPageLinkArrangement(cardArrangement);
+  const isFocus = cardArrangement === "focus";
   const linkSurveyCardMaxWidth =
     localSurvey.type === "link" ? getLinkSurveyCardMaxWidth(styling.linkSurveyCardWidth) : undefined;
 
@@ -1534,6 +1536,7 @@ export function Survey({
   if (isCardless) {
     return (
       <CardlessSurveyLayout
+        variant={isFocus ? "focus" : "cardless"}
         survey={localSurvey}
         blockId={blockId}
         styling={styling}

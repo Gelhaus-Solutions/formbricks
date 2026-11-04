@@ -71,7 +71,7 @@
 
 /* this is for styling the HtmlBody component */
 #fbjs .htmlbody {
-  @apply block text-sm leading-6 font-normal;
+  @apply block text-sm font-normal leading-6;
   /* need to use !important because in packages/survey-ui/components/editor/styles-editor-frontend.css the color is defined for some classes */
   color: var(--fb-subheading-color) !important;
 }
@@ -269,4 +269,270 @@
 
 #fbjs .grecaptcha-badge {
   visibility: hidden;
+}
+
+/*
+ * Focus, the GForms default for link surveys: one question per screen in large type, list choices as
+ * lettered rows a key press picks, motion on every step. Brand tints come from --fb-brand-color, so a
+ * workspace's brand colour restyles the whole layout.
+ *
+ * In the `components` layer with !important, like the focus ring in survey-ui: the Tailwind utilities
+ * are !important in the later `utilities` layer and the theme rules (styles.ts) are unlayered
+ * !important, and for important declarations the earlier layer wins. Customer CSS in the fb-* layers
+ * still wins over all of this.
+ */
+@layer components {
+  #fbjs .fb-focus {
+    --fb-focus-tint: color-mix(in srgb, var(--fb-brand-color) 6%, transparent);
+    --fb-focus-tint-hover: color-mix(in srgb, var(--fb-brand-color) 10%, transparent);
+    --fb-focus-tint-strong: color-mix(in srgb, var(--fb-brand-color) 15%, transparent);
+    --fb-focus-line: color-mix(in srgb, var(--fb-brand-color) 35%, transparent);
+    --fb-focus-ink: var(--fb-brand-readable-color, var(--fb-brand-color));
+    --fb-focus-muted: var(--fb-element-description-color, #475569);
+    --fb-focus-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  #fbjs .fb-focus .cardless-progress-bar .progress-track {
+    height: 4px !important;
+    min-height: 4px !important;
+  }
+
+  #fbjs .fb-focus .progress-indicator {
+    transition: width 600ms var(--fb-focus-ease) !important;
+  }
+
+  #fbjs .fb-focus .fb-focus-content [data-fb-part="headline"] {
+    text-align: start !important;
+  }
+
+  /* Required or not shows when the respondent tries to move on, not as a label over every question. */
+  #fbjs .fb-focus .fb-focus-content .label-card {
+    display: none !important;
+  }
+
+  #fbjs .fb-focus .fb-focus-content [data-fb-part="headline"],
+  #fbjs .fb-focus .fb-focus-content [data-fb-part="headline"] * {
+    font-size: clamp(1.375rem, 1.05rem + 1.1vw, 1.875rem) !important;
+    line-height: 1.3 !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.005em !important;
+  }
+
+  #fbjs .fb-focus .fb-focus-content [data-fb-part="description"],
+  #fbjs .fb-focus .fb-focus-content [data-fb-part="description"] * {
+    font-size: clamp(1rem, 0.94rem + 0.25vw, 1.125rem) !important;
+    line-height: 1.5 !important;
+    font-weight: 400 !important;
+    text-align: start !important;
+    opacity: 0.75;
+  }
+
+  /* The action row stands clear of the last choice. */
+  #fbjs .fb-focus .fb-focus-content .flex-row-reverse:has([data-fb-part="button-primary"]) {
+    margin-top: 2.25rem !important;
+  }
+
+  #fbjs .fb-focus [data-fb-part="option"][data-fb-focus-key] {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 26rem !important;
+    min-height: 2.875rem !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    cursor: pointer;
+    border: 1px solid var(--fb-focus-line) !important;
+    border-radius: 6px !important;
+    background-color: var(--fb-focus-tint) !important;
+    padding: 0.5rem 0.75rem 0.5rem 0.5rem !important;
+    text-align: start !important;
+    transition:
+      background-color 160ms var(--fb-focus-ease),
+      border-color 160ms var(--fb-focus-ease),
+      box-shadow 160ms var(--fb-focus-ease),
+      transform 160ms var(--fb-focus-ease) !important;
+  }
+
+  #fbjs .fb-focus [data-fb-part="option"][data-fb-focus-key] > span {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  #fbjs .fb-focus [data-fb-part="option"][data-fb-focus-key]:hover {
+    border-color: var(--fb-brand-color) !important;
+    background-color: var(--fb-focus-tint-hover) !important;
+  }
+
+  #fbjs .fb-focus [data-fb-part="option"][data-fb-focus-key]:active {
+    transform: scale(0.99);
+  }
+
+  #fbjs .fb-focus [data-fb-part="option"][data-fb-focus-key]:has(input:checked) {
+    border-color: var(--fb-brand-color) !important;
+    background-color: var(--fb-focus-tint-strong) !important;
+    box-shadow: inset 0 0 0 1px var(--fb-brand-color) !important;
+    animation: fb-focus-pick 520ms var(--fb-focus-ease);
+  }
+
+  #fbjs .fb-focus [data-fb-part="option"][data-fb-focus-key] [data-fb-part="option-label"] {
+    margin-inline: 0.75rem 0 !important;
+    font-size: clamp(1rem, 0.96rem + 0.15vw, 1.0625rem) !important;
+    text-align: start !important;
+  }
+
+  /* The radio or checkbox becomes the choice's letter key. */
+  #fbjs .fb-focus [data-fb-part="option-control"][data-fb-focus-key] {
+    width: 1.375rem !important;
+    height: 1.375rem !important;
+    flex-shrink: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--fb-brand-color) 50%, transparent) !important;
+    border-radius: 4px !important;
+    background: var(--fb-survey-background-color, #ffffff) !important;
+    box-shadow: none !important;
+    color: var(--fb-focus-ink) !important;
+  }
+
+  #fbjs .fb-focus [data-fb-part="option-control"][data-fb-focus-key] > * {
+    display: none !important;
+  }
+
+  #fbjs .fb-focus [data-fb-part="option-control"][data-fb-focus-key]::after {
+    content: attr(data-fb-focus-key) !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    font-size: 0.6875rem !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    color: inherit !important;
+  }
+
+  #fbjs
+    .fb-focus
+    [data-fb-part="option"]:has(input:checked)
+    [data-fb-part="option-control"][data-fb-focus-key] {
+    border-color: var(--fb-brand-color) !important;
+    background: var(--fb-brand-color) !important;
+    color: var(--fb-button-text-color, #ffffff) !important;
+  }
+
+  @keyframes fb-focus-pick {
+    0% {
+      transform: scale(1);
+      outline: 0 solid color-mix(in srgb, var(--fb-brand-color) 45%, transparent);
+      outline-offset: 0;
+    }
+    35% {
+      transform: scale(1.012);
+    }
+    100% {
+      transform: scale(1);
+      outline: 10px solid transparent;
+      outline-offset: 2px;
+    }
+  }
+
+  #fbjs .fb-focus .fb-focus-content [data-fb-part="button-primary"] {
+    min-height: 2.75rem !important;
+    padding-inline: 1.25rem !important;
+    border-radius: 6px !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    transition:
+      transform 160ms var(--fb-focus-ease),
+      filter 160ms var(--fb-focus-ease) !important;
+  }
+
+  #fbjs .fb-focus .fb-focus-content [data-fb-part="button-primary"]:hover {
+    filter: brightness(1.08);
+  }
+
+  #fbjs .fb-focus .fb-focus-content [data-fb-part="button-primary"]:active {
+    transform: translateY(1px) scale(0.99);
+  }
+
+  /* Bottom-right step arrows; they stand in for the Back button on wide screens. */
+  #fbjs .fb-focus .fb-focus-nav {
+    position: absolute;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 20;
+    display: none;
+    gap: 2px;
+  }
+
+  #fbjs .fb-focus .fb-focus-nav button {
+    display: flex !important;
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    background: var(--fb-brand-color) !important;
+    color: var(--fb-button-text-color, #ffffff) !important;
+    cursor: pointer;
+    transition: filter 160ms var(--fb-focus-ease) !important;
+  }
+
+  #fbjs .fb-focus .fb-focus-nav button:first-child {
+    border-radius: 10px 0 0 10px !important;
+  }
+
+  #fbjs .fb-focus .fb-focus-nav button:last-child {
+    border-radius: 0 10px 10px 0 !important;
+  }
+
+  #fbjs .fb-focus .fb-focus-nav button:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+
+  #fbjs .fb-focus .fb-focus-nav button:disabled {
+    cursor: default;
+    opacity: 0.4 !important;
+  }
+
+  #fbjs .fb-focus .fb-focus-nav svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    #fbjs .fb-focus .fb-focus-nav {
+      display: flex;
+    }
+
+    /* OK leads the action row, with the Enter hint beside it; Back moves to the arrows. */
+    #fbjs .fb-focus .fb-focus-content .flex-row-reverse:has([data-fb-part="button-primary"]) {
+      flex-direction: row !important;
+      justify-content: flex-start !important;
+    }
+
+    #fbjs .fb-focus .fb-focus-content [data-fb-part="button-back"] {
+      display: none !important;
+    }
+  }
+
+  @media (min-width: 640px) and (hover: hover) {
+    #fbjs .fb-focus .fb-focus-content div:has(> [data-fb-part="button-primary"]) {
+      display: flex !important;
+      align-items: center !important;
+      gap: 1rem !important;
+    }
+
+    #fbjs .fb-focus .fb-focus-content div:has(> [data-fb-part="button-primary"])::after {
+      content: var(--fb-focus-enter-hint);
+      font-size: 0.875rem;
+      white-space: nowrap;
+      color: var(--fb-focus-muted);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #fbjs .fb-focus,
+    #fbjs .fb-focus * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
 }

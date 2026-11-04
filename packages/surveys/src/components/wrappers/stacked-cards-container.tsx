@@ -3,6 +3,7 @@ import type { JSX } from "react";
 import { FB_PART } from "@formbricks/survey-ui/parts";
 import { type TPlacement } from "@formbricks/types/common";
 import { type TJsWorkspaceStateSurvey } from "@formbricks/types/js";
+import { isFullPageLinkArrangement } from "@formbricks/types/styling";
 import { type TCardArrangementOptions } from "@formbricks/types/styling";
 import { TSurveyStyling } from "@formbricks/types/surveys/types";
 import { type TWorkspaceStyling } from "@formbricks/types/workspace";
@@ -49,7 +50,7 @@ export function StackedCardsContainer({
   const resizeObserver = useRef<ResizeObserver | null>(null);
   const [cardHeight, setCardHeight] = useState("auto");
   const [cardWidth, setCardWidth] = useState<number>(0);
-  const isCardless = cardArrangement === "cardless";
+  const isCardless = isFullPageLinkArrangement(cardArrangement);
 
   const blockIdxTemp = useMemo(() => {
     if (currentBlockId === "start") return survey.welcomeCard.enabled ? -1 : 0;
@@ -184,7 +185,7 @@ export function StackedCardsContainer({
               data-fb-part={isCardless ? undefined : FB_PART.card}
               className={cn(
                 "w-full",
-                !isCardless && "bg-survey-bg overflow-hidden",
+                !isCardless && "overflow-hidden bg-survey-bg",
                 fullSizeCards && !isCardless ? "h-full" : ""
               )}
               style={isCardless ? undefined : borderStyles}>
