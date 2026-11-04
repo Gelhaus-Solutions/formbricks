@@ -1,16 +1,22 @@
 import "server-only";
 import { joinWorkflowActionTypes } from "@formbricks/workflows";
-import type { WorkflowAnalyticsDetail, WorkflowApiContext } from "@formbricks/workflows/server";
-import { resolveV3RequestVia } from "@/app/api/v3/lib/request-via";
+import type {
+  WorkflowAnalyticsDetail,
+  WorkflowAnalyticsOperation,
+  WorkflowApiContext,
+} from "@formbricks/workflows/server";
+import { type TV3RequestVia, resolveV3RequestVia } from "@/app/api/v3/lib/request-via";
 import type { TV3Authentication } from "@/app/api/v3/lib/types";
 import { capturePostHogEvent } from "@/lib/posthog";
 import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
-import {
-  type TWorkflowAnalyticsVia,
-  WORKFLOW_LIFECYCLE_EVENTS,
-} from "@/modules/ee/workflows/lib/analytics-events";
 
 const HOUR_MS = 60 * 60 * 1000;
+
+/** Which surface issued a mutation; the same handler serves all three. */
+type TWorkflowAnalyticsVia = TV3RequestVia;
+
+/** PostHog event name of a lifecycle operation: snake_case with the `workflow_` prefix. */
+const toWorkflowLifecycleEvent = (operation: WorkflowAnalyticsOperation): string => `workflow_${operation}`;
 
 /** Which surface issued the request — the shared v3 rule, kept under its analytics name. */
 export const resolveWorkflowAnalyticsVia = (
@@ -71,7 +77,7 @@ export const buildRecordAnalytics =
 
     capturePostHogEvent(
       userId ?? organizationId,
-      WORKFLOW_LIFECYCLE_EVENTS[detail.operation],
+      toWorkflowLifecycleEvent(detail.operation),
       toWorkflowLifecycleEventProperties(detail, { organizationId, via, now: new Date() }),
       { organizationId, workspaceId: detail.workspaceId }
     );
