@@ -1,16 +1,11 @@
 "use client";
 
-import { ChevronDownIcon, SparklesIcon } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { getTextContent } from "@formbricks/types/surveys/validation";
-import { getAIUnavailableMessage, getAIUnavailableMessageForErrorCode } from "@/lib/ai/availability";
-import type { TAIUnavailableReason } from "@/lib/ai/service";
 import { cn } from "@/lib/cn";
-import { getFormattedErrorMessage } from "@/lib/utils/error-message";
-import { translateSurveyFieldsAction } from "@/modules/ee/ai-translation/lib/actions";
 import { Button } from "@/modules/ui/components/button";
 import {
   Dialog,
@@ -26,7 +21,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/modules/ui/components/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/modules/ui/components/tooltip";
 import { isTranslationPathLocked } from "../lib/published-translation-lock";
 import { type TranslatableString } from "../lib/types";
 import {
@@ -47,9 +41,6 @@ interface ManageTranslationsModalProps {
   readonly languageCode: string;
   readonly languageName: string;
   readonly defaultLanguageName: string;
-  readonly workspaceId: string;
-  readonly isAIAvailable: boolean;
-  readonly aiUnavailableReason?: TAIUnavailableReason;
 }
 
 export const ManageTranslationsModal = ({
@@ -61,9 +52,6 @@ export const ManageTranslationsModal = ({
   languageCode,
   languageName,
   defaultLanguageName,
-  workspaceId,
-  isAIAvailable,
-  aiUnavailableReason,
 }: ManageTranslationsModalProps) => {
   const { t } = useTranslation();
 
@@ -71,8 +59,6 @@ export const ManageTranslationsModal = ({
 
   const [draftTranslations, setDraftTranslations] = useState<Record<string, string>>({});
   const [missingFirst, setMissingFirst] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [translatingPaths, setTranslatingPaths] = useState<Set<string>>(new Set());
 
   // Initialize drafts when modal opens
   useEffect(() => {
@@ -135,81 +121,6 @@ export const ManageTranslationsModal = ({
     setDraftTranslations((prev) => ({ ...prev, [path]: value }));
   }, []);
 
-  const emptyFields = useMemo(() => {
-    return strings.filter((s) => {
-      const val = draftTranslations[s.path];
-      if (val !== undefined && val !== "") {
-        const text = s.isRichText ? getTextContent(val) : val;
-        if (text.trim()) return false;
-      }
-      return (s.value.default || "").trim() !== "";
-    });
-  }, [strings, draftTranslations]);
-
-  const getAIErrorMessage = useCallback(
-    (errorCode: string): string => {
-      const aiUnavailableMessage = getAIUnavailableMessageForErrorCode(errorCode, t);
-      if (aiUnavailableMessage) {
-        return aiUnavailableMessage;
-      }
-
-      if (errorCode === "ai_quota_exceeded") {
-        return t("workspace.surveys.edit.ai_translation_quota_exceeded");
-      }
-
-      if (errorCode === "ai_output_too_long") {
-        return t("workspace.surveys.edit.ai_translation_output_too_long");
-      }
-
-      // Fall back to the generic failure message rather than leaking a raw error code to the user.
-      return t("workspace.surveys.edit.ai_translation_failed");
-    },
-    [t]
-  );
-
-  const handleTranslateWithAI = async () => {
-    if (emptyFields.length === 0) return;
-
-    const paths = new Set(emptyFields.map((s) => s.path));
-    setIsTranslating(true);
-    setTranslatingPaths(paths);
-
-    const toastId = toast.loading(t("workspace.surveys.edit.ai_translating"));
-
-    try {
-      const result = await translateSurveyFieldsAction({
-        workspaceId,
-        fields: emptyFields.map((s) => ({
-          path: s.path,
-          defaultText: s.value.default || "",
-          isRichText: s.isRichText,
-        })),
-        sourceLanguage: defaultLanguageName,
-        targetLanguage: languageName,
-      });
-
-      if (!result?.data?.translations) {
-        const errorMessage = getFormattedErrorMessage(result);
-        toast.error(
-          errorMessage ? getAIErrorMessage(errorMessage) : t("workspace.surveys.edit.ai_translation_failed"),
-          { id: toastId }
-        );
-        return;
-      }
-
-      setDraftTranslations((prev) => ({ ...prev, ...result.data?.translations }));
-      toast.success(t("workspace.surveys.edit.ai_translation_complete"), { id: toastId });
-    } catch {
-      // The action surfaces server-side failures via result.serverError (handled above). This catch
-      // only fires on genuine client-side throws (e.g. network) whose messages aren't error codes,
-      // so show the generic failure message.
-      toast.error(t("workspace.surveys.edit.ai_translation_failed"), { id: toastId });
-    } finally {
-      setIsTranslating(false);
-      setTranslatingPaths(new Set());
-    }
-  };
-
   const handleSave = () => {
     const updatedSurvey = structuredClone(localSurvey);
     for (const s of strings) {
@@ -249,31 +160,6 @@ export const ManageTranslationsModal = ({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <Button
-                        size="sm"
-                        className="text-xs"
-                        onClick={handleTranslateWithAI}
-                        disabled={!isAIAvailable || isTranslating || emptyFields.length === 0}
-                        loading={isTranslating}>
-                        <SparklesIcon className="mr-1 size-3.5" />
-                        {t("workspace.surveys.edit.ai_translate")}
-                      </Button>
-                    </div>
-                  </TooltipTrigger>
-                  {!isAIAvailable && !isTranslating && (
-                    <TooltipContent>{getAIUnavailableMessage(aiUnavailableReason, t)}</TooltipContent>
-                  )}
-                  {isAIAvailable && emptyFields.length === 0 && !isTranslating && (
-                    <TooltipContent>
-                      {t("workspace.surveys.edit.ai_translation_all_fields_populated")}
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="secondary" size="sm" className="text-xs">
@@ -318,7 +204,6 @@ export const ManageTranslationsModal = ({
                   onChange={handleDraftChange}
                   localSurvey={mergedSurvey}
                   languageCode={languageCode}
-                  disabled={translatingPaths.has(s.path)}
                   locked={isTranslationPathLocked(localSurvey, persistedSurvey, s.path, languageCode)}
                 />
               ))}
