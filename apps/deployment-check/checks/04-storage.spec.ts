@@ -22,11 +22,14 @@ test("a file uploads and reads back", async ({ api, config }) => {
   const code = (presign.json as { details?: { storage_error_code?: string } } | undefined)?.details
     ?.storage_error_code;
   if (presign.status >= 500 && code && STORAGE_NOT_CONFIGURED_CODES.has(code)) {
-    test.skip(config.storage === "auto", "storage not configured (S3_* env vars unset or invalid)");
+    test.skip(
+      config.storage === "auto",
+      "storage not configured (no usable S3 bucket and no writable uploads directory)"
+    );
     throw new CheckFailure(
       "File storage",
-      `the app cannot reach its S3 bucket (${code})`,
-      "check S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME and S3_ENDPOINT_URL"
+      `the app has no usable file storage (${code})`,
+      "check S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME and S3_ENDPOINT_URL, or, without S3, that UPLOADS_DIR is a writable volume"
     );
   }
   if (!presign.ok) {
@@ -51,15 +54,15 @@ test("a file uploads and reads back", async ({ api, config }) => {
   }).catch((error: unknown) => {
     throw new CheckFailure(
       "File storage",
-      `could not reach the bucket endpoint ${new URL(data.signedUrl).origin} (${error instanceof Error ? error.message : String(error)})`,
-      "the bucket endpoint must be reachable from the machine running this check, not only from the app"
+      `could not reach the upload endpoint ${new URL(data.signedUrl).origin} (${error instanceof Error ? error.message : String(error)})`,
+      "the upload endpoint (the S3 bucket, or the app's /storage/upload without S3) must be reachable from the machine running this check, not only from the app"
     );
   });
   if (!upload.ok) {
     throw new CheckFailure(
       "File storage",
       `uploading to the signed URL returned HTTP ${upload.status}`,
-      "the bucket endpoint must be reachable from the machine running this check, not only from the app"
+      "the upload endpoint (the S3 bucket, or the app's /storage/upload without S3) must be reachable from the machine running this check, not only from the app"
     );
   }
 
