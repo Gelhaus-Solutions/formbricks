@@ -115,8 +115,8 @@ Supported scopes:
 | `feedbackRecords:write` | `create_feedback_record`, `create_feedback_records`, `update_feedback_record`, `delete_feedback_record` |
 | `responses:read` | `list_responses`, `count_responses`, `get_response` |
 | `responses:write` | `validate_response`, `create_response`, `update_response`, `delete_response`, `batch_delete_responses` |
-| `dashboards:read` | `list_chart_fields`, `list_charts`, `get_chart`, `list_dashboards`, `get_dashboard`; with `feedbackRecords:read`, `preview_chart`, `get_chart_data`, `list_chart_field_values` |
-| `dashboards:write` | `create_chart`, `update_chart`, `duplicate_chart`, `create_dashboard`, `update_dashboard`, `duplicate_dashboard`, `update_dashboard_layout`, `add_chart_to_dashboard`, `update_widget`, `remove_chart_from_dashboard` |
+| `dashboards:read` | None: reserved, no tool uses it in this version |
+| `dashboards:write` | None: reserved, no tool uses it in this version |
 | `openid` | OpenID Connect subject interoperability |
 | `profile` | User profile claims |
 | `email` | User email claim |
@@ -251,15 +251,11 @@ API key permissions are enforced through the same workspace access checks as the
 | `create_feedback_records` | `write` or `manage` |
 | `update_feedback_record` | `write` or `manage` |
 | `delete_feedback_record` | `manage` |
-| `list_chart_fields`, `list_charts`, `get_chart`, `list_dashboards`, `get_dashboard` | `read` |
-| `preview_chart`, `get_chart_data`, `list_chart_field_values` | `read`, and read access to the chart's feedback dataset |
-| `create_chart`, `duplicate_chart` | `write` or `manage`, and write access to the feedback dataset |
-| `update_chart`, `create_dashboard`, `update_dashboard`, `duplicate_dashboard`, `update_dashboard_layout`, `add_chart_to_dashboard`, `update_widget`, `remove_chart_from_dashboard` | `write` or `manage` |
 
 Synthesized MCP scopes for an API key: every `:read` scope always (`surveys`, `workflows`,
 `feedbackRecords`, `responses`, `dashboards`); the matching `:write` scopes when the key has `write` or
-`manage` on any workspace — so every existing write key can manage charts and dashboards. The scope
-gate and the per-workspace access check above are independent — a `:write` tool requires **both** the
+`manage` on any workspace. The scope
+gate and the per-workspace access check above are independent: a `:write` tool requires **both** the
 `:write` scope on the token and write/manage on the target workspace.
 
 <Warning>
@@ -1397,29 +1393,6 @@ carry over to a third.
 Both are `idempotentHint: true`: a response that is already gone answers the same `403` as one that was
 never this caller's, so repeating the call converges rather than compounding.
 
-### Chart and dashboard tools
-
-Eighteen tools over the v3 chart and dashboard operations (`modules/mcp/tools/dashboards.ts`), one per
-operation, minus deletion: there is no tool that deletes a chart or a dashboard, so a vague prompt such as
-"clean up old charts" cannot remove anything permanently. There is no AI generation tool either — an agent
-writes the chart query itself.
-
-- **Write against the catalog.** `list_chart_fields` returns every field a chart query may use; the query
-  validator refuses anything else with `invalid_params` naming each problem. `preview_chart` runs an unsaved
-  chart so an agent can check it before `create_chart` saves it.
-- **Numbers need feedback access.** `preview_chart`, `get_chart_data` and `list_chart_field_values` return
-  respondents' answers in aggregate, so they declare `dashboards:read` **and** `feedbackRecords:read`, and the
-  operation also checks read access to the chart's feedback dataset. They spend from the same 600/min budget as
-  the REST data routes, and share their limit of 20 queries running at once, both charged inside the operation.
-- **Shared charts.** `update_chart`'s description says an edit shows on every dashboard holding the chart, and
-  points at `duplicate_chart` + `update_widget` for a per-dashboard change. `duplicate_dashboard` says the copy
-  shares its charts. `remove_chart_from_dashboard` says the chart is kept.
-- **Rearranging.** `update_dashboard_layout` takes `{ expectedUpdatedAt, widgets: [{ widgetId, layout }] }` and is
-  refused unless it lists exactly the current widgets, so it can never remove a widget by omission. A stale
-  `expectedUpdatedAt` answers `409` with the current one in `details`.
-
-Every write runs through `runMcpMutation`, so it leaves the same audit event as the REST call.
-
 ### list_feedback_datasets
 
 Lists the active feedback datasets assigned to a workspace. Read-only and idempotent. Use the
@@ -1960,7 +1933,7 @@ query, like `create_feedback_record`.
 - OAuth access tokens must be JWTs audience-bound to `/api/mcp`; opaque MCP access token introspection is not
   accepted by the MCP route.
 - API-key authentication remains supported for compatibility and fallback use.
-- The MCP server exposes only the survey, workflow, response, feedback-record, chart and dashboard operations listed on this page.
+- The MCP server exposes only the survey, workflow, response and feedback-record operations listed on this page.
 - Survey and workflow tool coverage depends on the current v3 Surveys and Workflows REST endpoint
   coverage; feedback-record tool coverage depends on the Hub feedback-records API.
 - `enable_workflow` makes a workflow live and can trigger email sending; treat it as a high-impact

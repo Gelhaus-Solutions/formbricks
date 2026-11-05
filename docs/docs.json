@@ -268,14 +268,6 @@
               "unify-feedback/feedback-sources",
               "unify-feedback/feedback-records",
               "unify-feedback/enrichment",
-              {
-                "group": "Dashboards & Charts",
-                "icon": "chart-line",
-                "pages": [
-                  "unify-feedback/dashboards-charts",
-                  "unify-feedback/dashboards-charts/creating-your-first-charts"
-                ]
-              },
               "unify-feedback/topics-subtopics"
             ]
           },
@@ -399,7 +391,6 @@
                   "self-hosting/advanced/enterprise-features/saml-sso",
                   "self-hosting/advanced/enterprise-features/audit-logging",
                   "self-hosting/advanced/enterprise-features/unify-feedback",
-                  "self-hosting/advanced/enterprise-features/dashboards",
                   "self-hosting/advanced/enterprise-features/ai-features",
                   "self-hosting/advanced/enterprise-features/workflows"
                 ]

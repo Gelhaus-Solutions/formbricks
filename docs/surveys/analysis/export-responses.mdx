@@ -174,7 +174,7 @@ What changes for a Low quality response:
 
 - It is left out of the Analysis export by default, and the count line says how many were left out. Tick **Include Low quality responses** to keep them. This also holds when you export ticked rows. If your filter selects Low quality responses, the export contains them.
 - The **Status** column of the Responses table and the response card show a **Low quality** badge. The Analysis export has an `outcome` column that reads `lowQuality`.
-- Its Feedback Records are removed, so it drops out of [Dashboards](/unify-feedback/dashboards-charts). Restoring the response creates them again.
+- Its Feedback Records are removed. Restoring the response creates them again.
 
 What does not change: the Summary, response counts, API lists, webhooks and integrations keep counting Low quality responses. Webhooks and API responses carry `outcome`, so you can filter on it yourself. The Standard export includes Low quality responses too, unless you untick **Include Low quality responses**.
 
