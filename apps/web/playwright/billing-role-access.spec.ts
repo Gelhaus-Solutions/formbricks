@@ -4,7 +4,7 @@ import type { UsersFixture } from "./fixtures/users";
 import { test } from "./lib/fixtures";
 
 // ENG-1763 regression: a billing-role member must not reach workspace product data (contacts PII,
-// survey summaries/responses, dashboards) by direct navigation. getWorkspaceAuth is the single choke
+// survey summaries/responses) by direct navigation. getWorkspaceAuth is the single choke
 // point every product page flows through, so it bounces billing users to their billing home instead
 // (the organization billing page on Cloud, their own profile on self-hosted). The owner test guards against a naive "redirect everyone" fix regressing product
 // access for legitimate roles.
@@ -42,7 +42,6 @@ const setupOrgWithBillingMember = async (users: UsersFixture) => {
     // Every workspace product surface flows through getWorkspaceAuth, so all of them must redirect.
     productUrls: [
       `${workspaceBase}/contacts`,
-      `${workspaceBase}/dashboards`,
       `${workspaceBase}/surveys/${survey.id}/summary`,
       `${workspaceBase}/surveys/${survey.id}/responses`,
     ],

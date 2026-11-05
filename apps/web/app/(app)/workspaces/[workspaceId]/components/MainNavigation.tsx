@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BarChart3Icon,
   Building2Icon,
   ChevronRightIcon,
   FoldersIcon,
@@ -64,7 +63,7 @@ interface NavigationProps {
 /**
  * The text half of a sidebar switcher trigger: name, caption, an in-flight spinner and the chevron.
  *
- * Both switchers rendered this inline and identically, at the deepest nesting in the component —
+ * Both switchers rendered this inline and identically, at the deepest nesting in the component,
  * which is most of what pushed MainNavigation past Sonar's cognitive-complexity limit (ENG-3076).
  * Deliberately not wrapping the `<button>` itself: that is a Radix `asChild` target, and moving it
  * behind a component would mean forwarding props and refs by hand for no gain.
@@ -151,7 +150,7 @@ export const MainNavigation = ({
     () => [
       {
         id: "ask",
-        // Product section (IA) label — intentionally not localized (kept in English across all locales)
+        // Product section (IA) label, intentionally not localized (kept in English across all locales)
         name: "Ask",
         items: [
           {
@@ -185,14 +184,6 @@ export const MainNavigation = ({
             href: `/workspaces/${workspace.id}/unify/sources`,
             icon: MessageSquareTextIcon,
             isActive: pathname?.includes("/unify/"),
-            isHidden: false,
-            disabled: isMembershipPending || isBilling,
-          },
-          {
-            name: t("common.analysis"),
-            href: `/workspaces/${workspace.id}/dashboards`,
-            icon: BarChart3Icon,
-            isActive: pathname?.includes("/dashboards") || pathname?.includes("/charts"),
             isHidden: false,
             disabled: isMembershipPending || isBilling,
           },
