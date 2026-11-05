@@ -1,16 +1,13 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
-import objectHash from "object-hash";
 import { describe, expect, test } from "vitest";
 import {
+  type ScanResults,
   type TranslationKeys,
   detectKeysWithSpaces,
   extractKeysFromContent,
   flattenKeys,
   forEachConcurrently,
-  parseLockfile,
+  hasKeyIssues,
   stripComments,
-  validateLockfile,
 } from "./scan-translations";
 
 describe("forEachConcurrently", () => {
@@ -726,97 +723,26 @@ describe("Translation Scanner", () => {
     });
   });
 
-  describe("Lockfile Verification", () => {
-    test("parseLockfile parses 4-space/32-hex line format", () => {
-      const lockfileContent = `
-# This is a comment
-    auth.login: 20e1a4569e2b15c6d6b47b96e2b15c6d
-    common.welcome: ea458b6dfc45f4486fbcfb895cf3bd38
-    another_key: aaaaaabbbbbbccccccddddddeeeeee12
-`;
-      const result = parseLockfile(lockfileContent);
-      expect(result).toEqual({
-        "auth.login": "20e1a4569e2b15c6d6b47b96e2b15c6d",
-        "common.welcome": "ea458b6dfc45f4486fbcfb895cf3bd38",
-        another_key: "aaaaaabbbbbbccccccddddddeeeeee12",
-      });
+  describe("hasKeyIssues", () => {
+    const clean = (): ScanResults => ({
+      usedKeys: new Set(["common.save"]),
+      translationKeys: new Set(["common.save"]),
+      missingKeys: new Set(),
+      unusedKeys: new Set(),
+      incompleteTranslations: new Map(),
+      keysWithSpaces: new Set(),
     });
 
-    test("object-hash vs plain md5 check", () => {
-      // In Lingo.dev / object-hash:
-      // objectHash.MD5("Welcome to Formbricks") should match expected hash
-      const val = "Welcome to Formbricks";
-      const expectedHash = objectHash.MD5(val);
-      // To prevent regressions where someone might change objectHash.MD5 to standard crypto MD5
-      // crypto.createHash("md5").update("Welcome to Formbricks").digest("hex") would yield:
-      // "7c7a10271701e0004944fb7f0f6797a1"
-      // But objectHash.MD5 yields "7ce863429c5176739b8e0a1ea023f411"
-      expect(expectedHash).toBe("7ce863429c5176739b8e0a1ea023f411");
-      expect(expectedHash).not.toBe("7c7a10271701e0004944fb7f0f6797a1");
+    test("passes keys that only lack a translation: the runtime shows them in en-US", () => {
+      expect(
+        hasKeyIssues({ ...clean(), incompleteTranslations: new Map([["de-DE", ["common.save"]]]) })
+      ).toBe(false);
     });
 
-    test("validateLockfile identifies missing, outOfSync, and extra keys", async () => {
-      // Create a temporary directory structure
-      const tempBaseDir = fs.mkdtempSync(path.join(__dirname, "temp-test-i18n-"));
-      const localesDir = path.join(tempBaseDir, "locales");
-      fs.mkdirSync(localesDir);
-
-      // Write mock default locale JSON: default locale is en-US.json
-      const localeData = {
-        auth: {
-          login: "Welcome to Formbricks", // outOfSync because hash will differ
-          logout: "Sign out", // missing from lockfile
-        },
-        common: {
-          welcome: "Hello", // in sync
-        },
-      };
-      fs.writeFileSync(path.join(localesDir, "en-US.json"), JSON.stringify(localeData, null, 2));
-
-      // Calculate correct hash for Hello
-      const helloHash = objectHash.MD5("Hello");
-
-      // Write mock i18n.lock
-      const lockfileData = `
-    common/welcome: ${helloHash}
-    auth/login: 11111111111111111111111111111111
-    common/extra_key: 320adebde930a8ae9253b8febf19e751
-`;
-      fs.writeFileSync(path.join(tempBaseDir, "i18n.lock"), lockfileData);
-
-      try {
-        const validation = await validateLockfile(localesDir, "en-US");
-        expect(validation).not.toBeNull();
-        if (validation) {
-          expect(validation.missing).toContain("auth/logout");
-          expect(validation.outOfSync).toContain("auth/login");
-          expect(validation.extra).toContain("common/extra_key");
-
-          expect(validation.missing.length).toBe(1);
-          expect(validation.outOfSync.length).toBe(1);
-          expect(validation.extra.length).toBe(1);
-        }
-      } finally {
-        // Cleanup files
-        fs.unlinkSync(path.join(localesDir, "en-US.json"));
-        fs.unlinkSync(path.join(tempBaseDir, "i18n.lock"));
-        fs.rmdirSync(localesDir);
-        fs.rmdirSync(tempBaseDir);
-      }
-    });
-
-    test("validateLockfile returns null when no lockfile exists", async () => {
-      const tempBaseDir = fs.mkdtempSync(path.join(__dirname, "temp-test-i18n-no-lock-"));
-      const localesDir = path.join(tempBaseDir, "locales");
-      fs.mkdirSync(localesDir);
-
-      try {
-        const validation = await validateLockfile(localesDir, "en-US");
-        expect(validation).toBeNull();
-      } finally {
-        fs.rmdirSync(localesDir);
-        fs.rmdirSync(tempBaseDir);
-      }
+    test("fails a missing, an unused or a spaced key", () => {
+      expect(hasKeyIssues({ ...clean(), missingKeys: new Set(["common.gone"]) })).toBe(true);
+      expect(hasKeyIssues({ ...clean(), unusedKeys: new Set(["common.stale"]) })).toBe(true);
+      expect(hasKeyIssues({ ...clean(), keysWithSpaces: new Set(["common.a b"]) })).toBe(true);
     });
   });
 });
