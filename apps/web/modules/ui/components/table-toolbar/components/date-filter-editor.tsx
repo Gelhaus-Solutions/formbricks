@@ -5,9 +5,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/cn";
 import { DATE_RANGE_PRESETS } from "@/lib/date-ranges";
-import { getTranslatedDatePresetLabel } from "@/modules/ee/analysis/lib/schema-definition";
 import { DateRangeCalendar, type TDateRangeValue } from "@/modules/ui/components/date-picker";
 import { formatCalendarDay, parseCalendarDay } from "../lib/date-filter";
+import { getDatePresetLabel } from "../lib/date-preset-label";
 import type { TFilterProperty, TTableFilter } from "../lib/types";
 import { datePresetFromSlug, datePresetToSlug } from "../lib/url-codec";
 
@@ -80,7 +80,7 @@ export const DateFilterEditor = ({
                 activePreset === preset ? null : { operator: "preset", preset: datePresetToSlug(preset) }
               )
             }>
-            {getTranslatedDatePresetLabel(preset, t)}
+            {getDatePresetLabel(preset, t)}
             {activePreset === preset && <CheckIcon className="size-4" />}
           </button>
         </li>

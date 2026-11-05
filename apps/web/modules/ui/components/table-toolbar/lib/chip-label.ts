@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { formatDateForDisplay } from "@/lib/utils/datetime";
-import { getTranslatedDatePresetLabel } from "@/modules/ee/analysis/lib/schema-definition";
 import { parseCalendarDay } from "./date-filter";
+import { getDatePresetLabel } from "./date-preset-label";
 import { MULTI_VALUE_OPERATORS, getOperatorLabel, operatorTakesValue } from "./operators";
 import type { TFilterProperty, TTableFilter } from "./types";
 import { datePresetFromSlug } from "./url-codec";
@@ -40,7 +40,7 @@ export const getChipParts = (
     case "preset": {
       const preset = datePresetFromSlug(filter.values[0]);
       label = `${property.label}:`;
-      value = preset ? getTranslatedDatePresetLabel(preset, t) : filter.values[0];
+      value = preset ? getDatePresetLabel(preset, t) : filter.values[0];
       break;
     }
     case "between":
