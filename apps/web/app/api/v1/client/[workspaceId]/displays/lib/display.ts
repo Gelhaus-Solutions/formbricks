@@ -3,13 +3,12 @@ import { Prisma } from "@formbricks/database/prisma";
 import { TDisplayCreateInput, ZDisplayCreateInput } from "@formbricks/types/displays";
 import { DatabaseError, InvalidInputError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { validateInputs } from "@/lib/utils/validate";
-import { getCreativeAttribution } from "@/modules/ee/creatives/lib/attribution";
 import { getContactByUserId } from "./contact";
 
 export const createDisplay = async (displayInput: TDisplayCreateInput): Promise<{ id: string }> => {
   validateInputs([displayInput, ZDisplayCreateInput]);
 
-  const { workspaceId, userId, surveyId, creativeId } = displayInput;
+  const { workspaceId, userId, surveyId } = displayInput;
 
   try {
     let contact: { id: string } | null = null;
@@ -33,17 +32,14 @@ export const createDisplay = async (displayInput: TDisplayCreateInput): Promise<
     }
 
     // Status only: this runs once per survey shown, so it never loads the survey's content or its
-    // stored custom CSS. The creative lookup only runs when a creative's click opened the survey.
-    const [survey, openedBy] = await Promise.all([
-      prisma.survey.findUnique({
-        where: {
-          id: surveyId,
-          workspaceId,
-        },
-        select: { status: true },
-      }),
-      creativeId ? getCreativeAttribution({ creativeId, workspaceId, surveyId }) : null,
-    ]);
+    // stored custom CSS.
+    const survey = await prisma.survey.findUnique({
+      where: {
+        id: surveyId,
+        workspaceId,
+      },
+      select: { status: true },
+    });
     if (!survey) {
       throw new ResourceNotFoundError("Survey", surveyId);
     }
@@ -67,7 +63,6 @@ export const createDisplay = async (displayInput: TDisplayCreateInput): Promise<
             },
           },
         }),
-        ...(openedBy && { creativeId: openedBy.id }),
       },
       select: { id: true, contactId: true, surveyId: true },
     });

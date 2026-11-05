@@ -19,7 +19,6 @@ const mocks = vi.hoisted(() => ({
   formatValidationErrorsForV1Api: vi.fn((errors) => errors),
   getClientIpFromHeaders: vi.fn(),
   getIsContactsEnabled: vi.fn(),
-  getOpenedByCreativeMeta: vi.fn(),
   getOrganizationIdFromWorkspaceId: vi.fn(),
   getSurvey: vi.fn(),
   reportApiError: vi.fn(),
@@ -65,10 +64,6 @@ vi.mock("@/modules/api/lib/validation", () => ({
 
 vi.mock("@/modules/api/v2/lib/element", () => ({
   validateOtherOptionLengthForMultipleChoice: mocks.validateOtherOptionLengthForMultipleChoice,
-}));
-
-vi.mock("@/modules/ee/creatives/lib/attribution", () => ({
-  getOpenedByCreativeMeta: mocks.getOpenedByCreativeMeta,
 }));
 
 vi.mock("@/modules/features/lib/flags", () => ({
@@ -261,7 +256,7 @@ describe("POST /api/v2/client/[workspaceId]/responses — duplicate submissions 
   });
 });
 
-describe("POST /api/v2/client/[workspaceId]/responses — opened by creative (ENG-4001)", () => {
+describe("POST /api/v2/client/[workspaceId]/responses: creative attribution", () => {
   const creativeId = "clh7m1qkx0000qwer1234abcd";
 
   const persistedMeta = () => mocks.createResponseWithQuotaEvaluation.mock.calls[0][0].meta;
@@ -285,27 +280,7 @@ describe("POST /api/v2/client/[workspaceId]/responses — opened by creative (EN
     });
   });
 
-  test("stamps the creative's own name, whatever name the client sent, and keeps it when anonymized", async () => {
-    mocks.getOpenedByCreativeMeta.mockResolvedValue({
-      openedByCreativeId: creativeId,
-      openedByCreativeName: "Feedback tab",
-    });
-
-    const response = await postRawBody(
-      { q1: "answer" },
-      { meta: { openedByCreativeId: creativeId, openedByCreativeName: "Forged name" } }
-    );
-
-    expect(response.status).toBe(200);
-    expect(mocks.getOpenedByCreativeMeta).toHaveBeenCalledWith({ creativeId, workspaceId, surveyId });
-    expect(persistedMeta()).toEqual(
-      expect.objectContaining({ openedByCreativeId: creativeId, openedByCreativeName: "Feedback tab" })
-    );
-  });
-
-  test("stores no creative when it does not check out, and still creates the response", async () => {
-    mocks.getOpenedByCreativeMeta.mockResolvedValue({});
-
+  test("stores no creative, whatever creative the client names", async () => {
     const response = await postRawBody(
       { q1: "answer" },
       { meta: { openedByCreativeId: creativeId, openedByCreativeName: "Forged name" } }
@@ -313,13 +288,6 @@ describe("POST /api/v2/client/[workspaceId]/responses — opened by creative (EN
 
     expect(response.status).toBe(200);
     expect(persistedMeta()).not.toHaveProperty("openedByCreativeId");
-    expect(persistedMeta()).not.toHaveProperty("openedByCreativeName");
-  });
-
-  test("never takes a name from a client that names no creative", async () => {
-    await postRawBody({ q1: "answer" }, { meta: { openedByCreativeName: "Forged name" } });
-
-    expect(mocks.getOpenedByCreativeMeta).not.toHaveBeenCalled();
     expect(persistedMeta()).not.toHaveProperty("openedByCreativeName");
   });
 });

@@ -1,5 +1,4 @@
 import "server-only";
-import type { TCreativePayload } from "@formbricks/creatives";
 import { prisma } from "@formbricks/database";
 import { Prisma } from "@formbricks/database/prisma";
 import { logger } from "@formbricks/logger";
@@ -15,19 +14,8 @@ import { PUBLIC_API_SURVEY_NAME_PLACEHOLDER } from "@formbricks/types/js-constan
 import { isCustomOverlay, resolveOverlayAppearance } from "@formbricks/types/overlay";
 import { type TBaseFilters, buildSurveyInteractionRefreshMap } from "@formbricks/types/segment";
 import { selectPublicSurveyEmbeddedDataLinks } from "@/lib/embedded-data/survey-fields";
-import { getPublicDomain } from "@/lib/getPublicUrl";
 import { toLegacyLanguageCodes } from "@/lib/i18n/utils";
 import { validateInputs } from "@/lib/utils/validate";
-import {
-  MAX_DELIVERED_CREATIVES,
-  type TDeliveredCreativeRow,
-  deliveredCreativeSelect,
-  getCreativesShowingNowWhere,
-  getPopupSurveyIds,
-  getUpcomingCreativesWhere,
-  toCreativePayloads,
-} from "@/modules/ee/creatives/lib/delivery";
-import { getIsCreativesEnabled } from "@/modules/features/lib/flags";
 import { resolveStorageUrlsInObject } from "@/modules/storage/utils";
 import { transformPrismaSurvey } from "@/modules/survey/lib/utils";
 import { resolveRespondentCustomCss } from "@/modules/survey/link/lib/respondent-custom-css";
@@ -45,7 +33,6 @@ export interface WorkspaceStateData {
   };
   surveys: TJsWorkspaceStateSurvey[];
   actionClasses: TJsWorkspaceStateActionClass[];
-  creatives: TCreativePayload[];
 }
 
 /**
@@ -90,7 +77,7 @@ const appendLegacyLanguageCodes = <
   return [...languages, ...legacyEntries];
 };
 
-/** What the SDKs read of an app survey: the 30 newest, and the older ones a creative opens. */
+/** What the SDKs read of an app survey. */
 const appSurveySelect = {
   id: true,
   welcomeCard: true,
@@ -161,29 +148,6 @@ const appSurveySelect = {
 } satisfies Prisma.SurveySelect;
 
 /**
- * The creatives the payload carries: those that can show now, then the soonest upcoming ones in the
- * capacity left, so creatives scheduled for later never push out one that is showing. An upcoming one
- * past the cap arrives once it has started, with the next payload the SDK reads (every 30 minutes).
- * Newest first, like `showingNow`.
- */
-const withUpcomingCreatives = async (
-  workspaceId: string,
-  showingNow: TDeliveredCreativeRow[],
-  now: Date
-): Promise<TDeliveredCreativeRow[]> => {
-  const capacity = MAX_DELIVERED_CREATIVES - showingNow.length;
-  if (capacity <= 0) return showingNow;
-  const upcoming = await prisma.creative.findMany({
-    where: { workspaceId, ...getUpcomingCreativesWhere(now) },
-    orderBy: [{ startAt: "asc" }, { createdAt: "desc" }],
-    take: capacity,
-    select: deliveredCreativeSelect,
-  });
-  if (upcoming.length === 0) return showingNow;
-  return [...showingNow, ...upcoming].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-};
-
-/**
  * Single optimized query that fetches all required data
  * Replaces multiple separate service calls with one efficient database operation
  */
@@ -191,7 +155,6 @@ export const getWorkspaceStateData = async (workspaceId: string): Promise<Worksp
   validateInputs([workspaceId, ZId]);
 
   try {
-    const now = new Date();
     // Single query that fetches everything needed for environment state
     // Uses strategic includes and selects to minimize data transfer
     const workspaceData = await prisma.workspace.findUnique({
@@ -238,13 +201,6 @@ export const getWorkspaceStateData = async (workspaceId: string): Promise<Worksp
           take: 30, // Limit for performance
           select: appSurveySelect,
         },
-        // ENG-3994: the creatives the SDK shows, newest first; those that can show now come first.
-        creatives: {
-          where: getCreativesShowingNowWhere(now),
-          orderBy: { createdAt: "desc" },
-          take: MAX_DELIVERED_CREATIVES,
-          select: deliveredCreativeSelect,
-        },
       },
     });
 
@@ -252,41 +208,7 @@ export const getWorkspaceStateData = async (workspaceId: string): Promise<Worksp
       throw new ResourceNotFoundError("workspace", workspaceId);
     }
 
-    // Creatives reach sites only while the licence includes them (ENG-6602); nothing is written either
-    // way, so ones that were Active show again by themselves once it does. The licence read is cached,
-    // and this payload's own 60 s cache adds at most a minute to the licence's refresh. Each creative's
-    // look is computed from the workspace Look & Feel, never its survey's (ENG-3998).
-    const creatives = (await getIsCreativesEnabled(workspaceData.organizationId))
-      ? await toCreativePayloads(
-          await withUpcomingCreatives(workspaceData.id, workspaceData.creatives, now),
-          {
-            publicDomain: getPublicDomain(),
-            workspaceStyling: workspaceData.styling,
-          }
-        )
-      : [];
-
-    // A creative opens its survey as a popup from this payload alone, so every such survey has to be in
-    // it — also one outside the 30 newest, and one with no trigger of its own (it is sent with
-    // `triggers: []`, which every SDK reads as "never show it by itself").
-    const newestSurveyIds = new Set(workspaceData.surveys.map(({ id }) => id));
-    const missingSurveyIds = getPopupSurveyIds(creatives).filter((id) => !newestSurveyIds.has(id));
-    const appSurveys =
-      missingSurveyIds.length > 0
-        ? [
-            ...workspaceData.surveys,
-            ...(await prisma.survey.findMany({
-              where: {
-                id: { in: missingSurveyIds },
-                workspaceId,
-                type: "app",
-                status: "inProgress",
-                archivedAt: null,
-              },
-              select: appSurveySelect,
-            })),
-          ]
-        : workspaceData.surveys;
+    const appSurveys = workspaceData.surveys;
 
     // Backwards-compat response shape for SDKs from before PR #7931. Those
     // clients decoded `survey.name` and the full `segment` object as required
@@ -438,7 +360,6 @@ export const getWorkspaceStateData = async (workspaceId: string): Promise<Worksp
       // intentional and only this endpoint's response widens the type.
       surveys: resolveStorageUrlsInObject(transformedSurveys) as unknown as TJsWorkspaceStateSurvey[],
       actionClasses: workspaceData.actionClasses,
-      creatives,
     };
   } catch (error) {
     if (error instanceof ResourceNotFoundError) {

@@ -1,6 +1,5 @@
 import "server-only";
 import { ErrorCode, createCacheKey } from "@formbricks/cache";
-import type { TCreativePayload } from "@formbricks/creatives";
 import { prisma } from "@formbricks/database";
 import { logger } from "@formbricks/logger";
 import { TJsWorkspaceState } from "@formbricks/types/js";
@@ -15,8 +14,11 @@ import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
 import { loggableError } from "@/lib/utils/loggable-error";
 import { getWorkspaceStateData } from "./data";
 
-/** The environment payload's `data`: the survey state plus the creatives (`@formbricks/creatives`). */
-export type TWorkspaceStatePayload = TJsWorkspaceState["data"] & { creatives?: TCreativePayload[] };
+/**
+ * The environment payload's `data`. It never carries `creatives`: GForms has none, and the SDKs read the
+ * key's absence as no creatives to show.
+ */
+export type TWorkspaceStatePayload = TJsWorkspaceState["data"];
 
 type WorkspaceState = { data: TWorkspaceStatePayload };
 type OutageEntry = { value: WorkspaceState; expiresAt: number; bytes: number };
@@ -94,7 +96,7 @@ const loadDuringRedisOutage = async (
 export const getWorkspaceState = async (workspaceId: string): Promise<{ data: TWorkspaceStatePayload }> => {
   const loadState = async (): Promise<WorkspaceState> => {
     // Single optimized database call replacing multiple service calls
-    const { workspace, surveys, actionClasses, creatives } = await getWorkspaceStateData(workspaceId);
+    const { workspace, surveys, actionClasses } = await getWorkspaceStateData(workspaceId);
 
     // Handle app setup completion update if needed
     // This is a one-time setup flag that can tolerate TTL-based cache expiration
@@ -135,9 +137,6 @@ export const getWorkspaceState = async (workspaceId: string): Promise<{ data: TW
       workspace: workspace.workspaceSettings,
       project: legacyProjectSettings,
       ...(IS_RECAPTCHA_CONFIGURED ? { recaptchaSiteKey: RECAPTCHA_SITE_KEY } : {}),
-      // ENG-3994: only when there is something to show, so SDKs and cached states from before
-      // creatives never meet the key.
-      ...(creatives.length > 0 ? { creatives } : {}),
     } as TWorkspaceStatePayload);
 
     return { data };

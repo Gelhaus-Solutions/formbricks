@@ -80,8 +80,8 @@ export const GET = withV1ApiWrapper({
           {
             data,
             expiresAt: new Date(now + 1000 * 60 * 60), // 1 hour for SDK to recheck
-            // ENG-3994: per request, outside the cached `data`, so creative schedules can correct the
-            // visitor's clock (`getClockOffset` in @formbricks/creatives).
+            // ENG-3994: per request, outside the cached `data`, so the SDK can correct the visitor's
+            // clock (`getClockOffset` in @formbricks/creatives).
             serverTime: new Date(now),
           },
           true,

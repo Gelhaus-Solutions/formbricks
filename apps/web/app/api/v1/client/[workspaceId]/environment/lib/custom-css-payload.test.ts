@@ -15,13 +15,10 @@ import { getWorkspaceState } from "./environmentState";
  */
 
 vi.mock("server-only", () => ({}));
-// Banner words come from the dashboard translator (getTranslate); its session-locale lookup is unused here.
-vi.mock("@/lingodotdev/language", () => ({ getLocale: vi.fn() }));
 vi.mock("@formbricks/database", () => ({
   prisma: {
     workspace: { findUnique: vi.fn(), update: vi.fn() },
     segment: { findMany: vi.fn() },
-    creative: { findMany: vi.fn(async () => []) },
   },
 }));
 vi.mock("@formbricks/logger", () => ({ logger: { debug: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
@@ -36,7 +33,6 @@ vi.mock("@/lib/constants", () => ({ IS_RECAPTCHA_CONFIGURED: false, POSTHOG_KEY:
 vi.mock("@/lib/posthog", () => ({ capturePostHogEvent: vi.fn() }));
 vi.mock("@/lib/utils/helper", () => ({ getOrganizationIdFromWorkspaceId: vi.fn() }));
 vi.mock("@/lib/utils/validate", () => ({ validateInputs: vi.fn() }));
-vi.mock("@/modules/features/lib/flags", () => ({ getIsCreativesEnabled: vi.fn(async () => true) }));
 vi.mock("@/modules/storage/utils", () => ({ resolveStorageUrlsInObject: vi.fn((value: unknown) => value) }));
 vi.mock("@/modules/survey/lib/utils", () => ({ transformPrismaSurvey: vi.fn((survey: unknown) => survey) }));
 // Stored output at the current processor version is delivered as stored.
@@ -144,7 +140,6 @@ describe("environment state payload at the custom CSS limits", () => {
       customCss: workspaceCss,
       actionClasses: [],
       surveys: Array.from({ length: SURVEY_COUNT }, (_, index) => survey(index)),
-      creatives: [],
     } as never);
 
     const { data } = await getWorkspaceState("clworkspace000000000000001");

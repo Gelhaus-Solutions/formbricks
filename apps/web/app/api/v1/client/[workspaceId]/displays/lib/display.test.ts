@@ -9,7 +9,6 @@ import {
   ValidationError,
 } from "@formbricks/types/errors";
 import { validateInputs } from "@/lib/utils/validate";
-import { getCreativeAttribution } from "@/modules/ee/creatives/lib/attribution";
 import { getContactByUserId } from "./contact";
 import { createDisplay } from "./display";
 
@@ -35,10 +34,6 @@ vi.mock("@formbricks/database", () => ({
 
 vi.mock("./contact", () => ({
   getContactByUserId: vi.fn(),
-}));
-
-vi.mock("@/modules/ee/creatives/lib/attribution", () => ({
-  getCreativeAttribution: vi.fn(),
 }));
 
 const workspaceId = "cqiu9au22kgzgqjossdlp5qh";
@@ -170,41 +165,14 @@ describe("createDisplay", () => {
     expect(result).toEqual(mockDisplayWithoutContact);
   });
 
-  describe("opened by a creative", () => {
-    const creativeId = "clh7m1qkx0000qwer1234abcd";
+  test("records no creative, whatever creative id the client sends", async () => {
+    vi.mocked(prisma.display.create).mockResolvedValue(mockDisplayWithoutContact);
 
-    test("records the creative when it is in the workspace and opens this survey", async () => {
-      vi.mocked(getCreativeAttribution).mockResolvedValue({ id: creativeId, name: "Feedback tab" });
-      vi.mocked(prisma.display.create).mockResolvedValue(mockDisplayWithoutContact);
+    await createDisplay({ ...displayInputWithoutUserId, creativeId: "clh7m1qkx0000qwer1234abcd" });
 
-      await createDisplay({ ...displayInputWithoutUserId, creativeId });
-
-      expect(getCreativeAttribution).toHaveBeenCalledWith({ creativeId, workspaceId, surveyId });
-      expect(prisma.display.create).toHaveBeenCalledWith({
-        data: { survey: { connect: { id: surveyId } }, creativeId },
-        select: { id: true, contactId: true, surveyId: true },
-      });
-    });
-
-    test("still creates the display, without the creative, when the creative does not check out", async () => {
-      vi.mocked(getCreativeAttribution).mockResolvedValue(null);
-      vi.mocked(prisma.display.create).mockResolvedValue(mockDisplayWithoutContact);
-
-      const result = await createDisplay({ ...displayInputWithoutUserId, creativeId });
-
-      expect(prisma.display.create).toHaveBeenCalledWith({
-        data: { survey: { connect: { id: surveyId } } },
-        select: { id: true, contactId: true, surveyId: true },
-      });
-      expect(result).toEqual(mockDisplayWithoutContact);
-    });
-
-    test("looks no creative up when none opened the survey", async () => {
-      vi.mocked(prisma.display.create).mockResolvedValue(mockDisplayWithoutContact);
-
-      await createDisplay(displayInputWithoutUserId);
-
-      expect(getCreativeAttribution).not.toHaveBeenCalled();
+    expect(prisma.display.create).toHaveBeenCalledWith({
+      data: { survey: { connect: { id: surveyId } } },
+      select: { id: true, contactId: true, surveyId: true },
     });
   });
 
