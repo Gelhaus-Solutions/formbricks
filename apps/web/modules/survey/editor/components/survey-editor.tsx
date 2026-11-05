@@ -34,7 +34,6 @@ import { useLiveWorkspaceCustomCss } from "@/modules/custom-css/components/hooks
 import { getCustomCssSource, toCustomCssDraft } from "@/modules/custom-css/components/lib/draft";
 import { type TSurveyCustomCssEditorConfig } from "@/modules/custom-css/components/types";
 import { isSurveyCustomCssApplied } from "@/modules/custom-css/lib/survey-css-gate";
-import type { TSurveyDataRetentionContext } from "@/modules/ee/data-retention/types";
 import { EditPublicSurveyAlertDialog } from "@/modules/survey/components/edit-public-survey-alert-dialog";
 import { ElementsView } from "@/modules/survey/editor/components/elements-view";
 import { LoadingSkeleton } from "@/modules/survey/editor/components/loading-skeleton";
@@ -102,8 +101,6 @@ interface SurveyEditorProps {
   surveyAccess: TSurveyAccess | null;
   ownerName: string | null;
   customCssEditor: TSurveyCustomCssEditorConfig;
-  /** Null when the organisation isn't entitled to data retention. */
-  dataRetention: TSurveyDataRetentionContext;
 }
 
 export const SurveyEditor = ({
@@ -141,7 +138,6 @@ export const SurveyEditor = ({
   surveyAccess,
   ownerName,
   customCssEditor,
-  dataRetention,
 }: Readonly<SurveyEditorProps>) => {
   const isFollowUpsTabVisible = shouldShowFollowUpsTab({
     followUpCount: survey.followUps.length,
@@ -154,8 +150,8 @@ export const SurveyEditor = ({
   // `localSurvey` must stay a structural clone of `survey`: the menu bar compares the two with
   // `isDeepEqual` to gate the draft auto-save, the back-navigation dialog and the beforeunload
   // prompt, and that comparison short-circuits on differing key counts. The inlined
-  // `embeddedFields` is the editor's Embedded Data state (ENG-2628) — the Variables and Hidden
-  // Fields cards edit it and every editor surface reads it — so it must arrive here exactly as the
+  // `embeddedFields` is the editor's Embedded Data state (ENG-2628): the Variables and Hidden
+  // Fields cards edit it and every editor surface reads it, so it must arrive here exactly as the
   // server sent it and be sent back the same way, which is also what keeps that comparison honest.
   const [localSurvey, setLocalSurvey] = useState<TSurvey | null>(() => structuredClone(survey));
   // Only the preview trails; the editor panes keep reading `localSurvey` so input stays immediate.
@@ -190,7 +186,7 @@ export const SurveyEditor = ({
 
   // `isFollowUpsTabVisible` tracks the server `survey` prop, which a manual save refreshes
   // (`updateSurveyAction` revalidates the route; the draft save calls `router.refresh()`). Deleting the last follow-up therefore hides the
-  // tab while `activeView` — client state — still points at it, leaving an empty main pane with no
+  // tab while `activeView` (client state) still points at it, leaving an empty main pane with no
   // tab selected. Fall back to the elements view so the deletion flow cannot dead-end.
   useEffect(() => {
     if (!isFollowUpsTabVisible && activeView === "followUps") {
@@ -272,7 +268,7 @@ export const SurveyEditor = ({
   // Recovery only: `localSurvey` is seeded from `survey` in its `useState` initializer, so this is a
   // no-op unless something ever resets it to null (the `LoadingSkeleton` guard below is the state it
   // recovers from). Written as an updater rather than reading `localSurvey`, because depending on it
-  // would re-run this on every keystroke in the editor to do nothing — and that shape becomes a real
+  // would re-run this on every keystroke in the editor to do nothing, and that shape becomes a real
   // loop the moment someone edits the guard. The active element is not set here: the
   // `[localSurvey?.type]` effect below already picks the first element whenever `localSurvey`
   // appears.
@@ -411,7 +407,6 @@ export const SurveyEditor = ({
 
           {activeView === "settings" && (
             <SettingsView
-              dataRetention={dataRetention}
               localSurvey={localSurvey}
               setLocalSurvey={setLocalSurveyNonNull}
               actionClasses={actionClasses}

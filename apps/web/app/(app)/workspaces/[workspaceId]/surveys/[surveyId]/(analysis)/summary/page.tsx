@@ -13,8 +13,6 @@ import { getUserVisibleSurveyWhere } from "@/lib/survey/visibility/actor-context
 import { getUser } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
 import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
-import { SurveyRetentionNote } from "@/modules/ee/data-retention/components/survey/survey-retention-note";
-import { getSurveyDataRetentionContext } from "@/modules/ee/data-retention/lib/survey-context";
 import { getIsContactsEnabled, getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 import { getSurveyAuth } from "@/modules/survey/lib/survey-auth";
@@ -73,11 +71,10 @@ const SurveyPage = async (
   const aiUnavailableReason = getAISmartToolsUnavailableReason(aiConfig) ?? null;
 
   // Fetch initial survey summary data on the server to prevent duplicate API calls during hydration
-  const [initialSurveySummary, { surveyVisibilityGate, visibility, surveyAccess, ownerName }, dataRetention] =
+  const [initialSurveySummary, { surveyVisibilityGate, visibility, surveyAccess, ownerName }] =
     await Promise.all([
       getSurveySummary(surveyId),
       getSurveyVisibilityViewer(survey, session.user.id, organization.id),
-      getSurveyDataRetentionContext(organization, session.user.id),
     ]);
 
   const publicDomain = getPublicDomain();
@@ -108,13 +105,6 @@ const SurveyPage = async (
         visibility,
         access: surveyAccess,
       }) && <RestrictedSurveyBanner ownerName={ownerName} />}
-      {dataRetention ? (
-        <SurveyRetentionNote
-          surveyId={survey.id}
-          organizationId={dataRetention.organizationId}
-          timeZone={dataRetention.timeZone}
-        />
-      ) : null}
       <SummaryPage
         survey={survey}
         surveyId={params.surveyId}

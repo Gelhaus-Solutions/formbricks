@@ -22,7 +22,6 @@ import { getCustomCssHealth, toDeliveredCustomCss } from "@/modules/custom-css/l
 import { getWorkspaceCustomCssRecord, parseStoredCustomCss } from "@/modules/custom-css/lib/service";
 import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
 import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
-import { getSurveyDataRetentionContext } from "@/modules/ee/data-retention/lib/survey-context";
 import { getQuotas } from "@/modules/ee/quotas/lib/quotas";
 import {
   getIsContactsEnabled,
@@ -160,10 +159,11 @@ export const SurveyEditorPage = async (props: {
 
   const isCxMode = searchParams.mode === "cx";
   const publicDomain = getPublicDomain();
-  const [{ surveyVisibilityGate, visibility, surveyAccess, ownerName }, dataRetention] = await Promise.all([
-    getSurveyVisibilityViewer(survey, session.user.id, workspaceWithTeamIds.organizationId),
-    getSurveyDataRetentionContext(organization, session.user.id),
-  ]);
+  const { surveyVisibilityGate, visibility, surveyAccess, ownerName } = await getSurveyVisibilityViewer(
+    survey,
+    session.user.id,
+    workspaceWithTeamIds.organizationId
+  );
 
   // The workspace row reaches the editor without its CSS columns (source, compiled output and the
   // previous revision); the editor gets only what the Custom CSS card shows, read here on the server.
@@ -211,7 +211,6 @@ export const SurveyEditorPage = async (props: {
       surveyAccess={surveyAccess}
       ownerName={ownerName}
       customCssEditor={customCssEditor}
-      dataRetention={dataRetention}
     />
   );
 };

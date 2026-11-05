@@ -6,8 +6,6 @@ import { TSegment } from "@formbricks/types/segment";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { TUserLocale } from "@formbricks/types/user";
 import { TargetingCard } from "@/modules/ee/contacts/segments/components/targeting-card";
-import { SurveyRetentionCard } from "@/modules/ee/data-retention/components/survey/survey-retention-card";
-import type { TSurveyDataRetentionContext } from "@/modules/ee/data-retention/types";
 import { QuotasCard } from "@/modules/ee/quotas/components/quotas-card";
 import { HowToSendCard } from "@/modules/survey/editor/components/how-to-send-card";
 import { RecontactOptionsCard } from "@/modules/survey/editor/components/recontact-options-card";
@@ -39,8 +37,6 @@ interface SettingsViewProps {
   enterpriseLicenseRequestFormUrl: string;
   /** A save or publish was blocked because the survey has no trigger (ENG-2581). */
   hasTriggerError?: boolean;
-  /** Null when the organisation isn't entitled to data retention. */
-  dataRetention?: TSurveyDataRetentionContext;
 }
 
 export const SettingsView = ({
@@ -63,7 +59,6 @@ export const SettingsView = ({
   appSetupCompleted,
   enterpriseLicenseRequestFormUrl,
   hasTriggerError = false,
-  dataRetention = null,
 }: Readonly<SettingsViewProps>) => {
   const isAppSurvey = localSurvey.type === "app";
 
@@ -127,14 +122,6 @@ export const SettingsView = ({
       />
 
       <RecontactOptionsCard localSurvey={localSurvey} setLocalSurvey={setLocalSurvey} />
-
-      {dataRetention ? (
-        <SurveyRetentionCard
-          surveyId={localSurvey.id}
-          surveyName={localSurvey.name}
-          context={dataRetention}
-        />
-      ) : null}
 
       {isAppSurvey && <SurveyPlacementCard localSurvey={localSurvey} setLocalSurvey={setLocalSurvey} />}
     </div>
