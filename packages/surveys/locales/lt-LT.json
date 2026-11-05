@@ -15,7 +15,6 @@
     "page_x_of_y": "{current} puslapis iš {total}",
     "people_responded": "{count, plural, one {Atsakė 1 žmogus} few {Atsakė {count} žmonės} many {Atsakė {count} žmogaus} other {Atsakė {count} žmonių}}",
     "please_retry_now_or_try_again_later": "Bandyk dar kartą dabar arba vėliau.",
-    "powered_by": "Sukurta su",
     "privacy_policy": "Privatumo politika",
     "protected_by_reCAPTCHA_and_the_Google": "Apsaugota reCAPTCHA ir Google",
     "question": "Klausimas",

@@ -15,7 +15,6 @@
     "page_x_of_y": "Lapa {current} no {total}",
     "people_responded": "{count, plural, zero {{count} cilvēki atbildēja} one {1 cilvēks atbildēja} other {{count} cilvēki atbildēja}}",
     "please_retry_now_or_try_again_later": "Lūdzu, mēģini vēlreiz tagad vai vēlāk.",
-    "powered_by": "Darbina",
     "privacy_policy": "Privātuma politika",
     "protected_by_reCAPTCHA_and_the_Google": "Aizsargā reCAPTCHA un Google",
     "question": "Jautājums",

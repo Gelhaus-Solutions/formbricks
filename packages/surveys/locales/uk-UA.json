@@ -15,7 +15,6 @@
     "page_x_of_y": "Сторінка {current} з {total}",
     "people_responded": "{count, plural, one {Відповіла 1 людина} few {{count} людини відповіли} many {{count} людей відповіли} other {{count} людини відповіли}}",
     "please_retry_now_or_try_again_later": "Будь ласка, спробуй ще раз зараз або пізніше.",
-    "powered_by": "Працює на",
     "privacy_policy": "Політика конфіденційності",
     "protected_by_reCAPTCHA_and_the_Google": "Захищено reCAPTCHA та Google",
     "question": "Запитання",

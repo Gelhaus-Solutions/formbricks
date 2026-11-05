@@ -15,7 +15,6 @@
     "page_x_of_y": "पृष्ठ {current} में से {total}",
     "people_responded": "{count, plural, one {1 व्यक्ति ने जवाब दिया} other {{count} लोगों ने जवाब दिया}}",
     "please_retry_now_or_try_again_later": "कृपया अभी पुनः प्रयास करें या बाद में फिर से प्रयास करें।",
-    "powered_by": "द्वारा संचालित",
     "privacy_policy": "गोपनीयता नीति",
     "protected_by_reCAPTCHA_and_the_Google": "reCAPTCHA और Google द्वारा संरक्षित",
     "question": "प्रश्न",

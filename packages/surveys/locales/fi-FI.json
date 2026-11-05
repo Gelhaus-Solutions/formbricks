@@ -15,7 +15,6 @@
     "page_x_of_y": "Sivu {current}/{total}",
     "people_responded": "{count, plural, one {1 henkilö vastasi} other {{count} henkilöä vastasi}}",
     "please_retry_now_or_try_again_later": "Yritä uudelleen nyt tai myöhemmin.",
-    "powered_by": "Palvelun tarjoaa",
     "privacy_policy": "Tietosuojakäytäntö",
     "protected_by_reCAPTCHA_and_the_Google": "Suojattu reCAPTCHA:lla ja Googlen",
     "question": "Kysymys",

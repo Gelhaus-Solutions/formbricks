@@ -15,7 +15,6 @@
     "page_x_of_y": "第 {current} 頁，共 {total} 頁",
     "people_responded": "{count, plural, other {{count} 人已回覆}}",
     "please_retry_now_or_try_again_later": "請立即重試或稍後再試。",
-    "powered_by": "技術支援",
     "privacy_policy": "隱私權政策",
     "protected_by_reCAPTCHA_and_the_Google": "受 reCAPTCHA 與 Google 保護",
     "question": "問題",

@@ -15,7 +15,6 @@
     "page_x_of_y": "Страница {current} от {total}",
     "people_responded": "{count, plural, one {1 човек отговори} other {{count} души отговориха}}",
     "please_retry_now_or_try_again_later": "Моля, опитай отново сега или по-късно.",
-    "powered_by": "Задвижвано от",
     "privacy_policy": "Политика за поверителност",
     "protected_by_reCAPTCHA_and_the_Google": "Защитено от reCAPTCHA и Google",
     "question": "Въпрос",

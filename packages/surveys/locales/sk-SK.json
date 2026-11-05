@@ -15,7 +15,6 @@
     "page_x_of_y": "Strana {current} z {total}",
     "people_responded": "{count, plural, one {Odpovedala 1 osoba} few {{count} osoby odpovedali} many {{count} osôb odpovedalo} other {{count} ľudí odpovedalo}}",
     "please_retry_now_or_try_again_later": "Skús to teraz znova alebo to skús neskôr.",
-    "powered_by": "Používa",
     "privacy_policy": "Zásady ochrany súkromia",
     "protected_by_reCAPTCHA_and_the_Google": "Chránené službou reCAPTCHA a spoločnosťou Google",
     "question": "Otázka",

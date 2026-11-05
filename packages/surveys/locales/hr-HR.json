@@ -15,7 +15,6 @@
     "page_x_of_y": "Stranica {current} od {total}",
     "people_responded": "{count, plural, one {Odgovorila je 1 osoba} few {{count} osobe su odgovorile} other {{count} osoba je odgovorilo}}",
     "please_retry_now_or_try_again_later": "Pokušaj ponovno sada ili probaj kasnije.",
-    "powered_by": "Pokreće",
     "privacy_policy": "Politika privatnosti",
     "protected_by_reCAPTCHA_and_the_Google": "Zaštićeno s reCAPTCHA i Googleom",
     "question": "Pitanje",
