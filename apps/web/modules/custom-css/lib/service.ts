@@ -59,7 +59,7 @@ export const classifyCustomCssChange = (
   input: TCustomCssInput | null
 ): TCustomCssChange => classifyCustomCssSourceChange(toCustomCssSource(existing), input);
 
-/** {@link classifyCustomCssChange} for CSS stored as source only (a creative's, ENG-3998). */
+/** {@link classifyCustomCssChange} for CSS given as source only. */
 export const classifyCustomCssSourceChange = (
   existing: TCustomCssInput | null | undefined,
   input: TCustomCssInput | null | undefined

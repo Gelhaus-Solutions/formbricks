@@ -50,11 +50,6 @@ interface CssCodeFieldProps {
   /** How to leave the field by keyboard; its `id` belongs in `aria-describedby`. */
   keyboardHint?: { id: string; text: string };
   handleRef?: Ref<TCssCodeFieldHandle>;
-  /**
-   * Offer the survey's styling hooks, states and variables while typing. Off where the CSS isn't
-   * written for the survey card, such as a creative's own CSS (ENG-4005).
-   */
-  offersSuggestions?: boolean;
 }
 
 interface TOpenSuggestions extends TCssSuggestionContext {
@@ -68,7 +63,7 @@ interface TOpenSuggestions extends TCssSuggestionContext {
  * The Custom CSS field (ENG-3723): a monospace textarea with a line-number gutter that marks lines
  * with an error in red and lines with a removed rule in amber. Tab indents by two spaces; Escape, then
  * Tab, leaves the field. Typing an attribute selector or a `--fb-` variable offers the survey's styling
- * hooks, states and theme variables at the caret, unless `offersSuggestions` is off.
+ * hooks, states and theme variables at the caret.
  */
 export const CssCodeField = ({
   id,
@@ -83,7 +78,6 @@ export const CssCodeField = ({
   "aria-describedby": ariaDescribedBy,
   keyboardHint,
   handleRef,
-  offersSuggestions = true,
 }: Readonly<CssCodeFieldProps>) => {
   const listboxId = useId();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -170,7 +164,7 @@ export const CssCodeField = ({
     onChange?.(event.target.value);
     const { selectionStart, selectionEnd } = event.target;
     const isTyping = !isApplyingEdit.current && (event.nativeEvent as InputEvent).inputType === "insertText";
-    if (offersSuggestions && isTyping && selectionStart === selectionEnd) {
+    if (isTyping && selectionStart === selectionEnd) {
       openSuggestions(event.target.value, selectionStart);
     } else setSuggestions(null);
   };
@@ -293,12 +287,12 @@ export const CssCodeField = ({
           aria-label={ariaLabel}
           aria-invalid={invalid}
           aria-describedby={ariaDescribedBy}
-          aria-autocomplete={isEditable && offersSuggestions ? "list" : undefined}
+          aria-autocomplete={isEditable ? "list" : undefined}
           aria-controls={suggestions ? listboxId : undefined}
           aria-activedescendant={activeOptionId}
           // Sizes are restated: the forms plugin's textarea defaults would put the text off the gutter's lines.
           className={cn(
-            "relative block w-full rounded-r-md border-0 bg-transparent px-3 py-2 font-mono text-xs leading-5 whitespace-pre [tab-size:2] text-slate-800 shadow-none outline-none placeholder:text-slate-400 focus:ring-0 focus:outline-none",
+            "relative block w-full rounded-r-md border-0 bg-transparent px-3 py-2 font-mono text-xs leading-5 whitespace-pre text-slate-800 shadow-none outline-none [tab-size:2] placeholder:text-slate-400 focus:ring-0 focus:outline-none",
             resizable ? "min-h-24 resize-y" : "resize-none",
             !isEditable && "cursor-default text-slate-600"
           )}

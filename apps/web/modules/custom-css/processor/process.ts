@@ -74,9 +74,8 @@ export interface TCustomCssProcessOptions {
   blockExternalResources?: boolean;
   /**
    * The element every selector is scoped to. Defaults to the survey root, `#fbjs`, and without it the
-   * output is exactly what it was before the option existed. Another root — the element a creative
-   * renders in, inside its shadow root — takes `#fbjs`'s place everywhere: as a root alias, as the
-   * anchor and in the dark anchor.
+   * output is exactly what it was before the option existed. Another root takes `#fbjs`'s place
+   * everywhere: as a root alias, as the anchor and in the dark anchor.
    */
   root?: TCustomCssRoot;
 }

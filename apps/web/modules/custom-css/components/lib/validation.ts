@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { TCreativeType } from "@formbricks/creatives";
 import {
   type TCustomCssCompiled,
   type TCustomCssError,
@@ -118,7 +117,6 @@ export const customCssKeys = {
     workspaceId: string;
     scope: TCustomCssScope;
     surveyId?: string | null;
-    creativeType?: TCreativeType;
     input: TCustomCssInput;
   }) =>
     [
@@ -127,7 +125,6 @@ export const customCssKeys = {
       params.workspaceId,
       params.scope,
       params.surveyId ?? null,
-      params.creativeType ?? null,
       params.input.light,
       params.input.dark,
     ] as const,

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { TCreativeType } from "@formbricks/creatives";
 import {
   type TCustomCssError,
   type TCustomCssInput,
@@ -89,8 +88,6 @@ export const validateCustomCss = async (params: {
   workspaceId: string;
   scope: TCustomCssScope;
   surveyId?: string | null;
-  /** A creative's own CSS, compiled for that creative's root element (survey scope only). */
-  creativeType?: TCreativeType;
   input: TCustomCssInput;
   signal?: AbortSignal;
 }): Promise<TCustomCssValidationResult> => {
@@ -103,7 +100,6 @@ export const validateCustomCss = async (params: {
         workspaceId: params.workspaceId,
         scope: params.scope,
         ...(params.surveyId ? { surveyId: params.surveyId } : {}),
-        ...(params.creativeType ? { creativeType: params.creativeType } : {}),
         data: { customCss: params.input },
       }),
       signal: params.signal,
