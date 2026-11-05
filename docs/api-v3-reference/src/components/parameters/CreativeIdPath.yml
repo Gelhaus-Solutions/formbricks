@@ -1,7 +1,0 @@
-in: path
-name: creativeId
-required: true
-schema:
-  type: string
-  format: cuid2
-description: Creative identifier.

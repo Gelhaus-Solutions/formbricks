@@ -64,12 +64,6 @@ Three things to know before reading the result:
   code. Where the licence does not grant Dashboards, every one of them answers the documented 403
   `dashboards_plan_required` instead. The chart data and preview operations answer a documented 502
   either way: the job runs no Cube.
-- **Creatives endpoints need a licence with `creatives`.** Without it the fixture workspace, which
-  has seeded creatives, is in wind-down: list, get, stats and delete still run against real data, a
-  `PATCH` that only pauses or closes runs too, as does the survey-wide pause
-  (`/api/v3/creatives/pause`, on a fixture survey of its own), and create, other patches, archive,
-  restore and duplicate answer the documented 403 `creatives_not_entitled`. No fixture change is needed
-  either way.
 - **The four `/tags` operations are session-only** (`auth: "session"`, and the spec declares only
   `sessionAuth`), so an API key gets a documented 401 before any handler runs. They are checked
   against that 401, which is a real assertion that they stay session-only — but no tag fixtures

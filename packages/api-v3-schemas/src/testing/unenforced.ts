@@ -10,9 +10,8 @@
  * - `src/generated.contract.test.ts` fails when generated-vs-spec differs by anything not listed
  *   here — so adopting a tag, or a spec edit, cannot add an unenforced constraint unnoticed — and when a
  *   listed entry stops differing (the generator learned it; drop the pin and the refinement).
- * - The consumer's coverage test (Responses: `apps/web/app/api/v3/responses/lib/write-schemas.test.ts`,
- *   Creatives: `apps/web/app/api/v3/creatives/lib/schemas.test.ts`) must reject a counterexample for
- *   every entry in its scope, at the right path.
+ * - The consumer's coverage test (Responses: `apps/web/app/api/v3/responses/lib/write-schemas.test.ts`)
+ *   must reject a counterexample for every entry in its scope, at the right path.
  */
 export type TUnenforcedKeyword =
   | "uniqueItems"
@@ -42,7 +41,6 @@ export const unenforcedKey = ({ schema, path, keyword }: TUnenforced): string =>
   `${schema} ${path} ${keyword}`;
 
 const RESPONSES = "apps/web/app/api/v3/responses/lib/schemas.ts";
-const CREATIVES = "apps/web/app/api/v3/creatives/lib/schemas.ts";
 
 /** The fingerprint `facts.ts` gives `ResponseDataMapInput`'s per-value `if/then/else` caps. */
 const DATA_VALUE_CAPS = "sha256:cd2aad86b9e1d557";
@@ -54,10 +52,6 @@ const pin = (
   specValue: string | number | boolean,
   enforcedBy: string = RESPONSES
 ): TUnenforced => ({ schema, path, keyword, specValue, enforcedBy });
-
-/** A link Destination's `url`: a real host, which the published pattern can only approximate. */
-const webUrl = (schema: string, path: string): TUnenforced =>
-  pin(schema, path, "format", "web-url", CREATIVES);
 
 export const EXPECTED_UNENFORCED: readonly TUnenforced[] = [
   pin("BatchDeleteResponsesRequest", "$.ids", "uniqueItems", true),
@@ -80,12 +74,4 @@ export const EXPECTED_UNENFORCED: readonly TUnenforced[] = [
   pin("ValidateResponsePatchRequest", "$", "requiredAtRuntime", "data"),
   pin("ValidateResponseRequest", "$|operation=create", "requiredAtRuntime", "data"),
   pin("ValidateResponseRequest", "$|operation=patch", "requiredAtRuntime", "data"),
-  webUrl("CreateBannerCreativeRequest", "$.destination|type=link.url"),
-  webUrl("CreateCreativeRequest", "$|type=banner.destination|type=link.url"),
-  webUrl("CreateCreativeRequest", "$|type=feedbackButton.destination|type=link.url"),
-  webUrl("CreateCreativeRequestBase", "$.destination|type=link.url"),
-  webUrl("CreateFeedbackButtonCreativeRequest", "$.destination|type=link.url"),
-  webUrl("CreativeDestinationInput", "$|type=link.url"),
-  webUrl("CreativeLinkDestinationInput", "$.url"),
-  webUrl("PatchCreativeRequest", "$.destination|type=link.url"),
 ];
