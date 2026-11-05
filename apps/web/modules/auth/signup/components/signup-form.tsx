@@ -12,6 +12,7 @@ import { z } from "zod";
 import {
   INVITE_TOKEN_INVALID_ERROR_CODE,
   PASSWORD_COMPROMISED_ERROR_CODE,
+  SIGNUP_DISABLED_ERROR_CODE,
   SIGNUP_EMAIL_DOMAIN_BLOCKED_ERROR_CODE,
 } from "@formbricks/types/errors";
 import { TUserLocale, ZUserName, ZUserPassword } from "@formbricks/types/user";
@@ -142,14 +143,11 @@ export const SignupForm = ({
         // probe which invites exist.
         toast.error(t("auth.invite.invite_not_found_description"));
         return;
+      case SIGNUP_DISABLED_ERROR_CODE:
+        // Reachable the same way: sign-up can be open when this page renders and closed before submit.
+        toast.error(t("auth.signup.signup_disabled"));
+        return;
       default:
-        // SIGNUP_DISABLED_ERROR_CODE lands here (#8681). CodeRabbit is right that a real user can see
-        // it — sign-up can be open when this page renders and closed before submit, the same
-        // render-then-revoke race that makes the invite branch above user-facing — so it should be
-        // translated rather than shown as a raw code. Deferred there because adding an en-US string
-        // needs the 14 target locales populated too, and doing it without that reddens
-        // `scan-translations`; tracked as a follow-up. (This PR hand-writes such strings with their
-        // i18n.lock checksums, so that route is open to whoever picks the follow-up up.)
         toast.error(errorMessage);
     }
   };
@@ -281,7 +279,7 @@ export const SignupForm = ({
                             onBlur={field.onBlur}
                             onChange={(e) => field.onChange(e.target.value)}
                             // This form creates the account, so a password manager should be
-                            // offering to generate and store — not autofill the current one.
+                            // offering to generate and store, not autofill the current one.
                             autoComplete="new-password"
                             placeholder="*******"
                             required
