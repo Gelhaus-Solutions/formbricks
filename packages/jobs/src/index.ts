@@ -34,7 +34,6 @@ export type { TRecurringBackgroundJobSchedule } from "./schedules";
 export {
   ZAttachmentExportJobData,
   ZAttachmentExportReconcileJobData,
-  ZCreativeStatsFlushJobData,
   ZDataRetentionSweepJobData,
   ZDeletionCleanupDrainJobData,
   ZGlobalScopeJobData,
@@ -52,7 +51,6 @@ export {
 export type {
   TAttachmentExportJobData,
   TAttachmentExportReconcileJobData,
-  TCreativeStatsFlushJobData,
   TDataRetentionSweepJobData,
   TDeletionCleanupDrainJobData,
   TGlobalScopeJobData,
