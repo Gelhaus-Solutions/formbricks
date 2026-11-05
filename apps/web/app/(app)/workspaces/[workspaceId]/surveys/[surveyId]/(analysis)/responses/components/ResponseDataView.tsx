@@ -28,8 +28,6 @@ interface ResponseDataViewProps {
   isQuotasAllowed: boolean;
   quotas: TSurveyQuota[];
   toolbar: TResponseToolbarState;
-  /** Creatives open this survey: its table then shows "Opened by creative" by default. */
-  isOpenedByCreatives: boolean;
   outcomeActions: TOutcomeActions;
 }
 
@@ -132,7 +130,6 @@ export const ResponseDataView: React.FC<Readonly<ResponseDataViewProps>> = ({
   isQuotasAllowed,
   quotas,
   toolbar,
-  isOpenedByCreatives,
   outcomeActions,
 }) => {
   const [selectedResponseId, setSelectedResponseId] = React.useState<string | null>(null);
@@ -161,7 +158,6 @@ export const ResponseDataView: React.FC<Readonly<ResponseDataViewProps>> = ({
         toolbar={toolbar}
         selectedResponseId={selectedResponseId}
         setSelectedResponseId={setSelectedResponseIdTransition}
-        isOpenedByCreatives={isOpenedByCreatives}
         outcomeActions={outcomeActions}
       />
     </div>

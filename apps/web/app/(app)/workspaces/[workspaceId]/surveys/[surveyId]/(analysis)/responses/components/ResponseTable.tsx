@@ -49,8 +49,6 @@ interface ResponseTableProps {
   toolbar: TResponseToolbarState;
   /** Marking and restoring Low quality, wired to the page's list. */
   outcomeActions: TOutcomeActions;
-  /** Creatives open this survey: its table then shows "Opened by creative" by default. */
-  isOpenedByCreatives: boolean;
 }
 
 /** The gear's column names: each column's text label, which its rendered header does not give. */
@@ -79,8 +77,6 @@ export const ResponseTable = ({
   setSelectedResponseId,
   toolbar,
   outcomeActions,
-
-  isOpenedByCreatives,
 }: Readonly<ResponseTableProps>) => {
   const { t } = useTranslation();
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -152,15 +148,14 @@ export const ResponseTable = ({
     // visible in TanStack, so the `secondary` ones need an explicit `false` to start hidden.
     setColumnVisibility(
       seedReservedColumnVisibility(
-        savedColumnVisibility ? (JSON.parse(savedColumnVisibility) as VisibilityState) : {},
-        { isOpenedByCreatives }
+        savedColumnVisibility ? (JSON.parse(savedColumnVisibility) as VisibilityState) : {}
       )
     );
 
     if (savedExpandedSettings !== null) {
       setIsExpanded(JSON.parse(savedExpandedSettings));
     }
-  }, [survey.id, defaultColumnOrder, isOpenedByCreatives]);
+  }, [survey.id, defaultColumnOrder]);
 
   const deleteResponse = async (responseId: string, params?: { decrementQuotas?: boolean }) => {
     const result = await deleteResponseAction({

@@ -87,28 +87,16 @@ const PERSISTED_RESERVED_COLUMN_NAMES: Record<string, string> = {
 export const reservedColumnId = (name: string): string =>
   `${METADATA_COLUMN_PREFIX}${PERSISTED_RESERVED_COLUMN_NAMES[name] ?? name}`;
 
-/** What about a survey changes which reserved columns its table shows by default. */
-export interface TReservedColumnDefaultsContext {
-  /** Any non-archived creative opens the survey (its linked creatives). */
-  isOpenedByCreatives: boolean;
-}
-
 /**
  * Which reserved columns start visible for an author who has never touched this table's settings.
  *
  * `primary` ones — exactly the fields the table already showed, so the default view is unchanged.
  * The `secondary` ones exist as columns and appear in the settings modal, but unchecked: a survey's
  * table must not silently grow thirteen columns, several of which are empty for every response
- * collected before ENG-1841. One exception: on a survey that creatives open, the
- * "Opened by creative" column (the creative's name) starts visible too, since it says which of them
- * brought each response; its ID column stays hidden. The catalog's `display` is unchanged, so every
- * other survey keeps it hidden.
+ * collected before ENG-1841.
  */
-export const isReservedColumnVisibleByDefault = (
-  { name, display }: { name: string; display: TReservedFieldDisplay },
-  context?: TReservedColumnDefaultsContext
-): boolean =>
-  display === "primary" || (context?.isOpenedByCreatives === true && name === "openedByCreativeName");
+export const isReservedColumnVisibleByDefault = ({ display }: { display: TReservedFieldDisplay }): boolean =>
+  display === "primary";
 
 /** The label a reserved column's header shows: the product's own wording, or one derived from the name. */
 export const getReservedColumnLabel = (name: string, t: TFunction): string => getReservedFieldLabel(name, t);

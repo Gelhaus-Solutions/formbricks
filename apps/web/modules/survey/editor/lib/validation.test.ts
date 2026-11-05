@@ -1833,25 +1833,17 @@ describe("validation.isMissingRequiredTrigger", () => {
   test.each(["inProgress", "paused", "completed"] as const)(
     "refuses an app survey with no trigger heading for %s",
     (targetStatus) => {
-      expect(validation.isMissingRequiredTrigger(appSurveyWithoutTriggers, targetStatus, false)).toBe(true);
+      expect(validation.isMissingRequiredTrigger(appSurveyWithoutTriggers, targetStatus)).toBe(true);
     }
   );
 
-  test("publishes an app survey with no trigger of its own when a creative opens it (ENG-3994)", () => {
-    expect(validation.isMissingRequiredTrigger(appSurveyWithoutTriggers, "inProgress", true)).toBe(false);
-  });
-
   test("lets an app survey with no trigger be saved as a draft", () => {
-    expect(validation.isMissingRequiredTrigger(appSurveyWithoutTriggers, "draft", false)).toBe(false);
+    expect(validation.isMissingRequiredTrigger(appSurveyWithoutTriggers, "draft")).toBe(false);
   });
 
   test("lets a link survey publish with no trigger", () => {
     expect(
-      validation.isMissingRequiredTrigger(
-        { type: "link", triggers: [] } as unknown as TSurvey,
-        "inProgress",
-        false
-      )
+      validation.isMissingRequiredTrigger({ type: "link", triggers: [] } as unknown as TSurvey, "inProgress")
     ).toBe(false);
   });
 
@@ -1861,7 +1853,7 @@ describe("validation.isMissingRequiredTrigger", () => {
       triggers: [{ actionClass: { id: "action1", name: "Click" } }],
     } as unknown as TSurvey;
 
-    expect(validation.isMissingRequiredTrigger(withTrigger, "inProgress", false)).toBe(false);
+    expect(validation.isMissingRequiredTrigger(withTrigger, "inProgress")).toBe(false);
   });
 
   test.each([
@@ -1870,11 +1862,7 @@ describe("validation.isMissingRequiredTrigger", () => {
     ["a hole left by a removed trigger", [undefined]],
   ])("treats %s as no trigger", (_case, triggers) => {
     expect(
-      validation.isMissingRequiredTrigger(
-        { type: "app", triggers } as unknown as TSurvey,
-        "inProgress",
-        false
-      )
+      validation.isMissingRequiredTrigger({ type: "app", triggers } as unknown as TSurvey, "inProgress")
     ).toBe(true);
   });
 });

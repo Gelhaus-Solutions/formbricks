@@ -247,24 +247,7 @@ describe("utils", () => {
       );
 
       expect(visible).toStrictEqual(["source", "url", "country", "action", "browser", "os", "deviceType"]);
-      expect(isReservedColumnVisibleByDefault({ name: "timezone", display: "secondary" })).toBe(false);
-    });
-
-    test("a survey that creatives open also shows who opened each response, by the creative's name", () => {
-      const visible = RESERVED_COLUMN_ENTRIES.filter((entry) =>
-        isReservedColumnVisibleByDefault(entry, { isOpenedByCreatives: true })
-      ).map((entry) => entry.name);
-
-      expect(visible).toStrictEqual([
-        "source",
-        "url",
-        "country",
-        "action",
-        "browser",
-        "os",
-        "deviceType",
-        "openedByCreativeName",
-      ]);
+      expect(isReservedColumnVisibleByDefault({ display: "secondary" })).toBe(false);
     });
   });
 

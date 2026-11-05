@@ -1,10 +1,5 @@
 import type { VisibilityState } from "@tanstack/react-table";
-import {
-  RESERVED_COLUMN_ENTRIES,
-  type TReservedColumnDefaultsContext,
-  isReservedColumnVisibleByDefault,
-  reservedColumnId,
-} from "./utils";
+import { RESERVED_COLUMN_ENTRIES, isReservedColumnVisibleByDefault, reservedColumnId } from "./utils";
 
 /**
  * Reconciles a persisted column order against the table's real columns (ENG-2540).
@@ -65,20 +60,16 @@ export const reconcileColumnOrder = (savedOrder: string[], defaultOrder: string[
  * alone: absent from `columnVisibility` already means visible in TanStack, and writing `true` for them
  * would only add noise to what gets persisted.
  *
- * Only ever fills gaps. An explicit choice the author has already made — including hiding a primary
- * column or revealing a secondary one — is never overwritten. Which columns start visible can depend
- * on the survey (`isReservedColumnVisibleByDefault`): on one that creatives open, "Opened by creative".
+ * Only ever fills gaps. An explicit choice the author has already made (including hiding a primary
+ * column or revealing a secondary one) is never overwritten.
  */
-export const seedReservedColumnVisibility = (
-  saved: VisibilityState,
-  context?: TReservedColumnDefaultsContext
-): VisibilityState => {
+export const seedReservedColumnVisibility = (saved: VisibilityState): VisibilityState => {
   const seeded: VisibilityState = { ...saved };
 
   for (const entry of RESERVED_COLUMN_ENTRIES) {
     const columnId = reservedColumnId(entry.name);
     if (columnId in seeded) continue;
-    if (!isReservedColumnVisibleByDefault(entry, context)) seeded[columnId] = false;
+    if (!isReservedColumnVisibleByDefault(entry)) seeded[columnId] = false;
   }
 
   return seeded;

@@ -277,19 +277,13 @@ export const isEndingCardValid = (
  * server refuses.
  *
  * `targetStatus` is the status the survey is heading for, not the one it has: publishing a draft
- * ("inProgress") and scheduling one ("paused") both need a trigger or a creative that opens it, while
- * saving it as a draft does not.
+ * ("inProgress") and scheduling one ("paused") both need a trigger, while saving it as a draft does not.
  */
-export const isMissingRequiredTrigger = (
-  survey: TSurvey,
-  targetStatus: TSurveyStatus,
-  isOpenedByCreative: boolean
-): boolean =>
+export const isMissingRequiredTrigger = (survey: TSurvey, targetStatus: TSurveyStatus): boolean =>
   isAppSurveyMissingTriggersToPublish({
     type: survey.type,
     status: targetStatus,
     triggers: survey.triggers,
-    isOpenedByCreative,
   });
 
 export const isSurveyValid = (
