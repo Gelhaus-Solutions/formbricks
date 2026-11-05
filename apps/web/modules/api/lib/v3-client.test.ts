@@ -41,16 +41,16 @@ describe("parseV3ApiError", () => {
     const response = new Response(
       JSON.stringify({
         status: 409,
-        detail: "Delete the creatives that open this survey before deleting it",
-        code: "survey_has_linked_creatives",
-        details: { creatives: [{ id: "creative_1", name: "Feedback tab" }] },
+        detail: "Remove the connections that use this survey before restricting it",
+        code: "visibility_blocked_by_connections",
+        details: { blockers: [{ id: "webhook_1", name: "Zapier", type: "webhook" }] },
       }),
       { status: 409, headers: { "Content-Type": "application/problem+json" } }
     );
 
     const error = await parseV3ApiError(response);
 
-    expect(error.details).toEqual({ creatives: [{ id: "creative_1", name: "Feedback tab" }] });
+    expect(error.details).toEqual({ blockers: [{ id: "webhook_1", name: "Zapier", type: "webhook" }] });
   });
 
   test("reads a 429's Retry-After in seconds, and ignores a form v3 does not send", async () => {

@@ -73,7 +73,6 @@ const BLOCKER_TYPE_ORDER: readonly TSurveyVisibilityBlocker["type"][] = [
   "integration",
   "webhook",
   "workflow",
-  "creative",
   "dashboard",
 ];
 

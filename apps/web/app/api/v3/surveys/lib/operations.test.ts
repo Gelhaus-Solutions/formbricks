@@ -16,7 +16,6 @@ import { capturePostHogEvent } from "@/lib/posthog";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import { previewCustomCss } from "@/modules/custom-css/lib/service";
-import { SurveyLinkedCreativesError } from "@/modules/ee/creatives/lib/linked-creatives";
 import { archiveSurvey, deleteSurvey, restoreSurvey } from "@/modules/survey/lib/surveys";
 import { getSurveyCount, getWorkspaceSurveyCount } from "@/modules/survey/list/lib/survey";
 import { getSurveyListPage } from "@/modules/survey/list/lib/survey-page";
@@ -786,59 +785,12 @@ describe("deleteV3Survey", () => {
     });
 
     expect(response.status).toBe(204);
-    expect(vi.mocked(deleteSurvey)).toHaveBeenCalledWith("survey_1", {
-      onCreativesUnlinked: expect.any(Function),
-    });
+    expect(vi.mocked(deleteSurvey)).toHaveBeenCalledWith("survey_1");
     expect(auditLog).toMatchObject({
       organizationId: "org_1",
       targetId: "survey_1",
       oldObject: survey,
     });
-  });
-
-  test("409 survey_has_linked_creatives naming the creatives that still open the survey", async () => {
-    const creatives = [{ id: "clcr1234567890123456789012", name: "Feedback tab" }];
-    vi.mocked(deleteSurvey).mockRejectedValueOnce(new SurveyLinkedCreativesError("delete", creatives));
-
-    const response = await deleteV3Survey({ surveyId: "survey_1", authentication, requestId, instance });
-
-    expect(response.status).toBe(409);
-    expect(await response.json()).toMatchObject({
-      code: "survey_has_linked_creatives",
-      detail: "Delete the creatives that open this survey before deleting it",
-      details: { creatives },
-      requestId,
-    });
-  });
-
-  test("audits each archived creative the delete unlinked as an update by the same caller", async () => {
-    const auditLog = {
-      userId: "user_1",
-      userType: "user",
-      apiUrl: instance,
-      eventId: "evt",
-    } as unknown as TV3AuditLog;
-
-    await deleteV3Survey({ surveyId: "survey_1", authentication, requestId, instance, auditLog });
-    const [[, options]] = vi.mocked(deleteSurvey).mock.calls;
-    await options?.onCreativesUnlinked?.([{ id: "cr_1", name: "Old tab" }], { organizationId: "org_1" });
-
-    expect(queueV3AuditLog).toHaveBeenCalledWith(
-      {
-        userId: "user_1",
-        userType: "user",
-        apiUrl: instance,
-        organizationId: "org_1",
-        action: "updated",
-        targetType: "creative",
-        targetId: "cr_1",
-        status: "success",
-        oldObject: { surveyId: "survey_1" },
-        newObject: { surveyId: null },
-      },
-      requestId,
-      expect.anything()
-    );
   });
 
   test("returns authorization responses from survey access", async () => {
@@ -2065,8 +2017,7 @@ describe("custom CSS (ENG-3641)", () => {
         requestId,
         instance
       );
-      // No creative type: the survey root, `#fbjs`.
-      expect(previewCustomCss).toHaveBeenCalledWith("survey", { light: "a{}", dark: null }, undefined);
+      expect(previewCustomCss).toHaveBeenCalledWith("survey", { light: "a{}", dark: null });
       expect(await readJson(response)).toEqual({
         data: {
           valid: true,
@@ -2172,34 +2123,13 @@ describe("custom CSS (ENG-3641)", () => {
       expect(previewCustomCss).not.toHaveBeenCalled();
     });
 
-    test("a creative type compiles the CSS for that creative's root element, as it is delivered", async () => {
-      const response = await validateV3Survey({
-        body: customCssBody({ creativeType: "banner" }),
-        authentication,
-        requestId,
-        instance,
-      } as never);
-
-      expect(response.status).toBe(200);
-      expect(previewCustomCss).toHaveBeenCalledWith(
-        "survey",
-        { light: "a{}", dark: null },
-        { type: "class", name: "fb-creative-banner" }
-      );
-      expect((await readJson(response)).data).toMatchObject({
-        valid: true,
-        customCss: { light: "@layer fb-survey{a}", dark: null },
-      });
-    });
-
     test("the raw entry point rejects compiled output and a surveyId on workspace scope", async () => {
       for (const body of [
         customCssBody({ data: { customCss: { light: "a{}", dark: null, compiled: "x" } } }),
         customCssBody({ scope: "workspace", surveyId: validSurveyId }),
         customCssBody({ data: { customCss: { light: "a{}" } } }),
-        customCssBody({ scope: "workspace", creativeType: "feedbackButton" }),
-        customCssBody({ surveyId: validSurveyId, creativeType: "feedbackButton" }),
-        customCssBody({ creativeType: "drawer" }),
+        // Creatives are gone, and with them the field that compiled CSS for a creative's root element.
+        customCssBody({ creativeType: "banner" }),
       ]) {
         const response = await validateV3SurveyFromRawInput({ body, authentication, requestId, instance });
         expect(response.status).toBe(400);

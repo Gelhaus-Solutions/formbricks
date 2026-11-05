@@ -135,7 +135,7 @@ export const DELETE = withV1ApiWrapper({
         auditLog.oldObject = result.survey;
       }
 
-      deletedSurvey = await deleteSurvey(params.surveyId, auditLog);
+      deletedSurvey = await deleteSurvey(params.surveyId);
     } catch (error) {
       return handleErrorResponse(error);
     }

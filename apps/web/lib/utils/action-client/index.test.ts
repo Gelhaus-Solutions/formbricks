@@ -85,7 +85,6 @@ describe("isExpectedError (shared helper)", () => {
       "InvalidPasswordResetTokenError",
       "UniqueConstraintError",
       "RequestBodyTooLargeError",
-      "SurveyLinkedCreativesError",
     ];
 
     expect(EXPECTED_ERROR_NAMES.size).toBe(expected.length);

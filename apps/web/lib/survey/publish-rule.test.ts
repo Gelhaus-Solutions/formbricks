@@ -2,25 +2,14 @@ import { describe, expect, test } from "vitest";
 import { isAppSurveyMissingTriggersToPublish } from "./publish-rule";
 
 describe("isAppSurveyMissingTriggersToPublish", () => {
-  const appSurvey = { type: "app", isOpenedByCreative: false } as const;
+  const appSurvey = { type: "app" } as const;
 
   test.each(["inProgress", "paused", "completed"] as const)(
-    "refuses a %s app survey with no trigger and no creative that opens it",
+    "refuses a %s app survey with no trigger",
     (status) => {
       expect(isAppSurveyMissingTriggersToPublish({ ...appSurvey, status, triggers: [] })).toBe(true);
     }
   );
-
-  test("publishes an app survey with no trigger of its own when a creative opens it (ENG-3994)", () => {
-    expect(
-      isAppSurveyMissingTriggersToPublish({
-        type: "app",
-        status: "inProgress",
-        triggers: [],
-        isOpenedByCreative: true,
-      })
-    ).toBe(false);
-  });
 
   test("publishes an app survey that has a trigger", () => {
     expect(

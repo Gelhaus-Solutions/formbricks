@@ -182,30 +182,6 @@ describe("purgeExpiredArchivedSurveys", () => {
     expect(secondCallWhere.where.id).toEqual({ notIn: ["s0"] });
   });
 
-  test("audits each creative the purge unlinked as a system change to its Destination", async () => {
-    vi.mocked(prisma.survey.findMany)
-      .mockResolvedValueOnce([makeSurvey("s1")] as never)
-      .mockResolvedValueOnce([] as never);
-    vi.mocked(deleteSurvey).mockResolvedValue({} as never);
-
-    await purgeExpiredArchivedSurveys(new Date("2026-07-31T00:00:00.000Z"));
-    // deleteSurvey hands over what it unlinked once the delete commits.
-    const [[, options]] = vi.mocked(deleteSurvey).mock.calls;
-    await options?.onCreativesUnlinked?.([{ id: "cr_1", name: "Feedback tab" }], { organizationId: "org_1" });
-
-    expect(queueAuditEventWithoutRequest).toHaveBeenCalledWith({
-      action: "updated",
-      targetType: "creative",
-      targetId: "cr_1",
-      organizationId: "org_1",
-      userId: "system",
-      userType: "system",
-      status: "success",
-      oldObject: { surveyId: "s1" },
-      newObject: { surveyId: null },
-    });
-  });
-
   test("counts the delete as purged even when the audit enqueue fails", async () => {
     vi.mocked(prisma.survey.findMany)
       .mockResolvedValueOnce([makeSurvey("s1")] as never)

@@ -32,8 +32,8 @@ export const PRISMA_AUTHORIZATION_RESOURCE_INVENTORY = {
   Contact: "workspace_inherited_resource",
   ContactAttribute: "parent_derived_or_data_integrity",
   ContactAttributeKey: "workspace_inherited_resource",
-  // Creatives are authorized at the workspace level with no SpiceDB definition of their own
-  // (`modules/ee/creatives/lib/authorization.ts`); their triggers, languages and counts follow the creative.
+  // Creatives: GForms serves none, but the tables stay for databases carried over from Formbricks. They
+  // belong to their workspace; their triggers, languages and counts follow the creative.
   Creative: "workspace_inherited_resource",
   CreativeDailyPageStat: "parent_derived_or_data_integrity",
   CreativeDailyStat: "parent_derived_or_data_integrity",
