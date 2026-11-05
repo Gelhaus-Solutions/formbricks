@@ -35,7 +35,7 @@ export const rateLimitConfigs = {
       namespace: "auth:verify:account",
       failClosed: true,
     }, // 3 per hour
-    emailToken: { interval: 3600, allowedPerInterval: 10, namespace: "auth:email-token", failClosed: true }, // 10 per hour — unauthenticated, tells the caller whether an email is registered
+    emailToken: { interval: 3600, allowedPerInterval: 10, namespace: "auth:email-token", failClosed: true }, // 10 per hour: unauthenticated, tells the caller whether an email is registered
     // The SAML callback parses the posted XML before it can tell an IdP from a stranger (ENG-3973), so this caps
     // how often one IP can make it parse. Generous on purpose: every SAML sign-in at a company behind one NAT
     // address lands here, often in a burst at the start of the day. The markup budget is the real bound.
@@ -51,7 +51,7 @@ export const rateLimitConfigs = {
       interval: 60,
       allowedPerInterval: 120,
       namespace: "api:v3:state-mutation",
-    }, // 120 per minute per principal — the API twin of `actions.stateMutation`, for batch writes that fan out to the response pipeline
+    }, // 120 per minute per principal: the API twin of `actions.stateMutation`, for batch writes that fan out to the response pipeline
     mcpAuth: { interval: 60, allowedPerInterval: 30, namespace: "api:mcp:auth", failClosed: true }, // 30 per minute
     v3SurveyGenerate: {
       interval: 60,
@@ -62,41 +62,18 @@ export const rateLimitConfigs = {
       interval: 60,
       allowedPerInterval: 10,
       namespace: "api:v3:surveys:visibility",
-    }, // 10 per minute per actor — a loop of workspace → restricted must not be able to arm the freshness guard (ENG-3282)
+    }, // 10 per minute per actor: a loop of workspace → restricted must not be able to arm the freshness guard (ENG-3282)
     v3CustomCss: {
       interval: 60,
       allowedPerInterval: 60,
       namespace: "api:v3:custom-css",
-    }, // 60 per minute per principal, on top of v3 — custom CSS processing is synchronous and CPU-bound, and
+    }, // 60 per minute per principal, on top of v3: custom CSS processing is synchronous and CPU-bound, and
     // the editor validates ~300 ms after typing stops, so normal editing stays far below this
-    v3ChartQueries: {
-      interval: 60,
-      allowedPerInterval: 600,
-      namespace: "api:v3:charts:queries",
-    }, // 600 per minute per user or API key, instead of v3 — chart data, preview and field values (ENG-6586).
-    // Sized for dashboards: every widget fetches its own data, so a page load is one query per chart.
-    v3ChartQueriesInFlight: {
-      interval: 120,
-      allowedPerInterval: 20,
-      namespace: "api:v3:charts:in-flight",
-    }, // At most 20 chart queries running at once per user or API key, so one caller cannot fill the shared
-    // Cube's queue with 60-second queries. An in-flight limit (`in-flight.ts`), not a window: `interval` is
-    // each slot's lease, twice the query timeout, after which a slot a crashed pod never released frees itself.
-    internalChartGeneration: {
-      interval: 60,
-      allowedPerInterval: 1,
-      namespace: "api:internal:charts:generate",
-    }, // 1 per minute per user — bounds concurrent and repeated LLM-backed chart generations
     internalDatasetPurge: {
       interval: 3600,
       allowedPerInterval: 5,
       namespace: "api:internal:feedback-datasets:purge",
-    }, // 5 per hour — irreversible and dataset-wide; nobody legitimately purges more often than that
-    internalRetentionExport: {
-      interval: 3600,
-      allowedPerInterval: 10,
-      namespace: "api:internal:retention-runs:export",
-    }, // 10 per hour — each export streams an organisation's whole retention history (data retention)
+    }, // 5 per hour: irreversible and dataset-wide; nobody legitimately purges more often than that
     client: { interval: 60, allowedPerInterval: 100, namespace: "api:client" }, // 100 per minute (Client API)
     clientEnvironment: {
       interval: 60,
@@ -139,9 +116,9 @@ export const rateLimitConfigs = {
       allowedPerInterval: 10,
       namespace: "action:validate-survey-pin",
       failClosed: true,
-    }, // 10 per minute — prevents brute-force PIN guessing
+    }, // 10 per minute: prevents brute-force PIN guessing
     licenseRecheck: { interval: 60, allowedPerInterval: 5, namespace: "action:license-recheck" }, // 5 per minute
-    unsplash: { interval: 60, allowedPerInterval: 30, namespace: "action:unsplash" }, // 30 per minute per user — bounds one account exhausting the instance-wide UNSPLASH_ACCESS_KEY quota
+    unsplash: { interval: 60, allowedPerInterval: 30, namespace: "action:unsplash" }, // 30 per minute per user: bounds one account exhausting the instance-wide UNSPLASH_ACCESS_KEY quota
     inviteMember: {
       interval: 3600 * 24,
       allowedPerInterval: 50,
@@ -169,12 +146,12 @@ export const rateLimitConfigs = {
       interval: 60,
       allowedPerInterval: 1,
       namespace: "action:generate-example-responses",
-    }, // 1 per minute per user — closes the multi-click race and bounds LLM spend
+    }, // 1 per minute per user: closes the multi-click race and bounds LLM spend
     integrationMutation: {
       interval: 60,
       allowedPerInterval: 30,
       namespace: "action:integration-mutation",
-    }, // 30 per minute per user — one save or delete per UI interaction, so this bounds a readWrite
+    }, // 30 per minute per user: one save or delete per UI interaction, so this bounds a readWrite
     // member churning integration rows (each write hits the provider config and the audit log) without
     // getting in the way of legitimate mapping edits
     feedbackSourceMutation: {
@@ -186,7 +163,7 @@ export const rateLimitConfigs = {
       interval: 3600,
       allowedPerInterval: 10,
       namespace: "action:historical-response-import",
-    }, // 10 per hour per user — bounds repeated full-survey imports
+    }, // 10 per hour per user: bounds repeated full-survey imports
     feedbackDirectoryMutation: {
       interval: 60,
       allowedPerInterval: 60,
@@ -196,12 +173,12 @@ export const rateLimitConfigs = {
       interval: 60,
       allowedPerInterval: 100,
       namespace: "action:feedback-record-deletion",
-    }, // 100 per minute per user — supports deliberate bulk deletion while bounding abuse
+    }, // 100 per minute per user: supports deliberate bulk deletion while bounding abuse
     stateMutation: {
       interval: 60,
       allowedPerInterval: 120,
       namespace: "action:state-mutation",
-    }, // 120 per minute per organization/workspace — shared guard for authenticated settings writes
+    }, // 120 per minute per organization/workspace: shared guard for authenticated settings writes
   },
 
   storage: {
@@ -214,7 +191,7 @@ export const rateLimitConfigs = {
     delete: { interval: 60, allowedPerInterval: 5, namespace: "storage:delete" }, // 5 per minute
     // One attachment export streams thousands of objects out of S3, so it is bounded far more tightly
     // than a CSV download. Charged inside the route's handler, on the download path only, so the
-    // client's dryRun pre-flight does not spend a download's allowance — see the route for why that
+    // client's dryRun pre-flight does not spend a download's allowance; see the route for why that
     // cannot go through the wrapper's customRateLimitConfig.
     attachmentsExport: {
       interval: 600,

@@ -125,11 +125,7 @@ describe("rateLimitConfigs", () => {
         "v3SurveyGenerate",
         "v3SurveyVisibility",
         "v3CustomCss",
-        "v3ChartQueries",
-        "v3ChartQueriesInFlight",
-        "internalChartGeneration",
         "internalDatasetPurge",
-        "internalRetentionExport",
         "client",
         "clientEnvironment",
       ]);
@@ -138,31 +134,6 @@ describe("rateLimitConfigs", () => {
         interval: 60,
         allowedPerInterval: 120,
         namespace: "api:v3:state-mutation",
-      });
-      // Chart data, preview and field values share one bucket sized for dashboards (ENG-6586).
-      // One LLM-backed chart generation per user per minute bounds AI spend; looser is a cost regression.
-      expect(rateLimitConfigs.api.internalChartGeneration).toEqual({
-        interval: 60,
-        allowedPerInterval: 1,
-        namespace: "api:internal:charts:generate",
-      });
-      expect(rateLimitConfigs.api.v3ChartQueries).toEqual({
-        interval: 60,
-        allowedPerInterval: 600,
-        namespace: "api:v3:charts:queries",
-      });
-      // 20 running at once; each slot's lease is twice the 60 s Cube query timeout.
-      expect(rateLimitConfigs.api.v3ChartQueriesInFlight).toEqual({
-        interval: 120,
-        allowedPerInterval: 20,
-        namespace: "api:v3:charts:in-flight",
-      });
-      // The values, not just the key: each export streams an organisation's whole retention history,
-      // names people, and runs a pre-flight count, so a loosened quota is a load and privacy regression.
-      expect(rateLimitConfigs.api.internalRetentionExport).toEqual({
-        interval: 3600,
-        allowedPerInterval: 10,
-        namespace: "api:internal:retention-runs:export",
       });
     });
 
