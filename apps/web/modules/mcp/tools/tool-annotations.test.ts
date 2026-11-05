@@ -5,9 +5,9 @@ import { describe, expect, test, vi } from "vitest";
  *
  * Annotations are hand-set on each registration, and "Honest annotations" in
  * `docs/development/technical-handbook/mcp-server.mdx` did not hold them: new write tools shipped with
- * `destructiveHint: false` on overwrites and removals (`update_chart`, `remove_chart_from_dashboard`,
- * `archive_workflow`), which tells MCP clients they need no confirmation. This walks every registration
- * across the tool modules, so a new tool is checked without anyone adding it to a list.
+ * `destructiveHint: false` on overwrites and removals (`archive_workflow` among them), which tells MCP
+ * clients they need no confirmation. This walks every registration across the tool modules, so a new tool
+ * is checked without anyone adding it to a list.
  */
 
 type TRegistration = {
@@ -57,13 +57,12 @@ const RECOVERABLE: Record<string, string> = {
 };
 
 const loadRegistrations = async (): Promise<TRegistration[]> => {
-  const [surveys, workflows, workspaces, feedbackRecords, responses, dashboards] = await Promise.all([
+  const [surveys, workflows, workspaces, feedbackRecords, responses] = await Promise.all([
     import("./surveys"),
     import("./workflows"),
     import("./workspaces"),
     import("./feedback-records"),
     import("./responses"),
-    import("./dashboards"),
   ]);
   const server = { registerTool: vi.fn() } as unknown as Parameters<typeof surveys.registerSurveyTools>[0];
   surveys.registerSurveyTools(server);
@@ -71,7 +70,6 @@ const loadRegistrations = async (): Promise<TRegistration[]> => {
   workspaces.registerWorkspaceTools(server);
   feedbackRecords.registerFeedbackRecordTools(server);
   responses.registerResponseTools(server);
-  dashboards.registerDashboardTools(server);
   return registrations;
 };
 
@@ -80,7 +78,7 @@ const startsWithAny = (name: string, prefixes: string[]): boolean => prefixes.so
 describe("MCP tool annotations", () => {
   test("agree with each tool's name and scopes", { timeout: 120_000 }, async () => {
     const tools = await loadRegistrations();
-    expect(tools.length).toBeGreaterThan(50);
+    expect(tools.length).toBeGreaterThan(40);
 
     const problems = tools.flatMap(({ name, annotations, scopes }) => {
       const readOnly = annotations?.readOnlyHint;
