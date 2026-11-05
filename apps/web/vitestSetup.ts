@@ -95,7 +95,7 @@ vi.mock("@formbricks/database/prisma", async () => {
       // Better Auth 1.7 seeds its `oauthResource` rows when the oauthProvider plugin initialises
       // (ENG-2343), which happens on any import of modules/auth/lib/auth.ts. Against this stub the
       // adapter would otherwise throw `Model oauthResource does not exist in the database` as an
-      // unhandled error in every such test file — noise that would sit in the suite forever and
+      // unhandled error in every such test file: noise that would sit in the suite forever and
       // mask a real failure later. A read that returns nothing lets seeding complete quietly;
       // nothing here asserts on it, and the real behaviour is covered against a real database.
       oauthResource = {
@@ -179,7 +179,7 @@ beforeEach(() => {
 
 afterEach(() => {
   // React Testing Library normally registers this itself, but it looks for a *global* `afterEach`
-  // (`typeof afterEach === 'function'`) and this project runs with vitest `globals: false` — so its
+  // (`typeof afterEach === 'function'`) and this project runs with vitest `globals: false`, so its
   // auto-cleanup never installs. Without it, every render()/renderHook() stays mounted for the rest
   // of the file: components from earlier tests keep firing timers, keep responding to window events,
   // and keep calling shared module mocks, so a later test's assertions can count work it never did.
@@ -224,24 +224,6 @@ vi.mock("@/lib/constants", async (importOriginal) => {
     SESSION_MAX_AGE: 1000,
     MAX_ATTRIBUTE_CLASSES_PER_ENVIRONMENT: 100,
     MAX_OTHER_OPTION_LENGTH: 250,
-    AVAILABLE_LOCALES: [
-      "de-DE",
-      "en-US",
-      "es-ES",
-      "fr-FR",
-      "hu-HU",
-      "ja-JP",
-      "nl-NL",
-      "pt-BR",
-      "pt-PT",
-      "ro-RO",
-      "ru-RU",
-      "sv-SE",
-      "tr-TR",
-      "zh-Hans-CN",
-      "zh-Hant-TW",
-    ],
-    DEFAULT_LOCALE: "en-US",
     BREVO_API_KEY: "mock-brevo-api-key",
     ITEMS_PER_PAGE: 30,
     FB_LOGO_URL: "mock-fb-logo-url",

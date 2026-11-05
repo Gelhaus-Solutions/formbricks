@@ -129,121 +129,9 @@ export const addMultiLanguageLabels = (object: unknown, languageSymbols: string[
   return object;
 };
 
-export const appLanguages = [
-  {
-    code: "de-DE",
-    label: {
-      "en-US": "German",
-      native: "Deutsch",
-    },
-  },
-  {
-    code: "en-US",
-    label: {
-      "en-US": "English (US)",
-      native: "English (US)",
-    },
-  },
-  {
-    code: "es-ES",
-    label: {
-      "en-US": "Spanish",
-      native: "Español",
-    },
-  },
-  {
-    code: "fr-FR",
-    label: {
-      "en-US": "French",
-      native: "Français",
-    },
-  },
-  {
-    code: "hu-HU",
-    label: {
-      "en-US": "Hungarian",
-      native: "Magyar",
-    },
-  },
-  {
-    code: "ja-JP",
-    label: {
-      "en-US": "Japanese",
-      native: "日本語",
-    },
-  },
-  {
-    code: "nl-NL",
-    label: {
-      "en-US": "Dutch",
-      native: "Nederlands",
-    },
-  },
-  {
-    code: "pt-BR",
-    label: {
-      "en-US": "Portuguese (Brazil)",
-      native: "Português (Brasil)",
-    },
-  },
-  {
-    code: "pt-PT",
-    label: {
-      "en-US": "Portuguese (Portugal)",
-      native: "Português (Portugal)",
-    },
-  },
-  {
-    code: "ro-RO",
-    label: {
-      "en-US": "Romanian",
-      native: "Română",
-    },
-  },
-  {
-    code: "ru-RU",
-    label: {
-      "en-US": "Russian",
-      native: "Русский",
-    },
-  },
-  {
-    code: "sv-SE",
-    label: {
-      "en-US": "Swedish",
-      native: "Svenska",
-    },
-  },
-  {
-    code: "tr-TR",
-    label: {
-      "en-US": "Turkish",
-      native: "Türkçe",
-    },
-  },
-  {
-    code: "zh-Hans-CN",
-    label: {
-      "en-US": "Chinese (Simplified)",
-      native: "简体中文",
-    },
-  },
-  {
-    code: "zh-Hant-TW",
-    label: {
-      "en-US": "Chinese (Traditional)",
-      native: "繁體中文",
-    },
-  },
-];
-
-export const sortedAppLanguages = [...appLanguages].sort((a, b) =>
-  a.label["en-US"].localeCompare(b.label["en-US"])
-);
-
 // Reverse of the canonical map: canonical code → the legacy codes that canonicalize to it (excluding
 // the identity). Using the real map (not a mechanical region-strip) is what surfaces alias codes a
-// strip would miss — e.g. `fil-PH` → `tl`, `ak-GH` → `ak`/`tw`, `zh-Hant-TW` → `zh-Hant`/`zh-TW`.
+// strip would miss, e.g. `fil-PH` → `tl`, `ak-GH` → `ak`/`tw`, `zh-Hant-TW` → `zh-Hant`/`zh-TW`.
 const LEGACY_CODES_BY_CANONICAL: Readonly<Record<string, string[]>> = Object.entries(
   LANGUAGE_CANONICAL_MAP
 ).reduce<Record<string, string[]>>((reverse, [legacy, canonical]) => {
@@ -258,7 +146,7 @@ const LEGACY_CODES_BY_CANONICAL: Readonly<Record<string, string[]>> = Object.ent
  *
  * Language codes were canonicalized to region-tagged BCP-47 (`de` → `de-DE`). SDK clients pick a
  * survey's display language by matching the user's language against the survey languages by *exact*
- * code — they don't canonicalize. So while older clients are still in the wild, the SDK-facing surface
+ * code; they don't canonicalize. So while older clients are still in the wild, the SDK-facing surface
  * keeps speaking the legacy code(s) on both sides:
  *   - the client environment serializer exposes a duplicate entry for each legacy alias next to the
  *     canonical language, and

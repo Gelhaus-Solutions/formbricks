@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -9,24 +8,16 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { TUser, TUserUpdateInput, ZUser, ZUserEmail } from "@formbricks/types/user";
 import { PasswordConfirmationModal } from "@/app/(app)/workspaces/[workspaceId]/settings/account/profile/components/password-confirmation-modal";
-import { appLanguages, sortedAppLanguages } from "@/lib/i18n/utils";
 import { getFormattedErrorMessage } from "@/lib/utils/error-message";
 import { useSignOut } from "@/modules/auth/hooks/use-sign-out";
 import { Button } from "@/modules/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/modules/ui/components/dropdown-menu";
 import { FormControl, FormError, FormField, FormItem, FormLabel } from "@/modules/ui/components/form";
 import { Input } from "@/modules/ui/components/input";
 import { Label } from "@/modules/ui/components/label";
 import { resetPasswordAction, updateUserAction } from "../actions";
 
 // Schema & types
-const ZEditProfileNameFormSchema = ZUser.pick({ name: true, locale: true, email: true }).extend({
+const ZEditProfileNameFormSchema = ZUser.pick({ name: true, email: true }).extend({
   email: ZUserEmail.transform((val) => val?.trim().toLowerCase()),
 });
 type TEditProfileNameForm = z.infer<typeof ZEditProfileNameFormSchema>;
@@ -47,7 +38,6 @@ export const EditProfileDetailsForm = ({
   const form = useForm<TEditProfileNameForm>({
     defaultValues: {
       name: user.name,
-      locale: user.locale,
       email: user.email,
     },
     mode: "onChange",
@@ -66,11 +56,9 @@ export const EditProfileDetailsForm = ({
 
     const emailChanged = "email" in dirtyFields;
     const nameChanged = "name" in dirtyFields;
-    const localeChanged = "locale" in dirtyFields;
 
     const name = values.name.trim();
     const email = values.email.trim().toLowerCase();
-    const locale = values.locale;
 
     const data: TUserUpdateInput = {};
 
@@ -80,9 +68,6 @@ export const EditProfileDetailsForm = ({
     }
     if (nameChanged) {
       data.name = name;
-    }
-    if (localeChanged) {
-      data.locale = locale;
     }
 
     const updatedUserResult = await updateUserAction(data);
@@ -202,59 +187,6 @@ export const EditProfileDetailsForm = ({
                 <FormError />
               </FormItem>
             )}
-          />
-
-          <FormField
-            control={form.control}
-            name="locale"
-            render={({ field }) => {
-              const selectedLanguage = appLanguages.find((l) => l.code === field.value);
-
-              return (
-                <FormItem className="mt-4">
-                  <FormLabel>{t("common.language")}</FormLabel>
-                  <FormControl>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="h-10 w-full border border-slate-300 px-3 text-left">
-                          <div className="flex w-full items-center justify-between">
-                            {selectedLanguage ? (
-                              <>
-                                {selectedLanguage.label["en-US"]}
-                                {selectedLanguage.label.native !== selectedLanguage.label["en-US"] &&
-                                  ` (${selectedLanguage.label.native})`}
-                              </>
-                            ) : (
-                              t("common.select")
-                            )}
-                            <ChevronDownIcon className="size-4 text-slate-500" />
-                          </div>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        className="min-w-(--radix-dropdown-menu-trigger-width) bg-white text-slate-700"
-                        align="start">
-                        <DropdownMenuRadioGroup value={field.value} onValueChange={field.onChange}>
-                          {sortedAppLanguages.map((lang) => (
-                            <DropdownMenuRadioItem
-                              key={lang.code}
-                              value={lang.code}
-                              className="min-h-8 cursor-pointer">
-                              {lang.label["en-US"]}
-                              {lang.label.native !== lang.label["en-US"] && ` (${lang.label.native})`}
-                            </DropdownMenuRadioItem>
-                          ))}
-                        </DropdownMenuRadioGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </FormControl>
-                  <FormError />
-                </FormItem>
-              );
-            }}
           />
 
           {isPasswordResetEnabled && (

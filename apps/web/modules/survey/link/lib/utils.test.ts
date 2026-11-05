@@ -71,9 +71,9 @@ const createMockSurvey = (languages: TSurvey["languages"] = []): TSurvey =>
   }) as TSurvey;
 
 describe("getWebAppLocale", () => {
-  test("maps language codes and handles defaults", () => {
+  test("maps language codes and handles defaults, reading English for every language the app does not ship", () => {
     expect(getWebAppLocale("en", createMockSurvey())).toBe("en-US");
-    expect(getWebAppLocale("de", createMockSurvey())).toBe("de-DE");
+    expect(getWebAppLocale("de", createMockSurvey())).toBe("en-US");
     const surveyWithLang = createMockSurvey([
       {
         language: {
@@ -88,7 +88,7 @@ describe("getWebAppLocale", () => {
         enabled: true,
       },
     ]);
-    expect(getWebAppLocale("default", surveyWithLang)).toBe("de-DE");
+    expect(getWebAppLocale("default", surveyWithLang)).toBe("en-US");
     expect(getWebAppLocale("xx", createMockSurvey())).toBe("en-US");
   });
 
@@ -111,8 +111,8 @@ describe("getWebAppLocale", () => {
   });
 
   test("matches base language code for variants", () => {
-    expect(getWebAppLocale("pt-PT", createMockSurvey())).toBe("pt-PT");
-    expect(getWebAppLocale("es-MX", createMockSurvey())).toBe("es-ES");
+    expect(getWebAppLocale("en-GB", createMockSurvey())).toBe("en-US");
+    expect(getWebAppLocale("pt-PT", createMockSurvey())).toBe("en-US");
   });
 });
 
@@ -131,38 +131,27 @@ const createLanguage = (code: string, isDefault = false, enabled = true) => ({
 
 describe("resolveWebAppLocale", () => {
   test("returns null instead of English when the app has no translation for the language", () => {
-    // A Hebrew survey must not drag the chrome to English — the caller keeps its own fallback.
+    // A Hebrew survey must not drag the chrome to English: the caller keeps its own fallback.
     expect(resolveWebAppLocale("he", createMockSurvey())).toBeNull();
     expect(resolveWebAppLocale("xx", createMockSurvey())).toBeNull();
     expect(resolveWebAppLocale("default", createMockSurvey())).toBeNull();
   });
 
-  test("keeps a variant the app ships rather than collapsing to the base language", () => {
-    expect(resolveWebAppLocale("pt-PT", createMockSurvey())).toBe("pt-PT");
-    expect(resolveWebAppLocale("pt", createMockSurvey())).toBe("pt-BR");
-    expect(resolveWebAppLocale("pt-BR", createMockSurvey())).toBe("pt-BR");
+  test("resolves no language the app no longer ships", () => {
+    expect(resolveWebAppLocale("de", createMockSurvey())).toBeNull();
+    expect(resolveWebAppLocale("pt-PT", createMockSurvey())).toBeNull();
+    expect(resolveWebAppLocale("zh-Hant-HK", createMockSurvey())).toBeNull();
   });
 
-  test("distinguishes the Chinese scripts, which share a base code", () => {
-    expect(resolveWebAppLocale("zh-Hant", createMockSurvey())).toBe("zh-Hant-TW");
-    expect(resolveWebAppLocale("zh-Hans", createMockSurvey())).toBe("zh-Hans-CN");
-    expect(resolveWebAppLocale("zh", createMockSurvey())).toBe("zh-Hans-CN");
-  });
-
-  test("falls back to the script before the base language for a regional code", () => {
-    // "zh-Hant-HK" names no locale and no alias, but Hong Kong writes Traditional Chinese — dropping
-    // straight to "zh" would hand a Traditional survey Simplified chrome.
-    expect(resolveWebAppLocale("zh-Hant-HK", createMockSurvey())).toBe("zh-Hant-TW");
-    expect(resolveWebAppLocale("zh-CN", createMockSurvey())).toBe("zh-Hans-CN");
-  });
-
-  test("matches survey language codes regardless of case", () => {
-    expect(resolveWebAppLocale("DE-de", createMockSurvey())).toBe("de-DE");
-    expect(resolveWebAppLocale("zh-hant-tw", createMockSurvey())).toBe("zh-Hant-TW");
+  test("matches English and its regional variants, regardless of case", () => {
+    expect(resolveWebAppLocale("en", createMockSurvey())).toBe("en-US");
+    expect(resolveWebAppLocale("en-GB", createMockSurvey())).toBe("en-US");
+    expect(resolveWebAppLocale("EN-us", createMockSurvey())).toBe("en-US");
   });
 
   test("resolves 'default' through the survey's default language", () => {
-    expect(resolveWebAppLocale("default", createMockSurvey([createLanguage("de", true)]))).toBe("de-DE");
+    expect(resolveWebAppLocale("default", createMockSurvey([createLanguage("en-GB", true)]))).toBe("en-US");
+    expect(resolveWebAppLocale("default", createMockSurvey([createLanguage("de", true)]))).toBeNull();
   });
 });
 
@@ -201,9 +190,11 @@ describe("resolveLinkSurveyLanguage", () => {
 describe("getGateLocale", () => {
   const survey = createMockSurvey([createLanguage("en", true), createLanguage("de")]);
 
-  test("uses the requested language, so the gate matches the survey behind it", () => {
-    expect(getGateLocale({ langParam: "de-DE", languageCode: "de", survey, fallbackLocale: "en-US" })).toBe(
-      "de-DE"
+  // The app ships English only, so the fallback below is always en-US in practice; "fr-FR" stands in for
+  // it here to show which branch answered.
+  test("uses the requested language when the app ships it, so the gate matches the survey behind it", () => {
+    expect(getGateLocale({ langParam: "en-GB", languageCode: "en", survey, fallbackLocale: "fr-FR" })).toBe(
+      "en-US"
     );
   });
 
@@ -218,9 +209,15 @@ describe("getGateLocale", () => {
   });
 
   test("follows a language picked from the browser languages, with no `?lang=`", () => {
-    expect(getGateLocale({ langParam: undefined, languageCode: "de", survey, fallbackLocale: "fr-FR" })).toBe(
-      "de-DE"
-    );
+    const germanFirst = createMockSurvey([createLanguage("de", true), createLanguage("en")]);
+    expect(
+      getGateLocale({
+        langParam: undefined,
+        languageCode: "en",
+        survey: germanFirst,
+        fallbackLocale: "fr-FR",
+      })
+    ).toBe("en-US");
   });
 
   test("keeps the Accept-Language locale when the requested language is not one the app speaks", () => {
@@ -229,11 +226,15 @@ describe("getGateLocale", () => {
     expect(getGateLocale({ langParam: "he", languageCode: "he", survey, fallbackLocale: "fr-FR" })).toBe(
       "fr-FR"
     );
+    // German too: GForms ships the app's own strings in English only.
+    expect(getGateLocale({ langParam: "de", languageCode: "de", survey, fallbackLocale: "fr-FR" })).toBe(
+      "fr-FR"
+    );
   });
 
   test("follows the survey default for a language the survey has not enabled", () => {
     // getLanguageCode resolves an unknown or disabled `?lang=` to "default", and the content will
-    // render in the survey's default language — so the gate reads that language, not the browser's.
+    // render in the survey's default language, so the gate reads that language, not the browser's.
     expect(
       getGateLocale({ langParam: "it-IT", languageCode: "default", survey, fallbackLocale: "fr-FR" })
     ).toBe("en-US");

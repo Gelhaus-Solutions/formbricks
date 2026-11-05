@@ -34,13 +34,14 @@ describe("createI18n", () => {
   });
 
   test("lets the latest switch win when an earlier one is still loading", async () => {
-    const i18n = createI18n("en-US", { greeting: "Hello" });
+    const i18n = createI18n("de-DE", { greeting: "Hallo" });
 
-    const slower = i18n.changeLanguage("fr-FR");
-    await i18n.changeLanguage("en-US");
+    // en-US loads its file; de-DE is already in memory and applies at once.
+    const slower = i18n.changeLanguage("en-US");
+    await i18n.changeLanguage("de-DE");
     await slower;
 
-    expect(i18n.language).toBe("en-US");
+    expect(i18n.language).toBe("de-DE");
   });
 
   test("rejects a switch to a locale that does not exist", async () => {

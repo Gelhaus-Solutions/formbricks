@@ -1,9 +1,10 @@
 import { matchSurveyLanguage } from "@formbricks/i18n-utils/survey-language-match";
-import { type TUserLocale, ZUserLocale } from "@formbricks/types/user";
+import type { TUserLocale } from "@formbricks/types/user";
+import { AVAILABLE_LOCALES } from "@/lib/constants";
 
 export type TDefaultEndingText = { headline: string; subheader: string };
 
-const APP_LOCALES = ZUserLocale.options.map((code) => ({
+const APP_LOCALES = AVAILABLE_LOCALES.map((code) => ({
   default: false,
   enabled: true,
   language: { code },
@@ -12,7 +13,7 @@ const APP_LOCALES = ZUserLocale.options.map((code) => ({
 /** The app language a survey language reads its strings from, matched like a respondent's language. */
 const matchAppLocale = (code: string): TUserLocale | null => {
   const matched = matchSurveyLanguage(APP_LOCALES, code);
-  return ZUserLocale.options.find((locale) => locale === matched) ?? null;
+  return AVAILABLE_LOCALES.find((locale) => locale === matched) ?? null;
 };
 
 const loadDefaultEndingText = async (locale: TUserLocale): Promise<TDefaultEndingText> => {
@@ -26,9 +27,9 @@ const loadDefaultEndingText = async (locale: TUserLocale): Promise<TDefaultEndin
 };
 
 /**
- * The editor's default ending in each of the survey's languages, from Formbricks' own translations
- * (`de-AT` reads the `de-DE` strings). A language Formbricks has no strings for gets `null`, except the
- * default language: it has to show text, so it gets English.
+ * The editor's default ending in each of the survey's languages, from the app's own strings, which
+ * GForms ships in English only (`en-GB` reads the `en-US` strings). Any other language gets `null`,
+ * except the default language: it has to show text, so it gets English.
  */
 export const getDefaultEndingTexts = (
   languageCodes: readonly string[]

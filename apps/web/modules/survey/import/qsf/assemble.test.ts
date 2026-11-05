@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import deDE from "@/locales/de-DE.json";
 import { cpuMsSince } from "./__fixtures__/cpu-time";
 import { loadQsfFixture } from "./__fixtures__/load-fixture";
 import { loadRecordedPlan, recordedGenerate } from "./__fixtures__/recorded-plans";
@@ -122,18 +121,20 @@ describe("assembleQsfDraft", () => {
     expect(checkQsfDraft(document)).toEqual([]);
   });
 
-  test("writes the default ending in each language Formbricks has strings for", async () => {
+  test("writes the English default ending into every language, and names the ones it stands in for", async () => {
     const { document, issues } = await assembleFixture("multilang-en-de.qsf");
 
     expect(document.endings).toMatchObject([
       {
-        headline: { "en-US": "Thank you!", "de-DE": deDE.templates.default_ending_card_headline },
-        subheader: {
-          "en-US": "We appreciate your feedback.",
-          "de-DE": deDE.templates.default_ending_card_subheader,
-        },
+        headline: { "en-US": "Thank you!", "de-DE": "Thank you!" },
+        subheader: { "en-US": "We appreciate your feedback.", "de-DE": "We appreciate your feedback." },
       },
     ]);
+    expect(issues).toContainEqual({
+      code: "ending_not_translated",
+      severity: "warning",
+      params: { subject: "ending", languages: "de-DE" },
+    });
     expect(document.languages.every((language) => language.enabled)).toBe(true);
     expect(issues.some((issue) => issue.code === "translation_missing")).toBe(false);
   });
@@ -180,7 +181,7 @@ describe("assembleQsfDraft", () => {
         type: "endScreen",
         headline: {
           "en-US": "Thanks for taking part!",
-          "de-DE": deDE.templates.default_ending_card_headline,
+          "de-DE": "Thanks for taking part!",
         },
       },
     ]);

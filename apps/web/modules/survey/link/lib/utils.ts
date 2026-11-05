@@ -3,7 +3,8 @@ import { TJsWorkspaceStateSurvey } from "@formbricks/types/js";
 import { TSurveyBlock } from "@formbricks/types/surveys/blocks";
 import { TSurveyElement } from "@formbricks/types/surveys/elements";
 import { TSurvey } from "@formbricks/types/surveys/types";
-import { TUserLocale, ZUserLocale } from "@formbricks/types/user";
+import { TUserLocale } from "@formbricks/types/user";
+import { AVAILABLE_LOCALES, DEFAULT_LOCALE } from "@/lib/i18n/app-locale";
 
 export function isRTL(text: string): boolean {
   const rtlCharRegex = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/;
@@ -72,32 +73,17 @@ export const getSurveyLanguageTag = (
 };
 
 /**
- * Survey language codes that do not name a web app locale outright. Bare language codes pick the
- * variant we ship ("pt" -> Brazilian Portuguese), and the Chinese script codes pick their region
- * because "zh-Hant" shares its base code with "zh-Hans".
+ * Survey language codes that do not name a web app locale outright: a bare language code picks the
+ * variant the app ships. GForms ships English only, so a survey in any other language keeps its gate
+ * screens in English (see `getGateLocale`).
  */
 const SURVEY_LANGUAGE_ALIASES: Record<string, TUserLocale> = {
-  en: "en-US",
-  de: "de-DE",
-  es: "es-ES",
-  fr: "fr-FR",
-  hu: "hu-HU",
-  ja: "ja-JP",
-  nl: "nl-NL",
-  pt: "pt-BR",
-  ro: "ro-RO",
-  ru: "ru-RU",
-  sv: "sv-SE",
-  tr: "tr-TR",
-  zh: "zh-Hans-CN",
-  "zh-hans": "zh-Hans-CN",
-  "zh-hant": "zh-Hant-TW",
+  en: DEFAULT_LOCALE,
 };
 
 /**
  * Maps a survey language code to the web app locale its chrome should be translated in, or null when
- * the app ships no translation for it (a Hebrew survey, say) so the caller can keep its own fallback
- * rather than being forced to English.
+ * the app ships no translation for it (a Hebrew survey, say) so the caller can keep its own fallback.
  *
  * @param languageCode A survey language code, or "default" for the survey's default language
  */
@@ -112,13 +98,12 @@ export const resolveWebAppLocale = (languageCode: string, survey: TSurvey): TUse
 
   const segments = codeToMap.toLowerCase().split("-");
 
-  // The longest prefix first, so a survey language that already names a locale ("pt-PT") keeps its
-  // variant instead of collapsing into the base language's default ("pt" -> "pt-BR"), and a regional
-  // code drops to its script before its base language ("zh-Hant-HK" -> "zh-Hant", not "zh").
+  // The longest prefix first, so a survey language that names a locale keeps it, and a regional code
+  // ("en-GB") drops to its base language.
   for (let length = segments.length; length > 0; length--) {
     const prefix = segments.slice(0, length).join("-");
 
-    const exactLocale = ZUserLocale.options.find((locale) => locale.toLowerCase() === prefix);
+    const exactLocale = AVAILABLE_LOCALES.find((locale) => locale.toLowerCase() === prefix);
     if (exactLocale) return exactLocale;
 
     const alias = SURVEY_LANGUAGE_ALIASES[prefix];
@@ -133,12 +118,12 @@ export const resolveWebAppLocale = (languageCode: string, survey: TSurvey): TUse
  * Falls back to "en-US" if the language is not available in web app locales.
  */
 export const getWebAppLocale = (languageCode: string, survey: TSurvey): string =>
-  resolveWebAppLocale(languageCode, survey) ?? "en-US";
+  resolveWebAppLocale(languageCode, survey) ?? DEFAULT_LOCALE;
 
 interface GateLocaleParams {
   /** The raw `?lang=` value, present only when the respondent asked for a language. */
   langParam: string | undefined;
-  /** The language the survey renders in — from `?lang=` or the browser languages — or "default". */
+  /** The language the survey renders in (from `?lang=` or the browser languages), or "default". */
   languageCode: string;
   survey: TSurvey;
   /** The locale negotiated from the Accept-Language header. */
@@ -149,9 +134,9 @@ interface GateLocaleParams {
  * The language a link survey renders in, read once on the server.
  *
  * Read from Accept-Language rather than the client's `navigator.languages`, so the very first paint is
- * already in the right language — no flash of the default language, and it works the same inside an
+ * already in the right language: no flash of the default language, and it works the same inside an
  * embed. Explicit `?lang=` first; one that matches nothing falls through to the browser languages (when
- * the survey opted in) and then the default — see `resolveSurveyLanguage`. A repeated `?lang=a&lang=b`
+ * the survey opted in) and then the default (see `resolveSurveyLanguage`). A repeated `?lang=a&lang=b`
  * arrives as an array and counts as no explicit language.
  */
 export const resolveLinkSurveyLanguage = ({
@@ -179,10 +164,10 @@ export const resolveLinkSurveyLanguage = ({
  * The locale the gate screens in front of a survey (PIN entry, email verification) translate their own
  * chrome in, and the one the verification email is written in.
  *
- * Precedence is deliberate and narrow: once a language was selected — by an explicit `?lang=`, or by
- * "Use browser language by default" picking one from Accept-Language — the gate follows it whenever we
+ * Precedence is deliberate and narrow: once a language was selected (by an explicit `?lang=`, or by
+ * "Use browser language by default" picking one from Accept-Language), the gate follows it whenever we
  * translate the app into it, because that is the language the survey content itself will render in.
- * Everything else — no language selected at all, or one the app has no translation for — keeps the
+ * Everything else (no language selected at all, or one the app has no translation for) keeps the
  * Accept-Language locale.
  */
 export const getGateLocale = ({

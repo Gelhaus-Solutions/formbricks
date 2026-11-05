@@ -1,5 +1,4 @@
 import "server-only";
-import { TUserLocale } from "@formbricks/types/user";
 import { env } from "./env";
 import { isPlainChatConfigured } from "./plain-chat-config";
 
@@ -276,24 +275,7 @@ export const STRIPE_API_VERSION = "2026-02-25.clover";
 // Maximum number of attribute classes allowed:
 export const MAX_ATTRIBUTE_CLASSES_PER_ENVIRONMENT = 150;
 
-export const DEFAULT_LOCALE = "en-US";
-export const AVAILABLE_LOCALES: TUserLocale[] = [
-  "de-DE",
-  "en-US",
-  "es-ES",
-  "fr-FR",
-  "hu-HU",
-  "ja-JP",
-  "nl-NL",
-  "pt-BR",
-  "pt-PT",
-  "ro-RO",
-  "ru-RU",
-  "sv-SE",
-  "tr-TR",
-  "zh-Hans-CN",
-  "zh-Hant-TW",
-];
+export { AVAILABLE_LOCALES, DEFAULT_LOCALE } from "./i18n/app-locale";
 
 export const PLAIN_APP_ID = env.PLAIN_APP_ID;
 export const PLAIN_ACTIVE_CUSTOMER_LABEL_TYPE_ID = env.PLAIN_ACTIVE_CUSTOMER_LABEL_TYPE_ID;

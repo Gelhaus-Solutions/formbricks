@@ -3,14 +3,14 @@ import { loadLocaleMessages } from "./load-locale-messages";
 
 describe("loadLocaleMessages", () => {
   test("loads the requested locale's catalogue", async () => {
-    const messages = (await loadLocaleMessages("de-DE")) as { common: { language: string } };
+    const messages = (await loadLocaleMessages("en-US")) as { common: { language: string } };
 
-    expect(messages.common.language).toBe("Sprache");
+    expect(messages.common.language).toBe("Language");
   });
 
   // `use()` suspends again on every new promise, so a fresh one per render would never settle.
   test("returns the same promise for the same locale", () => {
-    expect(loadLocaleMessages("fr-FR")).toBe(loadLocaleMessages("fr-FR"));
+    expect(loadLocaleMessages("en-US")).toBe(loadLocaleMessages("en-US"));
   });
 
   test("retries a locale whose load failed", async () => {

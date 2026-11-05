@@ -93,9 +93,9 @@ export const getFormattedDateTimeString = (date: Date, timeZone: string = "UTC")
  * and the first day of the week.
  *
  * `Intl` (which the formatters above use) takes the BCP 47 tag directly, but `react-day-picker` wants a
- * date-fns `Locale` object, so the app's locale codes have to be mapped explicitly. The keys mirror
- * `apps/web/locales/*.json`; anything else — including a survey language code that never became an app
- * locale — falls back to en-US rather than throwing.
+ * date-fns `Locale` object, so the app's locale codes have to be mapped explicitly. The keys cover the
+ * languages Formbricks shipped the app in (GForms ships English only); anything else, including a survey
+ * language code that never became an app locale, falls back to en-US rather than throwing.
  */
 export const getDateFnsLocale = (localeCode?: string): Locale => {
   if (!localeCode) return enUS;
@@ -131,7 +131,7 @@ export const getDateFnsLocale = (localeCode?: string): Locale => {
 /**
  * Serialises a local calendar day as `yyyy-MM-dd`.
  *
- * Machine-facing on purpose — this is the value chart and dashboard time filters hand to Cube — so it
+ * Machine-facing on purpose (this is the value chart and dashboard time filters hand to Cube), so it
  * stays non-localized. Deliberately not `toISOString().slice(0, 10)`: that converts to UTC first, so
  * a user east of UTC would emit tomorrow's date and one west of it yesterday's.
  */
@@ -144,7 +144,7 @@ export const formatLocalDay = (date: Date): string => {
 };
 
 /**
- * Parses a `yyyy-MM-dd` day back to local midnight — the inverse of `formatLocalDay`.
+ * Parses a `yyyy-MM-dd` day back to local midnight: the inverse of `formatLocalDay`.
  *
  * `new Date("2026-08-05")` parses as UTC midnight, which displays (and re-emits) a day earlier for
  * anyone west of UTC, so the value is rebuilt from its parts to keep the round trip symmetric.
@@ -156,7 +156,7 @@ export const parseLocalDay = (value: string): Date => {
 };
 
 /**
- * Parses a stored date value — a bare `yyyy-MM-dd` or a full ISO timestamp — to the local midnight of
+ * Parses a stored date value (a bare `yyyy-MM-dd` or a full ISO timestamp) to the local midnight of
  * the calendar day it names, or `null` when it names none.
  *
  * The time part is dropped before parsing rather than handed to `Date`: a stored
@@ -169,7 +169,7 @@ export const parseLocalDay = (value: string): Date => {
  * Only the day is validated, so a well-formed day followed by a malformed time still resolves to that
  * day. That is deliberate: the day is the part a date picker shows, these values can arrive from the
  * Management API rather than only from this UI, and the `<input type="date">` this replaced split on
- * `T` the same way — blanking a readable day over a broken time suffix would lose information.
+ * `T` the same way: blanking a readable day over a broken time suffix would lose information.
  */
 export const parseStoredDay = (value: string | null | undefined): Date | null => {
   if (!value) return null;

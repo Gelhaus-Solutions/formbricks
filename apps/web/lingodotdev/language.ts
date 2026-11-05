@@ -1,5 +1,5 @@
 import { TUserLocale } from "@formbricks/types/user";
-import { DEFAULT_LOCALE } from "@/lib/constants";
+import { toAppLocale } from "@/lib/i18n/app-locale";
 import { getUserLocale } from "@/lib/user/service";
 import { findMatchingLocale } from "@/lib/utils/locale";
 import { getSession } from "@/modules/auth/lib/session";
@@ -12,5 +12,5 @@ export const getLocale = async (): Promise<TUserLocale> => {
   } else {
     locale = await findMatchingLocale();
   }
-  return locale ?? DEFAULT_LOCALE;
+  return toAppLocale(locale);
 };

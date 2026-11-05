@@ -33,6 +33,11 @@ describe("lingodotdev server", () => {
     expect(translate).toBeDefined();
   });
 
+  test("reads English for a locale the app no longer ships", async () => {
+    const translate = await getTranslate("de-DE");
+    expect(translate("common.language")).toBe("Language");
+  });
+
   test("should call getLocale when locale is not provided", async () => {
     vi.mocked(getLocale).mockResolvedValue("fr-FR");
     await getTranslate();

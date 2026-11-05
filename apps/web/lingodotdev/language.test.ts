@@ -28,7 +28,7 @@ describe("lingodotdev getLocale", () => {
       },
       expires: "2999-01-01T00:00:00.000Z",
     };
-    const userLocale = "de-DE";
+    const userLocale = "en-US";
 
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(getUserLocale).mockResolvedValue(userLocale);
@@ -42,7 +42,7 @@ describe("lingodotdev getLocale", () => {
   });
 
   test("should use findMatchingLocale when no session exists", async () => {
-    const matchingLocale = "fr-FR";
+    const matchingLocale = "en-US";
 
     vi.mocked(getSession).mockResolvedValue(null);
     vi.mocked(findMatchingLocale).mockResolvedValue(matchingLocale);
@@ -71,5 +71,15 @@ describe("lingodotdev getLocale", () => {
     expect(getSession).toHaveBeenCalled();
     expect(getUserLocale).toHaveBeenCalledWith("user-123");
     expect(result).toBe(DEFAULT_LOCALE);
+  });
+
+  test("reads English for a stored locale the app no longer ships", async () => {
+    vi.mocked(getSession).mockResolvedValue({
+      user: { id: "user-123" },
+      expires: "2999-01-01T00:00:00.000Z",
+    });
+    vi.mocked(getUserLocale).mockResolvedValue("de-DE");
+
+    expect(await getLocale()).toBe(DEFAULT_LOCALE);
   });
 });

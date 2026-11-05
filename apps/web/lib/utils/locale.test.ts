@@ -1,7 +1,6 @@
 import * as nextHeaders from "next/headers";
 import { describe, expect, test, vi } from "vitest";
 import { AVAILABLE_LOCALES, DEFAULT_LOCALE } from "@/lib/constants";
-import { appLanguages } from "@/lib/i18n/utils";
 import { findMatchingLocale, getAcceptedLanguages } from "./locale";
 
 // Mock the Next.js headers function
@@ -83,42 +82,13 @@ describe("locale", () => {
     expect(nextHeaders.headers).toHaveBeenCalled();
   });
 
-  test("handles multiple potential matches correctly", async () => {
-    // If we have multiple locales for the same language, it should return the first match
-    const germanLocale = AVAILABLE_LOCALES.find((locale) => locale.toLowerCase().startsWith("de"));
-
-    if (!germanLocale) {
-      // Skip this test if no German locale is available
-      return;
-    }
+  test("matches English only: the app ships no other language", async () => {
+    expect(AVAILABLE_LOCALES).toEqual(["en-US"]);
 
     vi.mocked(nextHeaders.headers).mockReturnValue({
-      get: vi.fn().mockReturnValue("de-DE,en-US,fr-FR"),
+      get: vi.fn().mockReturnValue("de-DE,sv-SE,en-GB"),
     } as any);
 
-    const result = await findMatchingLocale();
-
-    expect(result).toBe(germanLocale);
-    expect(nextHeaders.headers).toHaveBeenCalled();
-  });
-
-  test("Swedish locale (sv-SE) is available and selectable", async () => {
-    // Verify sv-SE is in AVAILABLE_LOCALES
-    expect(AVAILABLE_LOCALES).toContain("sv-SE");
-
-    // Verify Swedish has a language entry with proper label
-    const swedishLanguage = appLanguages.find((lang) => lang.code === "sv-SE");
-    expect(swedishLanguage).toBeDefined();
-    expect(swedishLanguage?.label["en-US"]).toBe("Swedish");
-
-    // Verify the locale can be matched from Accept-Language header
-    vi.mocked(nextHeaders.headers).mockReturnValue({
-      get: vi.fn().mockReturnValue("sv-SE,en-US"),
-    } as any);
-
-    const result = await findMatchingLocale();
-
-    expect(result).toBe("sv-SE");
-    expect(nextHeaders.headers).toHaveBeenCalled();
+    expect(await findMatchingLocale()).toBe("en-US");
   });
 });

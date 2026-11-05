@@ -4,6 +4,7 @@ import resourcesToBackend from "i18next-resources-to-backend";
 import { initReactI18next } from "react-i18next/initReactI18next";
 import { TUserLocale } from "@formbricks/types/user";
 import { DEFAULT_LOCALE } from "@/lib/constants";
+import { toAppLocale } from "@/lib/i18n/app-locale";
 import { getLocale } from "@/lingodotdev/language";
 
 const initI18next = async (lng: string) => {
@@ -23,7 +24,7 @@ const initI18next = async (lng: string) => {
 };
 
 export async function getTranslate(locale?: TUserLocale) {
-  const resolvedLocale = locale ?? (await getLocale());
+  const resolvedLocale = toAppLocale(locale ?? (await getLocale()));
 
   const i18nextInstance = await initI18next(resolvedLocale);
   return i18nextInstance.getFixedT(resolvedLocale);
