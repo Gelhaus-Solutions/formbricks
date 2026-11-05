@@ -9,7 +9,7 @@ The `@formbricks/surveys` package provides a complete survey rendering system bu
 - **Type Safety**: Full TypeScript support
 - **Testing**: Comprehensive test coverage with Vitest
 - **Lightweight**: Built with Preact for optimal bundle size
-- **Multi-language Support**: Supports 10+ languages with automated translation generation
+- **Multi-language Support**: Supports 42 languages with automated translation generation
 
 ## Architecture
 
@@ -18,9 +18,9 @@ The `@formbricks/surveys` package provides a complete survey rendering system bu
 ```text
 packages/surveys/
 ├── locales/                 # Translation files
-│   ├── en.json             # Source translations (English)
-│   ├── de.json             # Generated translations (German)
-│   ├── fr.json             # Generated translations (French)
+│   ├── en-US.json          # Source translations (English)
+│   ├── de-DE.json          # Generated translations (German)
+│   ├── fr-FR.json          # Generated translations (French)
 │   └── ...                 # Other target languages
 ├── i18n.json               # lingo.dev configuration
 ├── src/
@@ -82,7 +82,7 @@ This will execute the auto-translate script and update translation files if need
 
 ### Adding New Translation Keys
 
-1. **Update Source File**: Add new keys to `packages/surveys/locales/en.json`
+1. **Update Source File**: Add new keys to `packages/surveys/locales/en-US.json`
 2. **Generate Translations**: Run `pnpm run i18n:generate`
 3. **Update Components**: Use the new translation keys in your components with `useTranslation` hook
 4. **Test**: Verify translations work across all supported languages
