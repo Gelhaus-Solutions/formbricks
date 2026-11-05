@@ -14,8 +14,8 @@ export type TOrgAction = "organization.read_access" | "organization.manage" | "o
 
 /**
  * Authorize a request against one organization: a session user who may take `action` on it. No
- * licence check: entitlement-gated routes add their own after this (data retention does, in
- * `requireRetentionOrgAccess`), and user management such as Reactivate needs none.
+ * licence check: entitlement-gated routes add their own after this, and user management such as
+ * Reactivate needs none.
  *
  * Callers pass an organization they derived from the resource or one the client named in the query;
  * either way this is the check, never the id itself. A missing organization and one the caller may not
