@@ -5,7 +5,6 @@ import {
   Building2Icon,
   ChevronRightIcon,
   FoldersIcon,
-  LayoutTemplateIcon,
   Loader2,
   MessageCircle,
   MessageSquareTextIcon,
@@ -60,9 +59,6 @@ interface NavigationProps {
   // server layout: deriving it here would mean reading `Date.now()` during render, which diverges
   // between the server pass and hydration and then goes stale as the tab sits open (ENG-2366).
   trialDaysRemaining: number | null;
-  // The workspace's Creatives access is `full` or `windDown` (ENG-6602). Hidden otherwise, with no
-  // upgrade notice: Creatives doesn't exist for that workspace.
-  isCreativesVisible: boolean;
 }
 
 /**
@@ -115,7 +111,6 @@ export const MainNavigation = ({
   responseCount,
   isFormbricksSurveysConfigured,
   trialDaysRemaining,
-  isCreativesVisible,
 }: Readonly<NavigationProps>) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -168,14 +163,6 @@ export const MainNavigation = ({
             disabled: isMembershipPending || isBilling,
           },
           {
-            name: t("common.creatives"),
-            href: `/workspaces/${workspace.id}/creatives`,
-            icon: LayoutTemplateIcon,
-            isActive: pathname?.includes("/creatives"),
-            isHidden: !isCreativesVisible,
-            disabled: isMembershipPending || isBilling,
-          },
-          {
             href: `/workspaces/${workspace.id}/contacts`,
             name: t("common.contacts"),
             icon: UserIcon,
@@ -212,7 +199,7 @@ export const MainNavigation = ({
         ],
       },
     ],
-    [t, workspace.id, pathname, isMembershipPending, isBilling, isCreativesVisible]
+    [t, workspace.id, pathname, isMembershipPending, isBilling]
   );
 
   const settingsNavigationItem = useMemo(
