@@ -17,10 +17,10 @@ const DEFAULT_WORKER_CONCURRENCY = 1;
 const DEFAULT_WORKER_COUNT = 1;
 
 /**
- * A dedicated queue serves recurring jobs that run on their own (AuthZed delivery every 5 s, the AuthZed
- * audits, the nightly data retention sweep, which can run for half an hour), so one slot per runtime is enough;
- * replicas add more. Deliberately not `concurrency`/`workerCount`: those size the
- * default queue for its own workload, and tuning them must not starve — or multiply — this one.
+ * A dedicated queue serves jobs that run on their own (AuthZed delivery every 5 s, the AuthZed audits,
+ * attachment exports, which can run for minutes), so one slot per runtime is enough; replicas add more.
+ * Deliberately not `concurrency`/`workerCount`: those size the default queue for its own workload, and
+ * tuning them must not starve (or multiply) this one.
  */
 const DEDICATED_WORKER_CONCURRENCY = 1;
 
@@ -37,7 +37,7 @@ export interface JobsRuntimeOptions {
 export interface JobsRuntimeHandle {
   /** The default `background-jobs` queue. */
   queue: Queue;
-  /** Every queue this runtime serves, keyed by name — the default one and each dedicated one. */
+  /** Every queue this runtime serves, keyed by name: the default one and each dedicated one. */
   queues: Readonly<Record<TJobsQueueName, Queue>>;
   /** The `workerCount` workers on the default queue, each running `concurrency` jobs at once. */
   workers: Worker[];

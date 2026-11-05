@@ -1,7 +1,6 @@
 import {
   AUTHZED_PROJECTION_QUEUE_NAME,
   AUTHZED_RECONCILIATION_QUEUE_NAME,
-  DATA_RETENTION_QUEUE_NAME,
   JOB_NAMES,
   type TJobsQueueName,
 } from "@/src/constants";
@@ -42,13 +41,13 @@ export interface RecurringJobDescriptor {
  * Declares a recurring background job once, for both sides of the system: the worker registry (via
  * `definition`) and the producer that registers the schedule (via `name`/`scheduleId`/`scope`).
  *
- * What stays in `apps/web` is deliberate: the *timing* (cron pattern, interval, time zone — all
+ * What stays in `apps/web` is deliberate: the *timing* (cron pattern, interval, time zone, all
  * env-derived) and the real handler, which needs Prisma and app modules this package cannot import.
  * See `apps/web/lib/jobs/recurring-registrations.ts`.
  *
  * Handlers must be **idempotent and safe to overlap**: `BULLMQ_WORKER_CONCURRENCY` and
  * `BULLMQ_WORKER_COUNT` are operator-configurable and there may be several app replicas, so two ticks
- * of the same job can run at once. They must also stay I/O-bound — BullMQ renews the job lock on a
+ * of the same job can run at once. They must also stay I/O-bound: BullMQ renews the job lock on a
  * timer, so CPU-bound work that blocks the event loop is what makes a job stall, not a long runtime.
  */
 export const defineRecurringJob = ({
@@ -104,13 +103,6 @@ export const recurringJobDescriptors = {
     name: JOB_NAMES.authzedSurveyAudit,
     queueName: AUTHZED_RECONCILIATION_QUEUE_NAME,
     scheduleId: "daily-authzed-survey-audit",
-  }),
-  // Its own queue: it may run for half an hour, and must not hold up the default queue's jobs.
-  dataRetentionSweep: defineRecurringJob({
-    label: "data retention sweep",
-    name: JOB_NAMES.dataRetentionSweep,
-    queueName: DATA_RETENTION_QUEUE_NAME,
-    scheduleId: "daily-data-retention-sweep",
   }),
   deletionCleanupDrain: defineRecurringJob({
     label: "deletion cleanup drain",

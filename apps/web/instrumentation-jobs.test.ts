@@ -11,7 +11,6 @@ const mockUpsertSurveyArchivePurge = vi.fn();
 const mockUpsertAuthzedProjectionDelivery = vi.fn();
 const mockUpsertAuthzedReconciliationAudit = vi.fn();
 const mockUpsertDeletionCleanupDrain = vi.fn();
-const mockUpsertDataRetentionSweep = vi.fn();
 const mockUpsertEmailAuditMaintenance = vi.fn();
 const mockDebug = vi.fn();
 const mockError = vi.fn();
@@ -25,7 +24,6 @@ const mockProcessAuthzedProjectionDeliveryJob = vi.fn();
 const mockObserveAuthzedOutboxHealth = vi.fn();
 const mockProcessAuthzedScheduledReconciliationJob = vi.fn();
 const mockProcessDeletionCleanupDrainJob = vi.fn();
-const mockProcessDataRetentionSweepJob = vi.fn();
 const mockProcessEmailAuditMaintenanceJob = vi.fn();
 const TEST_TIMEOUT_MS = 15_000;
 
@@ -72,12 +70,6 @@ vi.mock("@formbricks/jobs", () => ({
       scheduleId: "daily-authzed-survey-audit",
       scope: "global",
       upsert: vi.fn(),
-    },
-    dataRetentionSweep: {
-      name: "data-retention.sweep",
-      scheduleId: "daily-data-retention-sweep",
-      scope: "global",
-      upsert: mockUpsertDataRetentionSweep,
     },
     deletionCleanupDrain: {
       name: "deletion-cleanup.drain",
@@ -135,10 +127,6 @@ vi.mock("@/modules/survey/archive/lib/process-survey-archive-purge-job", () => (
   processSurveyArchivePurgeJob: mockProcessSurveyArchivePurgeJob,
 }));
 
-vi.mock("@/modules/ee/data-retention/sweep/process-data-retention-sweep-job", () => ({
-  processDataRetentionSweepJob: mockProcessDataRetentionSweepJob,
-}));
-
 vi.mock("@/modules/deletion-cleanup/lib/process-deletion-cleanup-drain-job", () => ({
   processDeletionCleanupDrainJob: mockProcessDeletionCleanupDrainJob,
 }));
@@ -184,7 +172,7 @@ describe("instrumentation-jobs", () => {
 
   /**
    * Keying the registrations by `TRecurringJobKey` forces an entry to exist for every declared job, but
-   * not that the entry holds *that* job's handle — a mispairing type-checks. It would be worse than a
+   * not that the entry holds *that* job's handle: a mispairing type-checks. It would be worse than a
    * swap: both entries would upsert the same scheduler, so one job's schedule is never registered and
    * its handler binds to the wrong name.
    */
@@ -250,7 +238,6 @@ describe("instrumentation-jobs", () => {
         "authzed-projection.deliver": expect.any(Function),
         "authzed-reconciliation.audit": expect.any(Function),
         "authzed-survey.audit": expect.any(Function),
-        "data-retention.sweep": expect.any(Function),
         "deletion-cleanup.drain": expect.any(Function),
         "email-audit.maintain": expect.any(Function),
         "response-pipeline.process": expect.any(Function),
@@ -423,18 +410,16 @@ describe("instrumentation-jobs", () => {
     expect(audit).toHaveBeenCalledOnce();
   });
 
-  test("schedules the data retention sweep and cleanup drain only once the release is activated, but AuthZed delivery at once", async () => {
+  test("schedules the cleanup drain only once the release is activated, but AuthZed delivery at once", async () => {
     online.enabled = false;
     mockGetJobsQueueingConfig.mockReturnValue({ enabled: true, redisUrl: "redis://localhost:6379" });
     const { registerRecurringJobs } = await import("./instrumentation-jobs");
     const { RECURRING_JOB_REGISTRATIONS_BY_KEY } = await import("@/lib/jobs/recurring-registrations");
-    const sweep = RECURRING_JOB_REGISTRATIONS_BY_KEY.dataRetentionSweep.job.upsert;
     const drain = RECURRING_JOB_REGISTRATIONS_BY_KEY.deletionCleanupDrain.job.upsert;
     const emailAudit = RECURRING_JOB_REGISTRATIONS_BY_KEY.emailAuditMaintenance.job.upsert;
     const delivery = RECURRING_JOB_REGISTRATIONS_BY_KEY.authzedProjectionDelivery.job.upsert;
 
     await registerRecurringJobs();
-    expect(sweep).not.toHaveBeenCalled();
     expect(drain).not.toHaveBeenCalled();
     expect(emailAudit).not.toHaveBeenCalled();
     // Revocations must keep reaching SpiceDB throughout the upgrade, or every check fails closed.
@@ -442,7 +427,6 @@ describe("instrumentation-jobs", () => {
 
     online.enabled = true;
     await vi.advanceTimersByTimeAsync(30_000);
-    expect(sweep).toHaveBeenCalledOnce();
     expect(drain).toHaveBeenCalledOnce();
     expect(emailAudit).toHaveBeenCalledOnce();
   });
@@ -470,8 +454,6 @@ describe("instrumentation-jobs", () => {
       const { SURVEY_ARCHIVE_PURGE_DAILY_CRON_PATTERN, SURVEY_ARCHIVE_PURGE_TIME_ZONE } =
         await import("@/modules/survey/archive/lib/constants");
       const { DELETION_CLEANUP_DRAIN_INTERVAL_MS } = await import("@/modules/deletion-cleanup/lib/constants");
-      const { DATA_RETENTION_SWEEP_DAILY_CRON_PATTERN, DATA_RETENTION_SWEEP_TIME_ZONE } =
-        await import("@/modules/ee/data-retention/sweep/constants");
 
       await registerRecurringJobs();
       await registerRecurringJobs();
@@ -489,14 +471,6 @@ describe("instrumentation-jobs", () => {
         everyMs: 6 * 60 * 60 * 1_000,
         kind: "every",
       });
-      expect(mockUpsertDataRetentionSweep).toHaveBeenCalledOnce();
-      expect(mockUpsertDataRetentionSweep).toHaveBeenCalledWith({
-        cronPattern: DATA_RETENTION_SWEEP_DAILY_CRON_PATTERN,
-        kind: "cron",
-        timeZone: DATA_RETENTION_SWEEP_TIME_ZONE,
-      });
-      // After the night's scheduling, before the archive purge at 01:30, in the same zone.
-      expect(DATA_RETENTION_SWEEP_TIME_ZONE).toBe(SURVEY_SCHEDULING_TIME_ZONE);
       expect(mockUpsertDeletionCleanupDrain).toHaveBeenCalledOnce();
       expect(mockUpsertDeletionCleanupDrain).toHaveBeenCalledWith({
         everyMs: DELETION_CLEANUP_DRAIN_INTERVAL_MS,

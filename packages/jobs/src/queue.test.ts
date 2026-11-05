@@ -6,7 +6,6 @@ import {
   ATTACHMENT_EXPORT_QUEUE_NAME,
   AUTHZED_PROJECTION_QUEUE_NAME,
   AUTHZED_RECONCILIATION_QUEUE_NAME,
-  DATA_RETENTION_QUEUE_NAME,
   JOBS_DEFAULT_JOB_OPTIONS,
   JOBS_DEFAULT_JOB_SCHEDULER_TEMPLATE_OPTIONS,
   JOBS_PREFIX,
@@ -223,7 +222,7 @@ describe("@formbricks/jobs queue helpers", () => {
   // A delivery queued behind a long sweep makes every authorization check fail closed, and the sweeps
   // themselves would hold up every default-queue job, so this pins the routing of every job: those have
   // queues of their own, everything else shares the default one.
-  test("routes AuthZed delivery, the AuthZed audits, the data retention sweep and attachment exports to their own queues, and only them", () => {
+  test("routes AuthZed delivery, the AuthZed audits and attachment exports to their own queues, and only them", () => {
     const queueNameByJob = Object.fromEntries(
       Object.values(backgroundJobDefinitions).map((definition) => [definition.name, definition.queueName])
     );
@@ -231,23 +230,12 @@ describe("@formbricks/jobs queue helpers", () => {
       [JOB_NAMES.authzedProjectionDelivery]: AUTHZED_PROJECTION_QUEUE_NAME,
       [JOB_NAMES.authzedReconciliationAudit]: AUTHZED_RECONCILIATION_QUEUE_NAME,
       [JOB_NAMES.authzedSurveyAudit]: AUTHZED_RECONCILIATION_QUEUE_NAME,
-      [JOB_NAMES.dataRetentionSweep]: DATA_RETENTION_QUEUE_NAME,
       [JOB_NAMES.attachmentExport]: ATTACHMENT_EXPORT_QUEUE_NAME,
     };
 
     for (const [jobName, queueName] of Object.entries(queueNameByJob)) {
       expect(queueName, jobName).toBe(dedicated[jobName] ?? JOBS_QUEUE_NAME);
     }
-  });
-
-  test("upserts the data retention sweep schedule on its own queue, then retires the legacy one", async () => {
-    mockQueueUpsertJobScheduler.mockResolvedValue({ id: "sweep-1" });
-    mockQueueRemoveJobScheduler.mockResolvedValue(false);
-
-    await recurringJobs.dataRetentionSweep.upsert({ cronPattern: "0 1 * * *", kind: "cron" });
-
-    expect(queueNamesOf(mockQueueUpsertJobScheduler)).toEqual([DATA_RETENTION_QUEUE_NAME]);
-    expect(queueNamesOf(mockQueueRemoveJobScheduler)).toEqual([JOBS_QUEUE_NAME]);
   });
 
   test.each([
@@ -381,7 +369,7 @@ describe("@formbricks/jobs queue helpers", () => {
 
     expect(job).toBe(mockJob);
     // No per-job attempts override: the job inherits attempts + backoff from the queue's
-    // defaultJobOptions (retries are safe now that execution is idempotent per step — ENG-1228).
+    // defaultJobOptions (retries are safe now that execution is idempotent per step, ENG-1228).
     expect(mockQueueAdd).toHaveBeenCalledWith(JOB_NAMES.workflowRun, workflowRunJobData, {
       jobId: workflowRunJobData.workflowRunId,
     });
@@ -597,7 +585,6 @@ describe("@formbricks/jobs queue helpers", () => {
     ["authzedProjectionDelivery", "authzed-projection.deliver:global:authzed-projection-delivery"],
     ["authzedReconciliationAudit", "authzed-reconciliation.audit:global:authzed-reconciliation-audit"],
     ["authzedSurveyAudit", "authzed-survey.audit:global:daily-authzed-survey-audit"],
-    ["dataRetentionSweep", "data-retention.sweep:global:daily-data-retention-sweep"],
     ["deletionCleanupDrain", "deletion-cleanup.drain:global:deletion-cleanup-drain"],
     ["surveyArchivePurge", "survey-archive-purge.process:global:daily-survey-archive-purge"],
     ["surveyScheduling", "survey-scheduling.reconcile:global:daily-survey-scheduling"],

@@ -13,7 +13,6 @@ import {
 import {
   AUTHZED_PROJECTION_QUEUE_NAME,
   AUTHZED_RECONCILIATION_QUEUE_NAME,
-  DATA_RETENTION_QUEUE_NAME,
   DEDICATED_JOBS_QUEUE_NAMES,
   JOBS_PREFIX,
   JOBS_QUEUE_NAME,
@@ -27,7 +26,6 @@ type TQueueModule = typeof QueueModule;
 let producerConnection = createMockRedisConnection();
 let queueMock = createMockQueue();
 let dedicatedQueueMock = createMockQueue();
-let retentionQueueMock = createMockQueue();
 let reconciliationQueueMock = createMockQueue();
 let workerConnections: MockRedisConnection[] = [];
 let workerMocks: MockWorker[] = [];
@@ -47,7 +45,6 @@ const mockCreateJobsQueues = vi.fn((_: unknown) => ({
   [JOBS_QUEUE_NAME]: asQueue(queueMock),
   [AUTHZED_PROJECTION_QUEUE_NAME]: asQueue(dedicatedQueueMock),
   [AUTHZED_RECONCILIATION_QUEUE_NAME]: asQueue(reconciliationQueueMock),
-  [DATA_RETENTION_QUEUE_NAME]: asQueue(retentionQueueMock),
 }));
 const mockWorkerConstructor = vi.fn(function MockWorker(_: string, __: unknown, ___?: unknown) {
   const worker = createMockWorker();
@@ -104,7 +101,6 @@ describe("@formbricks/jobs runtime", () => {
     producerConnection = createMockRedisConnection();
     queueMock = createMockQueue();
     dedicatedQueueMock = createMockQueue();
-    retentionQueueMock = createMockQueue();
     reconciliationQueueMock = createMockQueue();
     workerConnections = [];
     workerMocks = [];
@@ -232,13 +228,6 @@ describe("@formbricks/jobs runtime", () => {
         expect.objectContaining({ dedicatedQueueNames: [...DEDICATED_JOBS_QUEUE_NAMES] }),
         "BullMQ runtime started"
       );
-      // The data retention sweep's queue gets its own single worker the same way.
-      const retentionWorkerCalls = mockWorkerConstructor.mock.calls.filter(
-        ([queueName]) => queueName === DATA_RETENTION_QUEUE_NAME
-      );
-      expect(retentionWorkerCalls).toHaveLength(1);
-      expect(retentionWorkerCalls[0]?.[2]).toEqual(expect.objectContaining({ concurrency: 1 }));
-      expect(runtime.queues[DATA_RETENTION_QUEUE_NAME]).toBe(asQueue(retentionQueueMock));
       // And so does the AuthZed audits' queue, whatever the default queue is tuned to.
       const reconciliationWorkerCalls = mockWorkerConstructor.mock.calls.filter(
         ([queueName]) => queueName === AUTHZED_RECONCILIATION_QUEUE_NAME
@@ -251,7 +240,6 @@ describe("@formbricks/jobs runtime", () => {
       const dedicatedWorker = workerMocks[mockWorkerConstructor.mock.calls.indexOf(dedicatedWorkerCalls[0])];
       expect(dedicatedWorker.close).toHaveBeenCalledTimes(1);
       expect(dedicatedQueueMock.close).toHaveBeenCalledTimes(1);
-      expect(retentionQueueMock.close).toHaveBeenCalledTimes(1);
       expect(mockCloseRedisConnection).toHaveBeenCalledTimes(
         (workerCount ?? 1) + 1 + DEDICATED_JOBS_QUEUE_NAMES.length
       );
@@ -382,7 +370,6 @@ describe("@formbricks/jobs runtime", () => {
     }
     expect(queueMock.close).toHaveBeenCalledTimes(1);
     expect(dedicatedQueueMock.close).toHaveBeenCalledTimes(1);
-    expect(retentionQueueMock.close).toHaveBeenCalledTimes(1);
     expect(mockCloseRedisConnection).toHaveBeenCalledTimes(3 + DEDICATED_JOBS_QUEUE_NAMES.length);
     expect(mockLogger.error).toHaveBeenCalledWith(
       { err: startupError, queueName: JOBS_QUEUE_NAME, prefix: JOBS_PREFIX },
@@ -399,7 +386,6 @@ describe("@formbricks/jobs runtime", () => {
     expect(workerMocks[1]?.close).toHaveBeenCalledTimes(1);
     expect(queueMock.close).toHaveBeenCalledTimes(1);
     expect(dedicatedQueueMock.close).toHaveBeenCalledTimes(1);
-    expect(retentionQueueMock.close).toHaveBeenCalledTimes(1);
     expect(mockCloseRedisConnection).toHaveBeenCalledTimes(2 + DEDICATED_JOBS_QUEUE_NAMES.length);
   });
 

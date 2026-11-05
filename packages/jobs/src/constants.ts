@@ -12,13 +12,6 @@ export const JOBS_QUEUE_NAME = "background-jobs";
 export const AUTHZED_PROJECTION_QUEUE_NAME = "authzed-projection";
 
 /**
- * The nightly data retention sweep gets a queue of its own too: it may keep starting work for half an
- * hour, and on the default queue (one worker, one job at a time by default) every webhook delivery,
- * response pipeline run and cleanup drain would wait behind it.
- */
-export const DATA_RETENTION_QUEUE_NAME = "data-retention";
-
-/**
  * The six-hourly AuthZed reconciliation audit and the daily survey audit share a queue of their own: each
  * walks every organization (or survey) in one job, so on the default queue every webhook delivery and
  * response pipeline run would wait behind a whole sweep (ENG-3764). Neither is latency-sensitive, so one
@@ -37,7 +30,6 @@ export const ATTACHMENT_EXPORT_QUEUE_NAME = "attachment-export";
 export const DEDICATED_JOBS_QUEUE_NAMES = [
   AUTHZED_PROJECTION_QUEUE_NAME,
   AUTHZED_RECONCILIATION_QUEUE_NAME,
-  DATA_RETENTION_QUEUE_NAME,
   ATTACHMENT_EXPORT_QUEUE_NAME,
 ] as const;
 
@@ -56,7 +48,6 @@ export const JOB_NAMES = {
   authzedProjectionDelivery: "authzed-projection.deliver",
   authzedReconciliationAudit: "authzed-reconciliation.audit",
   authzedSurveyAudit: "authzed-survey.audit",
-  dataRetentionSweep: "data-retention.sweep",
   deletionCleanupDrain: "deletion-cleanup.drain",
   testLog: "system.test-log",
   responsePipeline: "response-pipeline.process",

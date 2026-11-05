@@ -40,7 +40,7 @@ describe("@formbricks/jobs processor registry", () => {
    * the two entries and one job would run the other's handler. Since ENG-2235 an unknown name is dropped
    * with a warning rather than failing loudly, that would be quiet.
    *
-   * A *mistyped* name is a different failure and is not caught here — it propagates consistently to both
+   * A *mistyped* name is a different failure and is not caught here: it propagates consistently to both
    * the schedule and the registry, so the job still works while orphaning the old schedule in Redis. The
    * pinned scheduler ids in `queue.test.ts` are what catch that.
    */
@@ -207,7 +207,7 @@ describe("@formbricks/jobs processor registry", () => {
       }),
       "BullMQ webhook delivery processor override is not registered"
     );
-    // Scalar identifiers only — the response answers must never reach the log line.
+    // Scalar identifiers only: the response answers must never reach the log line.
     expect(JSON.stringify(mockError.mock.calls)).not.toContain("sensitive answer");
   });
 
@@ -344,7 +344,6 @@ describe("@formbricks/jobs processor registry", () => {
     [JOB_NAMES.authzedProjectionDelivery, "AuthZed projection delivery"],
     [JOB_NAMES.authzedReconciliationAudit, "AuthZed reconciliation audit"],
     [JOB_NAMES.authzedSurveyAudit, "AuthZed survey audit"],
-    [JOB_NAMES.dataRetentionSweep, "data retention sweep"],
     [JOB_NAMES.deletionCleanupDrain, "deletion cleanup drain"],
     [JOB_NAMES.surveyArchivePurge, "survey archive purge"],
     [JOB_NAMES.surveyScheduling, "survey scheduling"],

@@ -42,8 +42,8 @@ export type TResponsePipelineJobData = z.infer<typeof ZResponsePipelineJobData>;
 
 /**
  * Payload shared by every recurring job: each one is a single global sweep, so it carries no
- * identifiers. A future per-tenant recurring job needs its own schema — and a handler that scopes its
- * queries by that tenant, resolved from the database rather than trusted from the job data — instead of
+ * identifiers. A future per-tenant recurring job needs its own schema (and a handler that scopes its
+ * queries by that tenant, resolved from the database rather than trusted from the job data) instead of
  * widening this literal.
  */
 export const ZGlobalScopeJobData = z.object({
@@ -61,11 +61,6 @@ export type TSurveySchedulingJobData = TGlobalScopeJobData;
 export const ZSurveyArchivePurgeJobData = ZGlobalScopeJobData;
 
 export type TSurveyArchivePurgeJobData = TGlobalScopeJobData;
-
-/** The nightly data retention sweep (ENG-3612). */
-export const ZDataRetentionSweepJobData = ZGlobalScopeJobData;
-
-export type TDataRetentionSweepJobData = TGlobalScopeJobData;
 
 /** Hub records and storage files left over by a delete (ENG-3612). */
 export const ZDeletionCleanupDrainJobData = ZGlobalScopeJobData;
@@ -103,24 +98,24 @@ export const ZWorkflowRunJobData = z.object({
 
 export type TWorkflowRunJobData = z.infer<typeof ZWorkflowRunJobData>;
 
-// The reconciler is a global periodic sweep, not a per-run job — it carries no run identifiers.
+// The reconciler is a global periodic sweep, not a per-run job: it carries no run identifiers.
 export const ZWorkflowRunReconcileJobData = ZGlobalScopeJobData;
 
 export type TWorkflowRunReconcileJobData = TGlobalScopeJobData;
 
 /**
- * One webhook delivery, fanned out by the response pipeline job — one job per matching webhook, so each
+ * One webhook delivery, fanned out by the response pipeline job: one job per matching webhook, so each
  * endpoint retries on its own budget without re-sending to the others or holding up the pipeline's
  * remaining side effects.
  *
  * The payload is the snapshot the pipeline job held when the event fired (response + the survey fields
- * the body exposes); the webhook's `url` and `secret` are deliberately NOT here — the handler re-reads
+ * the body exposes); the webhook's `url` and `secret` are deliberately NOT here: the handler re-reads
  * them from the database at delivery time, so the signing secret never sits in Redis and a webhook
  * deleted or re-scoped while retries are pending is skipped.
  *
  * `response` deliberately goes the other way. Re-reading it would cost a query per attempt and, more
  * importantly, would deliver whatever the response says *now* rather than what it said when the event
- * fired — the point-in-time semantics the pre-fan-out body had. The price is one copy of the snapshot per
+ * fired: the point-in-time semantics the pre-fan-out body had. The price is one copy of the snapshot per
  * matching webhook in Redis (plus the pipeline job's own), held for the queue's completed and failed
  * retention, so a survey with many webhooks and long free-text answers multiplies its footprint by the
  * webhook count. ENG-2318 tracks the payload size generally.

@@ -18,11 +18,6 @@ import {
 } from "@/lib/authzed/scheduled-reconciliation";
 import { DELETION_CLEANUP_DRAIN_INTERVAL_MS } from "@/modules/deletion-cleanup/lib/constants";
 import { processDeletionCleanupDrainJob } from "@/modules/deletion-cleanup/lib/process-deletion-cleanup-drain-job";
-import {
-  DATA_RETENTION_SWEEP_DAILY_CRON_PATTERN,
-  DATA_RETENTION_SWEEP_TIME_ZONE,
-} from "@/modules/ee/data-retention/sweep/constants";
-import { processDataRetentionSweepJob } from "@/modules/ee/data-retention/sweep/process-data-retention-sweep-job";
 import { processEmailAuditMaintenanceJob } from "@/modules/email/lib/email-audit-maintenance";
 import { processResponsePipelineJob } from "@/modules/response-pipeline/lib/process-response-pipeline-job";
 import { processWebhookDeliveryJob } from "@/modules/response-pipeline/lib/process-webhook-delivery-job";
@@ -42,7 +37,7 @@ import { processSurveySchedulingJob } from "@/modules/survey/scheduling/lib/proc
 /**
  * Adapts an app handler to the worker's override signature. The worker validates the payload against
  * the job's schema before dispatching, so this is the single place where that already-checked value is
- * narrowed — rather than one unchecked cast per job.
+ * narrowed, rather than one unchecked cast per job.
  */
 const toJobHandlerOverride =
   <TData>(handler: JobHandler<TData>): NonNullable<JobHandlerOverrides[string]> =>
@@ -60,10 +55,10 @@ interface RecurringJobRegistration {
 /**
  * The app's half of each recurring job: when it runs (env-derived timing) and what runs. The job name,
  * schedule identity and payload live with the declaration in `@formbricks/jobs`, so neither the name nor
- * the identity is ever spelled out here — which is what keeps the schedule and its handler in step.
+ * the identity is ever spelled out here, which is what keeps the schedule and its handler in step.
  *
  * Keyed by `TRecurringJobKey` deliberately: declaring a new job in `recurringJobDescriptors` without
- * adding it here is then a build error rather than a job that quietly never runs — its schedule would
+ * adding it here is then a build error rather than a job that quietly never runs: its schedule would
  * never be upserted and its handler never registered.
  *
  * The key only forces an entry to *exist*; pairing a key with another job's handle still type-checks,
@@ -99,7 +94,7 @@ export const RECURRING_JOB_REGISTRATIONS_BY_KEY: Record<TRecurringJobKey, Recurr
       kind: "every",
     },
   },
-  // ENG-3282: daily rather than six-hourly — its cost grows with the number of surveys, not grants.
+  // ENG-3282: daily rather than six-hourly: its cost grows with the number of surveys, not grants.
   authzedSurveyAudit: {
     requiresReleaseActivation: true,
     handler: processAuthzedSurveyAuditJob,
@@ -109,18 +104,8 @@ export const RECURRING_JOB_REGISTRATIONS_BY_KEY: Record<TRecurringJobKey, Recurr
       kind: "every",
     },
   },
-  // New in this release, like the cleanup drain below: during an online upgrade, scheduled only once
-  // the release is activated (older replicas have no handler for either, and the sweep acts on data).
-  dataRetentionSweep: {
-    requiresReleaseActivation: true,
-    handler: processDataRetentionSweepJob,
-    job: recurringJobs.dataRetentionSweep,
-    schedule: {
-      cronPattern: DATA_RETENTION_SWEEP_DAILY_CRON_PATTERN,
-      kind: "cron",
-      timeZone: DATA_RETENTION_SWEEP_TIME_ZONE,
-    },
-  },
+  // During an online upgrade, scheduled only once the release is activated: older replicas have no
+  // handler for it.
   deletionCleanupDrain: {
     requiresReleaseActivation: true,
     handler: processDeletionCleanupDrainJob,
