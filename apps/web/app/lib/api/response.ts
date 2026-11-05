@@ -241,16 +241,6 @@ const successResponse = (data: Object, cors: boolean = false, cache: string = "p
   );
 };
 
-/** 204 with no body, for endpoints that tell the caller nothing (the creative events beacon). */
-const noContentResponse = (cors: boolean = false, cache: string = "private, no-store") =>
-  new Response(null, {
-    status: 204,
-    headers: {
-      ...(cors && corsHeaders),
-      "Cache-Control": cache,
-    },
-  });
-
 const internalServerErrorResponse = (
   message: string,
   cors: boolean = false,
@@ -359,7 +349,6 @@ export const responses = {
   unauthorizedResponse,
   notFoundResponse,
   successResponse,
-  noContentResponse,
   payloadTooLargeResponse,
   tooManyRequestsResponse,
   serviceUnavailableResponse,

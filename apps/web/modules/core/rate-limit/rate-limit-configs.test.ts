@@ -132,7 +132,6 @@ describe("rateLimitConfigs", () => {
         "internalRetentionExport",
         "client",
         "clientEnvironment",
-        "clientCreativeEvents",
       ]);
       // The API twin of `actions.stateMutation`, per principal, for writes that fan out to the pipeline.
       expect(rateLimitConfigs.api.v3StateMutation).toEqual({
@@ -157,12 +156,6 @@ describe("rateLimitConfigs", () => {
         interval: 120,
         allowedPerInterval: 20,
         namespace: "api:v3:charts:in-flight",
-      });
-      // Per IP: one events request per page view, from every visitor behind one office NAT.
-      expect(rateLimitConfigs.api.clientCreativeEvents).toEqual({
-        interval: 60,
-        allowedPerInterval: 600,
-        namespace: "api:client:creative-events",
       });
       // The values, not just the key: each export streams an organisation's whole retention history,
       // names people, and runs a pre-flight count, so a loosened quota is a load and privacy regression.

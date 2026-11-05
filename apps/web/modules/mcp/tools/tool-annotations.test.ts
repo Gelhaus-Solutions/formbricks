@@ -57,23 +57,20 @@ const RECOVERABLE: Record<string, string> = {
 };
 
 const loadRegistrations = async (): Promise<TRegistration[]> => {
-  const [surveys, workflows, workspaces, feedbackRecords, responses, creatives, dashboards] =
-    await Promise.all([
-      import("./surveys"),
-      import("./workflows"),
-      import("./workspaces"),
-      import("./feedback-records"),
-      import("./responses"),
-      import("./creatives"),
-      import("./dashboards"),
-    ]);
+  const [surveys, workflows, workspaces, feedbackRecords, responses, dashboards] = await Promise.all([
+    import("./surveys"),
+    import("./workflows"),
+    import("./workspaces"),
+    import("./feedback-records"),
+    import("./responses"),
+    import("./dashboards"),
+  ]);
   const server = { registerTool: vi.fn() } as unknown as Parameters<typeof surveys.registerSurveyTools>[0];
   surveys.registerSurveyTools(server);
   workflows.registerWorkflowTools(server);
   workspaces.registerWorkspaceTools(server);
   feedbackRecords.registerFeedbackRecordTools(server);
   responses.registerResponseTools(server);
-  creatives.registerCreativeTools(server);
   dashboards.registerDashboardTools(server);
   return registrations;
 };
