@@ -26,7 +26,7 @@ export const ZUserNotificationSettings = z.object({
 });
 
 // Characters allowed in a user's display name: letters, combining marks, space, and common name
-// punctuation — apostrophe, comma, period, ampersand, parentheses, digits, hyphen. `.` and `&` were
+// punctuation: apostrophe, comma, period, ampersand, parentheses, digits, hyphen. `.` and `&` were
 // added for ENG-1743 so ordinary names ("J. Smith", "Smith & Co") validate instead of being rejected.
 // Declared once so the validator (ZUserName) and the normalizer (normalizeUserName) can never diverge:
 // every string normalizeUserName produces is guaranteed to satisfy ZUserName. `-` stays last so it is
@@ -124,7 +124,6 @@ export type TUserCreateInput = z.infer<typeof ZUserCreateInput>;
 export const ZUserPersonalInfoUpdateInput = ZUserUpdateInput.pick({
   name: true,
   email: true,
-  locale: true,
 }).extend({
   password: ZUserPassword.optional(),
 });

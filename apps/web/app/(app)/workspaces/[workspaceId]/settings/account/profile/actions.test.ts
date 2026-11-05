@@ -59,7 +59,7 @@ beforeEach(() => {
 
 // The identity provider owns User.name and re-writes it on every sign-in, so the profile form renders
 // the input disabled. These cover the server boundary, which is what a crafted request actually meets.
-describe("updateUserAction — name is IdP-owned for SSO users", () => {
+describe("updateUserAction: name is IdP-owned for SSO users", () => {
   test("rejects a name change from an SSO user", async () => {
     await expect(
       (updateUserAction as unknown as (a: unknown) => Promise<unknown>)({
@@ -83,26 +83,26 @@ describe("updateUserAction — name is IdP-owned for SSO users", () => {
 
   test("lets an SSO user submit their unchanged name without erroring", async () => {
     // The form omits untouched fields, but a client echoing the current value back is asking for no
-    // change — erroring on that would be a false positive.
+    // change; erroring on that would be a false positive.
     await (updateUserAction as unknown as (a: unknown) => Promise<unknown>)({
       ctx: ctxFor("azuread"),
-      parsedInput: { name: "Doe, Jane", locale: "de-DE" },
+      parsedInput: { name: "Doe, Jane" },
     });
-    expect(mocks.updateUser).toHaveBeenCalledWith("user-1", expect.objectContaining({ locale: "de-DE" }));
+    expect(mocks.updateUser).toHaveBeenCalledWith("user-1", { name: "Doe, Jane" });
   });
 
-  test("still lets an SSO user change their locale", async () => {
+  test("writes no locale: the dashboard ships English only", async () => {
     await (updateUserAction as unknown as (a: unknown) => Promise<unknown>)({
       ctx: ctxFor("azuread"),
       parsedInput: { locale: "de-DE" },
     });
-    expect(mocks.updateUser).toHaveBeenCalledWith("user-1", { locale: "de-DE" });
+    expect(mocks.updateUser).not.toHaveBeenCalled();
   });
 });
 
 // The signed-in reset has a budget of its own (ENG-3823): it was the one way to have reset emails sent with no
 // limit, and sharing forgot-password's per-account budget would let strangers spend it.
-describe("resetPasswordAction — its own reset email budget", () => {
+describe("resetPasswordAction: its own reset email budget", () => {
   const reset = resetPasswordAction as unknown as (a: unknown) => Promise<unknown>;
 
   test("charges the account's reset budget before asking for a reset", async () => {
@@ -125,7 +125,7 @@ describe("resetPasswordAction — its own reset email budget", () => {
 
 // A taken address returns quietly, so a capped verification email must too, or the refusal would tell the
 // user which addresses are free (ENG-3823).
-describe("updateUserAction — a capped email-change email looks like a sent one", () => {
+describe("updateUserAction: a capped email-change email looks like a sent one", () => {
   test("answers the same as for a taken address when the email is rate limited", async () => {
     mocks.verifyUserPassword.mockResolvedValue(true);
     mocks.getIsEmailUnique.mockResolvedValue(true);

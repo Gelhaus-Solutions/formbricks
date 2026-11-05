@@ -13,6 +13,7 @@ import {
 } from "@formbricks/types/errors";
 import { ZUser, ZUserLocale } from "@formbricks/types/user";
 import { IS_FORMBRICKS_CLOUD, IS_TURNSTILE_CONFIGURED, TURNSTILE_SECRET_KEY } from "@/lib/constants";
+import { toAppLocale } from "@/lib/i18n/app-locale";
 import { verifyInviteToken } from "@/lib/jwt";
 import { createMembership } from "@/lib/membership/service";
 import { createOrganization, getOrganization } from "@/lib/organization/service";
@@ -95,7 +96,7 @@ async function verifyTurnstileIfConfigured(turnstileToken: string | undefined): 
 type TSignUpOutcome =
   | { status: "created"; user: TCreatedUser }
   // Carries no user on purpose. Nothing downstream may act on a pre-existing account, so not handing
-  // one out is the cheapest way to keep it that way — there is no object to accidentally thread into a
+  // one out is the cheapest way to keep it that way: there is no object to accidentally thread into a
   // side effect later.
   | { status: "already_existed" };
 
@@ -108,7 +109,7 @@ async function signUpUserSafely(
   const normalizedEmail = email.toLowerCase();
 
   // Assigned on every path that does not throw; `undefined` is only in the type because TS cannot see
-  // that across the try/catch. If it ever were undefined — Better Auth changing its response shape —
+  // that across the try/catch. If it ever were undefined (Better Auth changing its response shape),
   // the id comparison below fails and the request is treated as already-existed, so no side effect
   // runs against an account we cannot attribute. Degrading that way is the safe direction.
   let signedUpUserId: string | undefined;
@@ -117,7 +118,7 @@ async function signUpUserSafely(
     // in auth.ts) and, when verification is enabled, sends Better Auth's verification email (sendOnSignUp;
     // callbackURL defaults to "/"). We deliberately do NOT pass a /invite callbackURL for invite signups:
     // the invite is accepted and deleted in handlePostUserCreation right after this, so by the time the
-    // verification link is clicked /invite would render "Invite Not Found" (ENG-1527) — the verified,
+    // verification link is clicked /invite would render "Invite Not Found" (ENG-1527); the verified,
     // already-provisioned user lands on the app home instead. Replaces the manual hash + createUser + the
     // legacy verification-token email.
     const signUpResult = await auth.api.signUpEmail({
@@ -126,13 +127,13 @@ async function signUpUserSafely(
     });
     signedUpUserId = signUpResult.user.id;
   } catch (error) {
-    // A breached password is rejected before any user is created — surface it as an expected error
+    // A breached password is rejected before any user is created; surface it as an expected error
     // with a stable code the sign-up form maps to a localized message (not an enumeration signal).
     if (isPasswordCompromisedError(error)) {
       throw new InvalidInputError(PASSWORD_COMPROMISED_ERROR_CODE);
     }
     // Enumeration-safe: a duplicate email resolves to "already existed", not a surfaced error.
-    // Reachable only when Better Auth is configured to THROW on a duplicate — see the id check below.
+    // Reachable only when Better Auth is configured to THROW on a duplicate (see the id check below).
     if (await getUserByEmail(normalizedEmail)) {
       return { status: "already_existed" };
     }
@@ -141,29 +142,31 @@ async function signUpUserSafely(
 
   const user = await getUserByEmail(normalizedEmail);
   if (!user) {
-    // signUpEmail succeeded but the row can't be loaded — an invariant violation. Fail loud rather
+    // signUpEmail succeeded but the row can't be loaded: an invariant violation. Fail loud rather
     // than returning { success: true } with no user, which would skip org creation / invite acceptance.
     throw new UnknownError("Failed to load user after signup");
   }
 
   // ENG-2091: a duplicate email does NOT throw here. Better Auth takes an enumeration-safe branch
-  // whenever `emailAndPassword.requireEmailVerification || autoSignIn === false` — auth.ts sets both —
+  // whenever `emailAndPassword.requireEmailVerification || autoSignIn === false` (auth.ts sets both),
   // which hashes the password for timing parity, then returns HTTP 200 carrying a SYNTHETIC user: a
   // freshly generated id, no row written, no credential linked and (because it returns before the send)
   // no verification email. So the id it hands back, not a thrown error, is what distinguishes the two:
-  // a synthetic id is never in the database. Do not "simplify" this to the catch above — that branch
+  // a synthetic id is never in the database. Do not "simplify" this to the catch above: that branch
   // only fires under a configuration that makes Better Auth throw USER_ALREADY_EXISTS instead, which
   // is why both signals are kept.
   if (user.id !== signedUpUserId) {
     return { status: "already_existed" };
   }
 
-  // signUpEmail can't carry the chosen locale (not a Better Auth field), so apply it afterwards — only
+  // signUpEmail can't carry the chosen locale (not a Better Auth field), so apply it afterwards, only
   // for an account this request created. Applying it on the already-existed path would let an
-  // anonymous caller rewrite an existing user's locale by POSTing their address at sign-up.
-  if (userLocale && user.locale !== userLocale) {
-    await updateUser(user.id, { locale: userLocale });
-    return { status: "created", user: { ...user, locale: userLocale } };
+  // anonymous caller rewrite an existing user's locale by POSTing their address at sign-up. Only a
+  // locale the app ships is stored, so `user.locale` never holds a language the dashboard cannot show.
+  const appLocale = userLocale && toAppLocale(userLocale);
+  if (appLocale && user.locale !== appLocale) {
+    await updateUser(user.id, { locale: appLocale });
+    return { status: "created", user: { ...user, locale: appLocale } };
   }
 
   return { status: "created", user };
@@ -176,13 +179,13 @@ async function handleInviteAcceptance(
 ): Promise<void> {
   // An invite grants a specific address a specific role in a specific organization. Verifying the
   // signature and loading the row is not enough: without matching the token's email against the account
-  // being created, anyone holding an invite link — they get forwarded, pasted into tickets, and land in
-  // referrer logs — could redeem it with an arbitrary address and take the invited role, which may be
+  // being created, anyone holding an invite link (they get forwarded, pasted into tickets, and land in
+  // referrer logs) could redeem it with an arbitrary address and take the invited role, which may be
   // manager or owner. `resolveInviteMatch` also enforces the invite's expiry, which this path skipped.
   //
   // Deliberately re-checked here even though `createUserAction` already rejected an invalid token
   // before creating the user: this is the function that performs the grant, so the check belongs
-  // beside it and keeps holding if another caller ever appears. The cost is one extra HMAC verify —
+  // beside it and keeps holding if another caller ever appears. The cost is one extra HMAC verify:
   // the invite lookup behind it is request-cached, so no second query.
   const inviteMatch = await resolveInviteMatch(inviteToken, user.email);
   if (inviteMatch !== "valid") {
@@ -333,7 +336,7 @@ async function handlePostUserCreation(
   } else {
     await handleOrganizationCreation(ctx, user);
   }
-  // Better Auth sends the verification email itself during signUpEmail (sendOnSignUp) — no manual
+  // Better Auth sends the verification email itself during signUpEmail (sendOnSignUp), no manual
   // send here. The legacy EMAIL_VERIFICATION_DISABLED branch (ENG-1527) is folded into auth.ts'
   // requireEmailVerification config and the callbackURL chosen in signUpUserSafely.
 }
@@ -358,7 +361,7 @@ async function assertSignupPolicyAllows(
     throw new InvalidInputError(INVITE_TOKEN_INVALID_ERROR_CODE);
   }
 
-  // A valid invite is an independent grant — it admits the holder whatever the instance policy says.
+  // A valid invite is an independent grant: it admits the holder whatever the instance policy says.
   // Never the bootstrap administrator, even on an empty instance: the grant is the invite, not the
   // exception, and spending the single-use marker here would lock out the operator it is reserved for.
   if (inviteMatch === "valid") {
@@ -367,7 +370,7 @@ async function assertSignupPolicyAllows(
 
   // No invite, so it comes down to instance policy: public sign-up genuinely open, or the initial
   // administrator during fresh-instance setup, who has no invite to present. That predicate is shared
-  // with the Better Auth hooks (signup-policy.ts) — writing it out twice is what left Better Auth's
+  // with the Better Auth hooks (signup-policy.ts); writing it out twice is what left Better Auth's
   // native /sign-up/email open after this action was fixed (ENG-2073 → ENG-2293).
   const admission = await resolveUninvitedSignupAdmission();
   if (admission === "denied") {
@@ -383,7 +386,7 @@ export const createUserAction = actionClient.inputSchema(ZCreateUserAction).acti
     await verifyTurnstileIfConfigured(parsedInput.turnstileToken);
 
     // Normalized once, up front, and used for every downstream decision. The sign-up form always sends
-    // this field as `inviteToken ?? ""`, so an ordinary uninvited sign-up arrives with an empty string —
+    // this field as `inviteToken ?? ""`, so an ordinary uninvited sign-up arrives with an empty string:
     // anything blank has to mean "no invite" everywhere, or the checks below disagree with
     // `handlePostUserCreation` about which path the request is on.
     const inviteToken = parsedInput.inviteToken?.trim() || undefined;
@@ -425,13 +428,13 @@ export const createUserAction = actionClient.inputSchema(ZCreateUserAction).acti
       // Issued on the `created` path only, and that exclusion is the security-relevant half: on
       // `already_existed` the caller is an unauthenticated stranger who has proven nothing about an
       // account that already exists, so arming a cookie for it would hand them the very auto-sign-in
-      // this fix exists to withhold — and would leak that the address is registered.
+      // this fix exists to withhold, and would leak that the address is registered.
       //
       // Before the other side effects: those can fail, and a sign-up that created the account but lost
       // its intent cookie would silently degrade to "verify, then log in".
       //
       // Non-fatal for the same reason: the cookie buys UX (auto-sign-in after verification), so a
-      // failure to mint it must cost exactly that UX — never the sign-up itself, which has already
+      // failure to mint it must cost exactly that UX, never the sign-up itself, which has already
       // created the account. Concretely reachable when neither secret is set.
       try {
         (await cookies()).set(
@@ -491,10 +494,10 @@ export const createUserAction = actionClient.inputSchema(ZCreateUserAction).acti
     } else {
       // No account was created, so no `created` event may be written. Attribution alone is not enough:
       // `withAuditLogging` wraps the whole action with a fixed action name and cannot see which branch
-      // ran, so without this it still logged a SUCCESSFUL `created` for an UNKNOWN_DATA target — a false
+      // ran, so without this it still logged a SUCCESSFUL `created` for an UNKNOWN_DATA target: a false
       // creation record on audit-enabled deployments (raised by @BhagyaAmarasinghe in review).
       //
-      // The response stays byte-identical either way (ENG-2099) — this changes only what we record, and
+      // The response stays byte-identical either way (ENG-2099); this changes only what we record, and
       // only on the success path, so a genuine failure is still audited.
       ctx.auditLoggingCtx.suppressEvent = true;
     }

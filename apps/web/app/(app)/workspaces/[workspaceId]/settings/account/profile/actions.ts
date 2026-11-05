@@ -28,7 +28,6 @@ import { sendVerificationNewEmail } from "@/modules/email";
 function buildUserUpdatePayload(parsedInput: TUserPersonalInfoUpdateInput): TUserUpdateInput {
   return {
     ...(parsedInput.name && { name: parsedInput.name }),
-    ...(parsedInput.locale && { locale: parsedInput.locale }),
   };
 }
 
@@ -36,8 +35,8 @@ function buildUserUpdatePayload(parsedInput: TUserPersonalInfoUpdateInput): TUse
  * Refuse a name change for an SSO user, mirroring the identical guard `handleEmailUpdate` applies to
  * the address.
  *
- * The identity provider owns `User.name` — it is re-read on every sign-in (`overrideUserInfo` in
- * modules/ee/sso/lib/better-auth-providers.ts) — so `EditProfileDetailsForm` renders the input
+ * The identity provider owns `User.name`: it is re-read on every sign-in (`overrideUserInfo` in
+ * modules/ee/sso/lib/better-auth-providers.ts), so `EditProfileDetailsForm` renders the input
  * disabled. That is presentation, not enforcement: this action takes `name` straight off the request,
  * so a crafted call would still land a write that sticks until the user's next sign-in silently
  * reverts it. Enforce it at the boundary instead.

@@ -121,7 +121,7 @@ vi.mock("@/lib/utils/action-client", () => ({
   },
 }));
 
-describe("createUserAction — signup verification email callbackURL", () => {
+describe("createUserAction: signup verification email callbackURL", () => {
   const createdUser = {
     id: "user-1",
     email: "ada@example.com",
@@ -168,7 +168,7 @@ describe("createUserAction — signup verification email callbackURL", () => {
 
   // The other half of the suppression guard below: a REAL creation must still be audited. Without this,
   // a bug that set the flag unconditionally would silence every `created` event and no test would notice.
-  test("audits a real creation — the suppression flag is not set on the created path", async () => {
+  test("audits a real creation: the suppression flag is not set on the created path", async () => {
     const ctx = newCtx();
 
     const result = await createUserAction({ ctx, parsedInput: baseInput } as never);
@@ -246,7 +246,7 @@ describe("createUserAction — signup verification email callbackURL", () => {
 
       expect(result).toEqual({ success: true });
       expect(auth.api.signUpEmail).toHaveBeenCalled();
-      // No invite means no membership grant — the org-creation path handles it instead.
+      // No invite means no membership grant; the org-creation path handles it instead.
       expect(createMembership).not.toHaveBeenCalled();
     }
   );
@@ -278,7 +278,7 @@ describe("createUserAction — signup verification email callbackURL", () => {
   );
 
   // ENG-2091: with requireEmailVerification + autoSignIn:false, Better Auth does NOT throw on a
-  // duplicate — it returns 200 with a SYNTHETIC user (generated id, nothing written). This suite used
+  // duplicate: it returns 200 with a SYNTHETIC user (generated id, nothing written). This suite used
   // to mock a rejection, so it asserted a branch that cannot execute in production and stayed green
   // while the real path ran every side effect against the pre-existing account. The real contract is
   // pinned against the live framework in signup-duplicate-email.integration.test.ts.
@@ -294,20 +294,26 @@ describe("createUserAction — signup verification email callbackURL", () => {
     expect(result).toEqual({ success: true }); // same response as a real signup
     expect(updateUser).not.toHaveBeenCalled(); // no locale write on someone else's account
     expect(capturePostHogEvent).not.toHaveBeenCalled();
-    // No `created` audit attribution for an account that was not created (S1) — and no `created` event
+    // No `created` audit attribution for an account that was not created (S1), and no `created` event
     // at all: withAuditLogging cannot tell this branch apart from a real creation, so the handler has to
     // say so explicitly or a false creation record is written.
     expect(ctx.auditLoggingCtx.userId).toBe("");
     expect(ctx.auditLoggingCtx.suppressEvent).toBe(true);
     // ENG-2562: and no sign-up intent cookie. The caller is an unauthenticated stranger who has proven
     // nothing about an account that already exists; arming one would hand them the auto-sign-in on the
-    // victim's eventual verification click — the exact pre-hijack this fix withholds — and would leak
+    // victim's eventual verification click (the exact pre-hijack this fix withholds) and would leak
     // that the address is registered.
     expect(setCookies.map((c) => c.name)).not.toContain("formbricks.signup_intent");
   });
 
-  // ENG-2562: the other half of the same rule — a real creation DOES get the cookie, because that is
+  // ENG-2562: the other half of the same rule: a real creation DOES get the cookie, because that is
   // what preserves the ENG-1746 land-in-the-app UX for the browser that actually signed up.
+  test("stores no locale the app does not ship: the dashboard is English only", async () => {
+    await createUserAction({ ctx: newCtx(), parsedInput: { ...baseInput, userLocale: "de-DE" } } as never);
+
+    expect(updateUser).not.toHaveBeenCalledWith("user-1", expect.objectContaining({ locale: "de-DE" }));
+  });
+
   test("issues a sign-up intent cookie bound to the created user", async () => {
     const ctx = newCtx();
     await createUserAction({ ctx, parsedInput: baseInput } as never);
@@ -319,7 +325,7 @@ describe("createUserAction — signup verification email callbackURL", () => {
   });
 
   // Regression: signup/page.tsx requires a valid invite once public sign-up is closed, but the action
-  // itself enforced nothing — so anyone could POST it and create an account on a closed instance.
+  // itself enforced nothing, so anyone could POST it and create an account on a closed instance.
   describe("closed instance policy", () => {
     beforeEach(() => {
       constantsOverrides.SIGNUP_ENABLED = false;
@@ -380,7 +386,7 @@ describe("createUserAction — signup verification email callbackURL", () => {
   });
 });
 
-describe("createUserAction — personal email domain block (Cloud)", () => {
+describe("createUserAction: personal email domain block (Cloud)", () => {
   const createdUser = {
     id: "user-2",
     email: "spammer@gmail.com",
