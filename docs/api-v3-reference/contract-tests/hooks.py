@@ -3,13 +3,13 @@
 Two jobs, both generic over the contract rather than per endpoint:
 
 1. Teach Schemathesis the ``cuid2`` string format every v3 identifier declares. Without it an
-   unknown format degrades to an arbitrary string — including values like ``""`` or ``"0"`` that
+   unknown format degrades to an arbitrary string, including values like ``""`` or ``"0"`` that
    route somewhere other than the operation under test, producing failures that say nothing about
    the contract.
 
 2. Point identifiers at the seeded data so authenticated endpoints answer with real payloads
    instead of a wall of 401/403s. Substitution is keyed by parameter name and operationId, from the
-   map ``db:seed:contract`` writes (``fixtures.json``) — nothing here is registered per test, so a
+   map ``db:seed:contract`` writes (``fixtures.json``); nothing here is registered per test, so a
    newly documented endpoint is exercised the moment it lands in the bundle. An id the map does not
    mention keeps its generated cuid2 and gets the documented 403, which is still a contract check.
 
@@ -43,8 +43,8 @@ WORKSPACE_FIELD = "workspaceId"
 def _load_fixtures() -> dict[str, Any]:
     path = Path(os.environ.get(FIXTURES_ENV_VAR) or DEFAULT_FIXTURES_PATH)
     # `ValueError` rather than `json.JSONDecodeError` alone: a truncated write, a hand-edit, and a file
-    # that is not UTF-8 all reach the reader as the same problem as a missing one — "your fixtures are
-    # not usable, re-seed" — and `UnicodeDecodeError` is a ValueError that JSONDecodeError misses.
+    # that is not UTF-8 all reach the reader as the same problem as a missing one ("your fixtures are
+    # not usable, re-seed"), and `UnicodeDecodeError` is a ValueError that JSONDecodeError misses.
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
@@ -72,7 +72,7 @@ WORKSPACE_ID: str = _FIXTURES[WORKSPACE_FIELD]
 READ_IDS: dict[str, str] = _FIXTURES.get("read", {})
 # Per-operationId overrides: {"deleteSurveyV3": {"path": {...}, "body": {...}}}. Mutating operations
 # get their own disposable resource here so a DELETE cannot decide what a GET elsewhere sees.
-# Values are usually ids, but may be whole objects or lists — a dashboard save carries its widget list.
+# Values are usually ids, but may be whole objects or lists, such as a request body.
 OPERATION_IDS: dict[str, dict[str, dict[str, Any]]] = _FIXTURES.get("operations", {})
 
 schemathesis.openapi.format("cuid2", CUID2_STRATEGY)
@@ -102,7 +102,7 @@ def _substitute(container: Any, overrides: dict[str, Any], defaults: dict[str, s
 
     for name, value in container.items():
         # Per-operation overrides come first, including for `workspaceId`: an operation that wants a
-        # foreign workspace — to assert the documented cross-tenant 403 — has to be able to say so,
+        # foreign workspace (to assert the documented cross-tenant 403) has to be able to say so,
         # and `operations` is the map documented as winning over the defaults.
         if name in overrides:
             container[name] = overrides[name]

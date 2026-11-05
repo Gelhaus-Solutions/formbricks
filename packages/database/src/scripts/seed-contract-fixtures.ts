@@ -57,23 +57,6 @@ const CONTRACT_IDS = {
   ATTRIBUTE_KEY_PLAN: "clctattributekeyplan0001",
   CONTACT_READ: "clctcontactread000000001",
   SEGMENT_READ: "clctsegmentread000000001",
-  DATASET: "clctdataset0000000000001",
-  CHART_READ: "clctchartread00000000001",
-  CHART_PATCH: "clctchartpatch0000000001",
-  CHART_DELETE: "clctchartdelete000000001",
-  CHART_DUPLICATE: "clctchartduplicate000001",
-  CHART_WIDGET_ADD: "clctchartwidgetadd000001",
-  CHART_REPOINT: "clctchartrepoint00000001",
-  DASHBOARD_READ: "clctdashboardread0000001",
-  DASHBOARD_RENAME: "clctdashboardrename00001",
-  DASHBOARD_DELETE: "clctdashboarddelete00001",
-  DASHBOARD_DUPLICATE: "clctdashboarddupl0000001",
-  DASHBOARD_REPLACE: "clctdashboardreplace0001",
-  DASHBOARD_WIDGETS: "clctdashboardwidgets0001",
-  WIDGET_READ: "clctwidgetread0000000001",
-  WIDGET_REPLACE: "clctwidgetreplace0000001",
-  WIDGET_PATCH: "clctwidgetpatch000000001",
-  WIDGET_DELETE: "clctwidgetdelete00000001",
 } as const;
 
 /** The custom attribute the contact list and the distinct-values endpoint are exercised against. */
@@ -82,7 +65,7 @@ const CONTRACT_ATTRIBUTE_KEY = "contractFixturePlan";
 /**
  * Pinned `updatedAt` for every seeded survey, so the block operations' `expectedUpdatedAt` override can
  * name it. Their documented request examples carry a fixed timestamp, and the hook only rewrites keys the
- * overrides name — left alone, every example call answers 409 and neither operation's 200 is ever
+ * overrides name; left alone, every example call answers 409 and neither operation's 200 is ever
  * schema-checked. Once a run's first edit lands the row moves on and later cases answer 409, which is
  * documented too.
  */
@@ -90,7 +73,7 @@ const CONTRACT_FIXTURE_UPDATED_AT = new Date("2026-04-21T10:00:00.000Z");
 
 /**
  * Where the id map goes. Defaults to the contract-tests directory that reads it, resolved from this
- * file rather than the working directory — `pnpm --filter` runs scripts from the package root, so a
+ * file rather than the working directory: `pnpm --filter` runs scripts from the package root, so a
  * caller-supplied relative path would mean something different from what the caller typed.
  */
 function getOutPath(): string {
@@ -98,7 +81,7 @@ function getOutPath(): string {
   const override = index === -1 ? undefined : process.argv[index + 1];
 
   // A trailing `--out` with no value is otherwise indistinguishable from no `--out` at all: the map
-  // would be written to the default path — the very file the caller was redirecting away from — with no
+  // would be written to the default path (the very file the caller was redirecting away from) with no
   // diagnostic. Easy to hit with `--out "$SOME_UNSET_VAR"`, so fail loudly instead.
   if (index !== -1 && !override) {
     throw new Error("--out requires a path argument.");
@@ -116,7 +99,7 @@ function getOutPath(): string {
 /**
  * Languages the `lang` examples on `GET /api/v3/surveys/{surveyId}` ask for. The endpoint answers a
  * documented 400 for a language the survey does not configure, so without these the whole operation
- * only ever exercises its error path and the survey resource schema — the largest in the contract —
+ * only ever exercises its error path and the survey resource schema (the largest in the contract)
  * is never validated.
  */
 const READ_SURVEY_LANGUAGES = ["en-US", "de-DE", "pt-PT", "zh-Hans", "zh-Hans-CN"] as const;
@@ -141,13 +124,13 @@ async function seedSurveyLanguages(surveyId: string, codes: readonly string[]): 
  * One response on the read survey, so the three response reads have something to return.
  *
  * Without it `GET /api/v3/responses` and `/count` answer a valid but empty page, and
- * `GET /{responseId}` has no id to fetch — all schema-conformant, and none of it exercising the
+ * `GET /{responseId}` has no id to fetch: all schema-conformant, and none of it exercising the
  * payload the contract actually describes. The answer is keyed by the read survey's own element id
  * so it resolves into `answers[]` rather than landing in `unresolved[]`, which is the difference
  * between checking the envelope and checking the response body.
  *
  * `ttc` is present because `durationSeconds` is the one optional member of the payload, and absent
- * timing is the case that omits it — seeding timing exercises the other branch.
+ * timing is the case that omits it; seeding timing exercises the other branch.
  *
  * The destructive response operations are not seeded here: their gates open on their own tickets,
  * and each will want its own victim for the reason this file's header gives.
@@ -157,11 +140,11 @@ async function seedResponse(id: string, surveyId: string): Promise<void> {
   const fields = {
     surveyId,
     finished: true,
-    // The survey's own default code, not `"default"`. `"default"` is a legitimate stored value — the
-    // contract says so (`ResponseBase.yml`) and three app surfaces guard on it — but it is the wrong
+    // The survey's own default code, not `"default"`. `"default"` is a legitimate stored value (the
+    // contract says so in `ResponseBase.yml`, and three app surfaces guard on it), but it is the wrong
     // fixture here: it matches none of the survey's declared languages, so `resolveV3LabelContext`
     // took the unrecognised-language fallback and the one row the contract suite validates exercised
-    // the fallback branch in every body. `z.string().nullable()` accepts that, so nothing failed — the
+    // the fallback branch in every body. `z.string().nullable()` accepts that, so nothing failed: the
     // fixture was schema-valid and had quietly stopped describing the ordinary payload.
     language: READ_SURVEY_LANGUAGES[0],
     data: { [elementId]: "Contract fixture answer" },
@@ -179,8 +162,8 @@ async function seedResponse(id: string, surveyId: string): Promise<void> {
 
 /**
  * Block and element ids the block-edit fixture is seeded with: the ones the documented request examples
- * of `PATCH /api/v3/surveys/{surveyId}/blocks` name. The alternative — a generic `id` override in the
- * hook — rewrites every `id` key in the example recursively, so the update's *element* id becomes the
+ * of `PATCH /api/v3/surveys/{surveyId}/blocks` name. The alternative, a generic `id` override in the
+ * hook, rewrites every `id` key in the example recursively, so the update's *element* id becomes the
  * block id (a cross-namespace `duplicate_identifier` 422) and the insert's new block id becomes an
  * existing one (another 422). Seeding the example's ids instead lets the update example answer 200
  * against a non-draft survey, whose element ids are immutable and therefore have to match too.
@@ -229,8 +212,8 @@ async function seedSurvey(
 /**
  * Custom CSS on the read survey and the workspace (ENG-3641), so `GET /api/v3/surveys/{surveyId}` and
  * `GET /api/v3/workspaces/{workspaceId}/custom-css` return a populated `customCss` (and `previous`) rather
- * than `null`, and their schemas are validated against real values. Seeded under processor version 0 —
- * older than any real processor — so the workspace read also exercises the reprocess path behind
+ * than `null`, and their schemas are validated against real values. Seeded under processor version 0
+ * (older than any real processor), so the workspace read also exercises the reprocess path behind
  * `status`. Synthetic CSS only; never a customer stylesheet.
  */
 const CONTRACT_CUSTOM_CSS = {
@@ -312,7 +295,7 @@ async function seedContactsAndSegment(): Promise<void> {
   }
 
   const segmentFields = {
-    title: "Contract fixture — segment",
+    title: "Contract fixture: segment",
     description: "Disposable fixture for the v3 API contract tests.",
     isPrivate: false,
     // One attribute rule and one survey-interaction rule, so the response carries both filter
@@ -403,123 +386,37 @@ async function seedWorkflow(
   await prisma.workflow.upsert({ where: { id }, update: fields, create: { id, ...fields } });
 }
 
-/**
- * ENG-6596: a Feedback Dataset the seed workspace uses, with charts and dashboards on it, so the chart
- * and dashboard operations answer from real rows instead of their documented 403. The backfill the job
- * runs after seeding projects the dataset assignment into SpiceDB, which is what lets the seed API key
- * reach the dataset. Every mutating operation gets its own victim, as with surveys.
- *
- * The data and preview operations still answer 502: the job runs no Cube, so they are checked against
- * that documented response. And all of them answer `dashboards_plan_required` where the instance's
- * license does not grant Dashboards.
- */
-async function seedDashboards(organizationId: string): Promise<void> {
-  await prisma.feedbackDirectory.upsert({
-    where: { id: CONTRACT_IDS.DATASET },
-    update: {},
-    create: {
-      id: CONTRACT_IDS.DATASET,
-      name: "Contract fixture — dataset",
-      organizationId,
-      workspaces: { create: { workspaceId: SEED_IDS.WORKSPACE } },
-    },
-  });
-
-  const charts = [
-    [CONTRACT_IDS.CHART_READ, "Contract fixture — chart read"],
-    [CONTRACT_IDS.CHART_PATCH, "Contract fixture — chart patch"],
-    [CONTRACT_IDS.CHART_DELETE, "Contract fixture — chart delete"],
-    [CONTRACT_IDS.CHART_DUPLICATE, "Contract fixture — chart duplicate"],
-    [CONTRACT_IDS.CHART_WIDGET_ADD, "Contract fixture — chart widget add"],
-    [CONTRACT_IDS.CHART_REPOINT, "Contract fixture — chart repoint"],
-  ] as const;
-  for (const [id, name] of charts) {
-    const fields = {
-      name,
-      type: "bar" as const,
-      query: { measures: ["FeedbackRecords.count"], dimensions: ["FeedbackRecords.sourceType"] },
-      config: {},
-      workspaceId: SEED_IDS.WORKSPACE,
-      feedbackDirectoryId: CONTRACT_IDS.DATASET,
-      createdBy: SEED_IDS.USER_ADMIN,
-    };
-    await prisma.chart.upsert({ where: { id }, update: fields, create: { id, ...fields } });
-  }
-
-  const dashboards: [string, string, [string, string][]][] = [
-    [
-      CONTRACT_IDS.DASHBOARD_READ,
-      "Contract fixture — dashboard read",
-      [[CONTRACT_IDS.WIDGET_READ, CONTRACT_IDS.CHART_READ]],
-    ],
-    [CONTRACT_IDS.DASHBOARD_RENAME, "Contract fixture — dashboard rename", []],
-    [CONTRACT_IDS.DASHBOARD_DELETE, "Contract fixture — dashboard delete", []],
-    [CONTRACT_IDS.DASHBOARD_DUPLICATE, "Contract fixture — dashboard duplicate", []],
-    [
-      CONTRACT_IDS.DASHBOARD_REPLACE,
-      "Contract fixture — dashboard replace",
-      [[CONTRACT_IDS.WIDGET_REPLACE, CONTRACT_IDS.CHART_READ]],
-    ],
-    [
-      CONTRACT_IDS.DASHBOARD_WIDGETS,
-      "Contract fixture — dashboard widgets",
-      [
-        [CONTRACT_IDS.WIDGET_PATCH, CONTRACT_IDS.CHART_READ],
-        [CONTRACT_IDS.WIDGET_DELETE, CONTRACT_IDS.CHART_PATCH],
-      ],
-    ],
-  ];
-  for (const [id, name, widgets] of dashboards) {
-    // Re-seeding resets the widgets too, so a second run starts from the same layout as the first.
-    await prisma.dashboardWidget.deleteMany({ where: { dashboardId: id } });
-    const fields = {
-      name,
-      workspaceId: SEED_IDS.WORKSPACE,
-      createdBy: SEED_IDS.USER_ADMIN,
-      updatedAt: CONTRACT_FIXTURE_UPDATED_AT,
-    };
-    await prisma.dashboard.upsert({ where: { id }, update: fields, create: { id, ...fields } });
-    for (const [order, [widgetId, chartId]] of widgets.entries()) {
-      await prisma.dashboardWidget.create({
-        data: { id: widgetId, dashboardId: id, chartId, layout: { x: order * 4, y: 0, w: 4, h: 4 }, order },
-      });
-    }
-    // Adding the widgets moved nothing, but pin it again so the replace precondition below holds.
-    await prisma.dashboard.update({ where: { id }, data: { updatedAt: CONTRACT_FIXTURE_UPDATED_AT } });
-  }
-}
-
 async function main(): Promise<void> {
   const outPath = getOutPath();
 
   const workspace = await prisma.workspace.findUnique({ where: { id: SEED_IDS.WORKSPACE } });
   if (!workspace) {
-    throw new Error(`Workspace ${SEED_IDS.WORKSPACE} is missing — run \`db:seed\` before this script.`);
+    throw new Error(`Workspace ${SEED_IDS.WORKSPACE} is missing: run \`db:seed\` before this script.`);
   }
 
-  await seedSurvey(CONTRACT_IDS.SURVEY_READ, "Contract fixture — read", false);
+  await seedSurvey(CONTRACT_IDS.SURVEY_READ, "Contract fixture: read", false);
   await seedSurveyLanguages(CONTRACT_IDS.SURVEY_READ, READ_SURVEY_LANGUAGES);
   await seedResponse(CONTRACT_IDS.RESPONSE_READ, CONTRACT_IDS.SURVEY_READ);
   // Its own response, so marking and restoring cannot change what the read operations return.
   await seedResponse(CONTRACT_IDS.RESPONSE_OUTCOME, CONTRACT_IDS.SURVEY_READ);
   await seedCustomCss(CONTRACT_IDS.SURVEY_READ);
-  await seedSurvey(CONTRACT_IDS.SURVEY_PATCH, "Contract fixture — patch", false);
-  await seedSurvey(CONTRACT_IDS.SURVEY_DELETE, "Contract fixture — delete", false);
-  await seedSurvey(CONTRACT_IDS.SURVEY_ARCHIVE, "Contract fixture — archive", false);
+  await seedSurvey(CONTRACT_IDS.SURVEY_PATCH, "Contract fixture: patch", false);
+  await seedSurvey(CONTRACT_IDS.SURVEY_DELETE, "Contract fixture: delete", false);
+  await seedSurvey(CONTRACT_IDS.SURVEY_ARCHIVE, "Contract fixture: archive", false);
   await seedSurvey(
     CONTRACT_IDS.SURVEY_BLOCKS_EDIT,
-    "Contract fixture — block edit",
+    "Contract fixture: block edit",
     false,
     BLOCK_EDIT_EXAMPLE_BLOCKS.length,
     BLOCK_EDIT_EXAMPLE_BLOCKS
   );
-  await seedSurvey(CONTRACT_IDS.SURVEY_BLOCKS_ORDER, "Contract fixture — block order", false, 2);
+  await seedSurvey(CONTRACT_IDS.SURVEY_BLOCKS_ORDER, "Contract fixture: block order", false, 2);
   // Restore only has something to do on an already-archived survey.
-  await seedSurvey(CONTRACT_IDS.SURVEY_RESTORE, "Contract fixture — restore", true);
+  await seedSurvey(CONTRACT_IDS.SURVEY_RESTORE, "Contract fixture: restore", true);
   // ENG-3282: one workspace-visible and one restricted survey, both owned by the seed admin, so the
   // visibility operations and the list's visibility fields have real rows in both states.
-  await seedSurvey(CONTRACT_IDS.SURVEY_VISIBILITY, "Contract fixture — visibility", false);
-  await seedSurvey(CONTRACT_IDS.SURVEY_VISIBILITY_PRIVATE, "Contract fixture — restricted", false);
+  await seedSurvey(CONTRACT_IDS.SURVEY_VISIBILITY, "Contract fixture: visibility", false);
+  await seedSurvey(CONTRACT_IDS.SURVEY_VISIBILITY_PRIVATE, "Contract fixture: restricted", false);
   await Promise.all(
     (
       [
@@ -534,17 +431,17 @@ async function main(): Promise<void> {
     )
   );
 
-  await seedWorkflow(CONTRACT_IDS.WORKFLOW_PATCH, "Contract fixture — patch", "draft");
-  await seedWorkflow(CONTRACT_IDS.WORKFLOW_DELETE, "Contract fixture — delete", "draft");
-  await seedWorkflow(CONTRACT_IDS.WORKFLOW_DUPLICATE, "Contract fixture — duplicate", "draft");
+  await seedWorkflow(CONTRACT_IDS.WORKFLOW_PATCH, "Contract fixture: patch", "draft");
+  await seedWorkflow(CONTRACT_IDS.WORKFLOW_DELETE, "Contract fixture: delete", "draft");
+  await seedWorkflow(CONTRACT_IDS.WORKFLOW_DUPLICATE, "Contract fixture: duplicate", "draft");
   // `enable` only accepts draft/disabled rows; `disable` and `archive` need a live one.
-  await seedWorkflow(CONTRACT_IDS.WORKFLOW_ENABLE, "Contract fixture — enable", "draft");
-  await seedWorkflow(CONTRACT_IDS.WORKFLOW_DISABLE, "Contract fixture — disable", "enabled");
-  await seedWorkflow(CONTRACT_IDS.WORKFLOW_ARCHIVE, "Contract fixture — archive", "enabled");
-  await seedWorkflow(CONTRACT_IDS.WORKFLOW_UNARCHIVE, "Contract fixture — unarchive", "archived");
+  await seedWorkflow(CONTRACT_IDS.WORKFLOW_ENABLE, "Contract fixture: enable", "draft");
+  await seedWorkflow(CONTRACT_IDS.WORKFLOW_DISABLE, "Contract fixture: disable", "enabled");
+  await seedWorkflow(CONTRACT_IDS.WORKFLOW_ARCHIVE, "Contract fixture: archive", "enabled");
+  await seedWorkflow(CONTRACT_IDS.WORKFLOW_UNARCHIVE, "Contract fixture: unarchive", "archived");
   // `test` is a dry run, but it resolves the trigger and the recipient allowlist for real, so it needs
-  // a definition whose recipient is a workspace member — which the base seed's demo workflows are not.
-  await seedWorkflow(CONTRACT_IDS.WORKFLOW_TEST, "Contract fixture — test", "draft");
+  // a definition whose recipient is a workspace member, which the base seed's demo workflows are not.
+  await seedWorkflow(CONTRACT_IDS.WORKFLOW_TEST, "Contract fixture: test", "draft");
 
   // An empty collection response satisfies the list schema without ever validating an item, so the
   // read fixtures below exist to put at least one row in front of every list endpoint.
@@ -553,7 +450,7 @@ async function main(): Promise<void> {
     update: {},
     create: {
       id: CONTRACT_IDS.ACTION_CLASS_READ,
-      name: "Contract fixture — action class",
+      name: "Contract fixture: action class",
       description: "Disposable fixture for the v3 API contract tests.",
       type: "code",
       key: "contract-fixture-action",
@@ -562,7 +459,6 @@ async function main(): Promise<void> {
   });
 
   await seedContactsAndSegment();
-  await seedDashboards(workspace.organizationId);
 
   // No tag fixtures: every /api/v3/tags operation is `auth: "session"`, so an API key is rejected
   // with a documented 401 before a handler ever looks for a row. Seeding them would read as coverage
@@ -585,10 +481,6 @@ async function main(): Promise<void> {
       surveyId: CONTRACT_IDS.SURVEY_READ,
       workflowId: SEED_IDS.WORKFLOW_RESPONSE_FOLLOW_UP,
       ...(workflowRun ? { runId: workflowRun.id } : {}),
-      datasetId: CONTRACT_IDS.DATASET,
-      chartId: CONTRACT_IDS.CHART_READ,
-      dashboardId: CONTRACT_IDS.DASHBOARD_READ,
-      widgetId: CONTRACT_IDS.WIDGET_READ,
     },
     operations: {
       getResponseV3: { path: { responseId: CONTRACT_IDS.RESPONSE_READ } },
@@ -598,7 +490,7 @@ async function main(): Promise<void> {
       patchSurveyV3: { path: { surveyId: CONTRACT_IDS.SURVEY_PATCH } },
       deleteSurveyV3: { path: { surveyId: CONTRACT_IDS.SURVEY_DELETE } },
       archiveSurveyV3: { path: { surveyId: CONTRACT_IDS.SURVEY_ARCHIVE } },
-      // No `id`/`blockId` override on purpose — the survey is seeded with the example's own ids (see
+      // No `id`/`blockId` override on purpose: the survey is seeded with the example's own ids (see
       // BLOCK_EDIT_EXAMPLE_BLOCKS), because the hook rewrites `id` at every depth and would turn the
       // example's element id into the block id.
       editSurveyBlocksV3: {
@@ -608,7 +500,7 @@ async function main(): Promise<void> {
         },
       },
       // The order must be a permutation of the seeded survey's own block ids, so it cannot be
-      // generated — without this the operation only ever exercises its documented 422. And without the
+      // generated; without this the operation only ever exercises its documented 422. And without the
       // pinned `expectedUpdatedAt`, the example's fixed timestamp makes every call a 409.
       setSurveyBlockOrderV3: {
         path: { surveyId: CONTRACT_IDS.SURVEY_BLOCKS_ORDER },
@@ -619,7 +511,7 @@ async function main(): Promise<void> {
       },
       restoreSurveyV3: { path: { surveyId: CONTRACT_IDS.SURVEY_RESTORE } },
       // API keys never manage visibility (K-4), and this harness authenticates with one, so both
-      // operations are checked against their documented 403 — on a real, readable survey, not an
+      // operations are checked against their documented 403, on a real, readable survey, not an
       // unknown id, which is the same body by design.
       getSurveyVisibilityV3: { path: { surveyId: CONTRACT_IDS.SURVEY_VISIBILITY } },
       changeSurveyVisibilityV3: { path: { surveyId: CONTRACT_IDS.SURVEY_VISIBILITY } },
@@ -634,38 +526,6 @@ async function main(): Promise<void> {
       // `key` is required and must name an attribute of the workspace, or the operation only ever
       // exercises its documented 400.
       listContactAttributeValuesV3: { query: { key: CONTRACT_ATTRIBUTE_KEY } },
-      // Charts and dashboards (ENG-6596). Layouts are pinned to free grid cells: a generated one is as
-      // likely to overlap a seeded widget, which only ever exercises the documented 422.
-      updateChartV3: { path: { chartId: CONTRACT_IDS.CHART_PATCH } },
-      deleteChartV3: { path: { chartId: CONTRACT_IDS.CHART_DELETE } },
-      duplicateChartV3: {
-        path: { chartId: CONTRACT_IDS.CHART_DUPLICATE },
-        body: { dashboardId: CONTRACT_IDS.DASHBOARD_DUPLICATE, layout: { x: 0, y: 20, w: 4, h: 4 } },
-      },
-      renameDashboardV3: { path: { dashboardId: CONTRACT_IDS.DASHBOARD_RENAME } },
-      deleteDashboardV3: { path: { dashboardId: CONTRACT_IDS.DASHBOARD_DELETE } },
-      duplicateDashboardV3: { path: { dashboardId: CONTRACT_IDS.DASHBOARD_DUPLICATE } },
-      // The whole dashboard, so the save answers its 200: the precondition is the pinned `updatedAt`,
-      // and the widget list names the one widget the dashboard holds.
-      replaceDashboardV3: {
-        path: { dashboardId: CONTRACT_IDS.DASHBOARD_REPLACE },
-        body: {
-          name: "Contract fixture — dashboard replaced",
-          expectedUpdatedAt: CONTRACT_FIXTURE_UPDATED_AT.toISOString(),
-          widgets: [{ widgetId: CONTRACT_IDS.WIDGET_REPLACE, layout: { x: 0, y: 0, w: 6, h: 4 }, order: 0 }],
-        },
-      },
-      addDashboardWidgetV3: {
-        path: { dashboardId: CONTRACT_IDS.DASHBOARD_WIDGETS },
-        body: { chartId: CONTRACT_IDS.CHART_WIDGET_ADD, layout: { x: 0, y: 20, w: 4, h: 4 } },
-      },
-      updateDashboardWidgetV3: {
-        path: { dashboardId: CONTRACT_IDS.DASHBOARD_WIDGETS, widgetId: CONTRACT_IDS.WIDGET_PATCH },
-        body: { chartId: CONTRACT_IDS.CHART_REPOINT, layout: { x: 0, y: 30, w: 4, h: 4 } },
-      },
-      removeDashboardWidgetV3: {
-        path: { dashboardId: CONTRACT_IDS.DASHBOARD_WIDGETS, widgetId: CONTRACT_IDS.WIDGET_DELETE },
-      },
     },
   };
 

@@ -47,7 +47,7 @@ properties:
 
 
       This is the shared error shape every v3 operation returns, so it lists what the API can emit
-      today and nothing more — `INVALID_PARAM_CODES` in `app/api/v3/lib/response.ts` is the
+      today and nothing more: `INVALID_PARAM_CODES` in `app/api/v3/lib/response.ts` is the
       registry, and a code absent from it is dropped before the response is built. Categories for
       operations that do not exist yet are added with the code that emits them, not ahead of it.
 
@@ -63,8 +63,7 @@ properties:
 
 
       `limit_exceeded`: the field is well formed but past a limit the operation states, which
-      `reason` names together with what to change. Chart queries use it for a date range that spans
-      more time buckets than its granularity allows.
+      `reason` names together with what to change.
 
 
       `qsf_not_recognized` and `qsf_limit_exceeded` come from the Qualtrics import (an internal,
