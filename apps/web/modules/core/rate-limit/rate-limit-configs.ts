@@ -164,16 +164,6 @@ export const rateLimitConfigs = {
       allowedPerInterval: 10,
       namespace: "action:historical-response-import",
     }, // 10 per hour per user: bounds repeated full-survey imports
-    feedbackDirectoryMutation: {
-      interval: 60,
-      allowedPerInterval: 60,
-      namespace: "action:feedback-directory-mutation",
-    }, // 60 per minute per user
-    feedbackRecordDeletion: {
-      interval: 60,
-      allowedPerInterval: 100,
-      namespace: "action:feedback-record-deletion",
-    }, // 100 per minute per user: supports deliberate bulk deletion while bounding abuse
     stateMutation: {
       interval: 60,
       allowedPerInterval: 120,

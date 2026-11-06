@@ -155,8 +155,6 @@ describe("rateLimitConfigs", () => {
         "integrationMutation",
         "feedbackSourceMutation",
         "historicalResponseImport",
-        "feedbackDirectoryMutation",
-        "feedbackRecordDeletion",
         "stateMutation",
       ]);
 
