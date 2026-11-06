@@ -3,14 +3,14 @@ import { ResourceNotFoundError } from "@formbricks/types/errors";
 import { problemForbidden, problemUnauthorized } from "@/app/api/v3/lib/response";
 import type { TV3Authentication } from "@/app/api/v3/lib/types";
 import { can } from "@/lib/authorization";
-import { getOrganizationIdFromDirectoryId } from "@/modules/ee/feedback-directory/lib/feedback-directory";
+import { getOrganizationIdFromDirectoryId } from "@/lib/feedback-directory/service";
 import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 
 /**
  * Authorize a request that mutates a feedback dataset as a whole.
  *
  * A dataset is an organization-level resource: it is owned by an organization and shared with any
- * number of workspaces (possibly none). So the guard is org-scoped rather than workspace-scoped —
+ * number of workspaces (possibly none). So the guard is org-scoped rather than workspace-scoped:
  * the sibling taxonomy guard reaches datasets *through* a workspace, which cannot address a dataset
  * that has no workspace assigned, and a dataset with no workspaces is exactly one you might want to
  * empty.
@@ -20,7 +20,7 @@ import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
  * reach another organization's dataset by supplying its id.
  *
  * Owner/manager only, for the ENG-1770 reason: a dataset's records carry no workspace of their own,
- * so workspace permissions cannot draw a line between them — a member of one workspace would
+ * so workspace permissions cannot draw a line between them: a member of one workspace would
  * otherwise destroy records another workspace's surveys ingested.
  *
  * Returns a `Response` (401/403) to short-circuit on failure, or the organization id on success.
@@ -54,7 +54,7 @@ export async function requireFeedbackDatasetMutationAccess(
   }
 
   // Authorization before entitlement, so a non-member never learns anything about the owning
-  // organization — including whether it holds an Enterprise license.
+  // organization, including whether it holds an Enterprise license.
   if (
     !(await can({ type: "user", id: userId }, "organization.manage", {
       type: "organization",

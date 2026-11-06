@@ -52,7 +52,7 @@ vi.mock("@formbricks/database", () => ({
   },
 }));
 
-vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
+vi.mock("@/lib/feedback-directory/service", () => ({
   getFeedbackDirectoryAuthContext: mockGetFeedbackDirectoryAuthContext,
 }));
 
@@ -408,7 +408,7 @@ describe("authorizeEnvoyRequest", () => {
   test("denies a cross-org API key even with a matching workspace permission (ENG-1980)", async () => {
     // The directory belongs to org_2; the key belongs to org_1 but carries a workspace permission
     // whose workspaceId collides with one linked to the org_2 directory. Access must be denied by the
-    // key-belongs-to-directory-org check — this is the exact cross-tenant path ENG-1980 closed.
+    // key-belongs-to-directory-org check; this is the exact cross-tenant path ENG-1980 closed.
     // Wiring-level guard: if authorizeFeedbackRecordsGatewayRequest ever passed the key's own
     // organizationId (instead of the directory's) into the org check, that check turns into a
     // tautology and this returns 200; the direct unit test on the pure function can't catch it.

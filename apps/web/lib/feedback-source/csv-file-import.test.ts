@@ -7,7 +7,7 @@ import {
   CSV_INCONSISTENT_COLUMNS_ERROR_CODE,
   CSV_MAX_RECORDS_ERROR_CODE,
   MAX_CSV_VALUES,
-} from "@/modules/ee/unify-feedback/sources/types";
+} from "./csv-constants";
 import { CsvImportValidationError, type TCsvImportErrorCode, parseCsvImportFile } from "./csv-file-import";
 
 const createFile = (name: string, content: string, type = "text/csv", size?: number) => {

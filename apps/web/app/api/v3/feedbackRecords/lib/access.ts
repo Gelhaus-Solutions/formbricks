@@ -10,7 +10,7 @@ import { getFeedbackDirectoryAssignmentAuthorizationAction } from "@/lib/authori
 import {
   getFeedbackDirectoriesByWorkspaceId,
   getFeedbackDirectoryAuthContext,
-} from "@/modules/ee/feedback-directory/lib/feedback-directory";
+} from "@/lib/feedback-directory/service";
 import { canApiKeyMutateFeedbackDirectoryRecords } from "@/modules/hub/feedback-records-gateway-authz";
 import { retrieveFeedbackRecord } from "@/modules/hub/service";
 import type { FeedbackRecordData } from "@/modules/hub/types";
@@ -21,8 +21,8 @@ import { hubErrorToProblemResponse } from "./errors";
  * Tenant isolation for the feedback-records surface. Two guards live here, and every operation goes
  * through at least one of them:
  *
- * - `resolveWorkspaceFeedbackTenant` — the workspace → dataset → Hub tenant choke point.
- * - `requireOwnedFeedbackRecord` — the per-record ownership check for the Hub endpoints that take a bare
+ * - `resolveWorkspaceFeedbackTenant`: the workspace → dataset → Hub tenant choke point.
+ * - `requireOwnedFeedbackRecord`: the per-record ownership check for the Hub endpoints that take a bare
  *   record id and derive the tenant from the record itself.
  *
  * Kept in its own module (mirroring `unify-feedback/taxonomy/lib/access.ts`) so the authorization rules
@@ -68,9 +68,9 @@ const canAccessFeedbackDirectoryAssignment = async (
 
 /**
  * Resolve (and authorize) the Hub tenant for a feedback-records request. This is the single tenant-
- * isolation choke point for every tool: workspace access → feedback-directories license gate →
+ * isolation choke point for every tool: workspace access → the feedbackDirectories feature flag →
  * dataset membership → the resolved Hub tenant (= the FeedbackDirectory id, `dataset_id` on the wire).
- * Mirrors the Unify read path (`modules/ee/unify-feedback/page.tsx`). `tenant_id` is never taken from caller input.
+ * `tenant_id` is never taken from caller input.
  */
 export async function resolveWorkspaceFeedbackTenant({
   authentication,
@@ -94,8 +94,8 @@ export async function resolveWorkspaceFeedbackTenant({
   const { workspaceId: resolvedWorkspaceId, organizationId } = authResult;
 
   const directories = await getFeedbackDirectoriesByWorkspaceId(resolvedWorkspaceId);
-  // Normalised once, here: the Hub uses `tenant_id` verbatim — in SQL filters and, for semantic search, in
-  // the vector query — with no trimming of its own, so a stray space silently matches nothing instead of
+  // Normalised once, here: the Hub uses `tenant_id` verbatim (in SQL filters and, for semantic search, in
+  // the vector query) with no trimming of its own, so a stray space silently matches nothing instead of
   // failing. Doing it at the source means every consumer gets a usable value; doing it per call site meant
   // whichever site was written last got it right.
   const allowedTenantIds = directories.map((directory) => directory.id.trim());
@@ -210,13 +210,13 @@ type TMutationRoleResult = { ok: true } | { ok: false; response: Response };
  * belonging to the caller's workspace: a dataset is shared by every workspace it is assigned to, and a
  * record carries no workspace of its own. So a workspace `readWrite` member would otherwise edit or
  * delete records that another workspace's surveys ingested, in exactly the datasets they legitimately
- * read. Until Hub records carry a workspace, changing one is gated per principal type — an organization
+ * read. Until Hub records carry a workspace, changing one is gated per principal type: an organization
  * role for people (ENG-1770), an exclusively-owned dataset for API keys (ENG-2189), which is the closest
  * equivalent available to a principal that has no role.
  *
  * A dispatcher over the two, and an allowlist rather than "no user id ⇒ allowed": an API key is the one
- * shape that takes the sharing rule, and anything else that cannot be resolved to a user — a principal
- * type added later, or a session whose user never materialized — is refused below.
+ * shape that takes the sharing rule, and anything else that cannot be resolved to a user (a principal
+ * type added later, or a session whose user never materialized) is refused below.
  */
 export async function requireFeedbackRecordMutationRole(
   params: TRequireMutationRoleParams
@@ -234,7 +234,7 @@ export async function requireFeedbackRecordMutationRole(
  * Four of the five checks below re-assert something `resolveWorkspaceFeedbackTenant` already implies
  * and are only reachable on a TOCTOU race between the resolver's read and this function's independent
  * read. The sharing check (`canApiKeyMutateFeedbackDirectoryRecords`) is not implied by the resolver
- * at all — sharing is not part of what the resolver checks — and is the actual ENG-2189 enforcement
+ * at all (sharing is not part of what the resolver checks) and is the actual ENG-2189 enforcement
  * point that fires deterministically on every shared-dataset request. Each check compares the *key*
  * and the *dataset* directly, so the decision stays correct read on its own rather than inheriting
  * the resolver's word for it, which is the bug class that let ENG-1980 exist.
@@ -252,7 +252,7 @@ async function requireApiKeyExclusiveDataset(
   // direction of the same relation.
   const directory = await getFeedbackDirectoryAuthContext(resolution.tenantId);
   // The generic record 403 is the default because it is what all but one refusal returns. Built by the
-  // default parameter rather than up front so the success path — the common one — allocates no Response.
+  // default parameter rather than up front so the success path (the common one) allocates no Response.
   const deny = (
     reason: string,
     response: Response = forbidFeedbackRecord(requestId, instance)
@@ -265,7 +265,7 @@ async function requireApiKeyExclusiveDataset(
     return deny("dataset could not be resolved");
   }
   // The key's own organization, not `resolution.organizationId`. The resolution's org came from the
-  // workspace, and the workspace is only known to be the key's via `workspacePermissions` — the very
+  // workspace, and the workspace is only known to be the key's via `workspacePermissions`, the very
   // invariant this check exists to distrust. Comparing the two derived values would assert nothing.
   if (authentication.organizationId !== directory.organizationId) {
     return deny("dataset organization mismatch");
@@ -326,7 +326,7 @@ const forbidFeedbackRecordMutation = (requestId: string, instance: string): Resp
  * The 403 for an API key in a shared dataset. Separate from the owner/manager refusal above because the
  * cause and the remedy are different, and an integrator handed a generic "ask an owner" cannot act on it.
  * For an MCP agent this body is the entire user interface, so it names the cause, what still works, and
- * both ways out. It does disclose that the dataset is shared with another workspace — accepted
+ * both ways out. It does disclose that the dataset is shared with another workspace, accepted
  * deliberately: the key already belongs to that organization, sharing is its own configuration, and the
  * alternative is an unactionable refusal against a caller with no UI to fall back on.
  */
@@ -353,7 +353,7 @@ type TOwnedRecordResult = { ok: true; record: FeedbackRecordData } | { ok: false
  * Assert that a feedback record belongs to the caller, and return it.
  *
  * Several Hub endpoints (`GET /{id}`, `GET /{id}/similar`, `DELETE /{id}`) take a bare record id and
- * derive the tenant from the stored record — the Hub delegates record-level authorization to us by
+ * derive the tenant from the stored record; the Hub delegates record-level authorization to us by
  * design. Without this guard each of them would be a cross-tenant primitive: a read oracle, a
  * neighbour-leak, and a destructive write respectively. So every one of them retrieves first, checks the
  * record's tenant against the caller's permitted set, and only then acts.
@@ -383,7 +383,7 @@ export async function requireOwnedFeedbackRecord({
   }
 
   // When the caller named a dataset, the record must live in THAT one; otherwise any dataset the
-  // workspace owns is acceptable. Same 403 either way — see the doc comment above.
+  // workspace owns is acceptable. Same 403 either way; see the doc comment above.
   const permittedTenantIds = datasetId ? [resolution.tenantId] : resolution.allowedTenantIds;
   if (!result.data.tenant_id || !permittedTenantIds.includes(result.data.tenant_id)) {
     log.warn({ statusCode: 403 }, "Feedback record tenant outside caller's workspace datasets");
@@ -394,8 +394,8 @@ export async function requireOwnedFeedbackRecord({
 }
 
 /**
- * The single record-level 403. Exported so every path that must be indistinguishable from the others —
- * the ownership guard above, and a record that vanishes mid-update — produces a byte-identical body by
+ * The single record-level 403. Exported so every path that must be indistinguishable from the others
+ * (the ownership guard above, and a record that vanishes mid-update) produces a byte-identical body by
  * construction rather than by two copies of the same string staying in sync.
  */
 export const forbidFeedbackRecord = (requestId: string, instance: string): Response =>

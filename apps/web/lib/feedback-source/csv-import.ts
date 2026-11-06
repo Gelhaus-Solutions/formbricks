@@ -1,8 +1,8 @@
 import "server-only";
 import { InvalidInputError } from "@formbricks/types/errors";
 import { TFeedbackSourceWithMappings } from "@formbricks/types/feedback-source";
-import { CSV_IMPORT_MISSING_COLUMNS_ERROR_CODE } from "@/modules/ee/unify-feedback/sources/types";
 import { createFeedbackRecordsBatch } from "@/modules/hub";
+import { CSV_IMPORT_MISSING_COLUMNS_ERROR_CODE } from "./csv-constants";
 import { transformCsvRowsToFeedbackRecords } from "./csv-transform";
 import { TImportResult } from "./import";
 import {
@@ -55,7 +55,7 @@ export const importCsvData = async (
       if (result.data !== null) {
         successes++;
       } else if (result.error?.status === 409) {
-        // Duplicate (tenant_id, submission_id, field_id) — already imported. Treat as skipped, not failed.
+        // Duplicate (tenant_id, submission_id, field_id): already imported. Treat as skipped, not failed.
         skipped++;
       } else {
         failures++;

@@ -52,7 +52,7 @@ vi.mock("@formbricks/database", () => ({
   },
 }));
 
-vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
+vi.mock("@/lib/feedback-directory/service", () => ({
   getFeedbackDirectoryAuthContext: mockGetFeedbackDirectoryAuthContext,
 }));
 

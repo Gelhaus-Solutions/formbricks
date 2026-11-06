@@ -3,11 +3,11 @@ import { logger } from "@formbricks/logger";
 import { AuthorizationError } from "@formbricks/types/errors";
 import { assertCan } from "@/lib/authorization";
 import { assertFeedbackSourceDirectoryAccess } from "@/lib/feedback-source/access";
+import { CSV_FILE_TOO_LARGE_ERROR_CODE } from "@/lib/feedback-source/csv-constants";
 import { importCsvFile } from "@/lib/feedback-source/csv-file-import";
 import { getFeedbackSourceWithMappingsById } from "@/lib/feedback-source/service";
 import { getUser } from "@/lib/user/service";
 import { getSession } from "@/modules/auth/lib/session";
-import { CSV_FILE_TOO_LARGE_ERROR_CODE } from "@/modules/ee/unify-feedback/sources/types";
 import { POST } from "./route";
 
 vi.mock("@formbricks/logger", () => ({

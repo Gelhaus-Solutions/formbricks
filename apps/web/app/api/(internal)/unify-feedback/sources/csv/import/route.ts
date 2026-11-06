@@ -9,15 +9,15 @@ import {
 import { RequestBodyTooLargeError, parseFormDataWithLimit } from "@/app/lib/api/request-body";
 import { assertCan } from "@/lib/authorization";
 import { assertFeedbackSourceDirectoryAccess } from "@/lib/feedback-source/access";
-import { CsvImportValidationError, importCsvFile } from "@/lib/feedback-source/csv-file-import";
-import { getFeedbackSourceWithMappingsById } from "@/lib/feedback-source/service";
-import { getUser } from "@/lib/user/service";
-import { getSession } from "@/modules/auth/lib/session";
 import {
   CSV_FILE_TOO_LARGE_ERROR_CODE,
   CSV_IMPORT_FAILED_ERROR_CODE,
   MAX_CSV_VALUES,
-} from "@/modules/ee/unify-feedback/sources/types";
+} from "@/lib/feedback-source/csv-constants";
+import { CsvImportValidationError, importCsvFile } from "@/lib/feedback-source/csv-file-import";
+import { getFeedbackSourceWithMappingsById } from "@/lib/feedback-source/service";
+import { getUser } from "@/lib/user/service";
+import { getSession } from "@/modules/auth/lib/session";
 
 const CSV_IMPORT_REQUEST_BODY_LIMIT = MAX_CSV_VALUES.FILE_SIZE + 1024 * 1024;
 

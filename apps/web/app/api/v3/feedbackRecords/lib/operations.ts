@@ -11,7 +11,7 @@ import {
   successResponse,
 } from "@/app/api/v3/lib/response";
 import type { TV3AuditLog, TV3Authentication } from "@/app/api/v3/lib/types";
-import { getFeedbackDirectoriesByWorkspaceId } from "@/modules/ee/feedback-directory/lib/feedback-directory";
+import { getFeedbackDirectoriesByWorkspaceId } from "@/lib/feedback-directory/service";
 import {
   countFeedbackRecords,
   createFeedbackRecord,
@@ -86,7 +86,7 @@ const getMutationAssignmentPermission = (
 ): TTeamPermission => (authentication && "apiKeyId" in authentication ? apiKeyPermission : "read");
 
 /**
- * Build the Hub create payload. This field list *is* the allowlist — never a spread of the input — so
+ * Build the Hub create payload. This field list *is* the allowlist (never a spread of the input), so
  * nothing the caller invents (a `tenant_id` above all) can reach the Hub. Optional fields are assigned
  * unconditionally: `undefined` ones are dropped by JSON serialization, so the wire payload only ever
  * carries what the caller actually sent.
@@ -120,13 +120,13 @@ function buildHubCreateParams(
 }
 
 /**
- * Build the Hub update payload. An allowlist for the same reason as the create builder — and it is what
+ * Build the Hub update payload. An allowlist for the same reason as the create builder, and it is what
  * enforces immutability of a record's provenance: a `source_type` or `submission_id` in the input simply has
  * nowhere to go. Only the fields the caller actually sent are assigned, so an omitted field is left
  * untouched rather than being overwritten with null.
  *
  * One field is not additive: the Hub assigns `metadata` wholesale (`metadata = $n`), so sending it replaces
- * the stored object rather than merging into it. A caller adding one key must send the existing keys too —
+ * the stored object rather than merging into it. A caller adding one key must send the existing keys too,
  * hence the warning in the tool description, since the failure is silent.
  */
 function buildHubUpdateParams(data: TV3FeedbackRecordUpdateBody): FeedbackRecordUpdateParams {
@@ -151,7 +151,7 @@ const DEFAULT_LIST_LIMIT = 50;
  * `satisfies Record<keyof TV3FeedbackRecordFilters, "list" | "scalar">` ties this table's keys to the
  * filter schema's: a filter added to `ZV3FeedbackRecordFilters` without an entry here is a **compile
  * error**, not a filter that silently never reaches the Hub. That is the failure this table exists to
- * rule out — `buildHubFilterParams` used to hand-enumerate every key with no such link, so a forgotten
+ * rule out: `buildHubFilterParams` used to hand-enumerate every key with no such link, so a forgotten
  * filter would still pass `.strict()` validation and simply never leave this process. A *widened* result
  * (a dropped filter matches more, not less) is exactly the class of bug this whole surface is built to
  * avoid, so the enumeration itself now has to fail loudly when it falls behind the schema.
@@ -192,11 +192,11 @@ const FILTER_KEYS = Object.keys(FILTER_KEY_KIND) as (keyof TV3FeedbackRecordFilt
  * Map our filters onto the Hub's query parameters, with the resolved tenant injected.
  *
  * Driven by `FILTER_KEY_KIND` rather than a spread, for the same reason as the create builder: `tenant_id`
- * is always ours, and nothing a caller invents can reach the Hub by being named plausibly — only a key this
+ * is always ours, and nothing a caller invents can reach the Hub by being named plausibly; only a key this
  * table lists is ever copied across.
  *
  * Shared by list and count: the Hub documents `/count` as accepting the same parameters as the list endpoint,
- * so the two must agree about what a filter means — otherwise a count could describe a different set of
+ * so the two must agree about what a filter means; otherwise a count could describe a different set of
  * records than the list it is supposed to be counting. Absent filters are left off entirely rather than sent
  * as undefined, tested with `!== undefined` rather than truthiness because several filters have meaningful
  * falsy values: `has_sentiment: false` asks for records enrichment has not labelled yet, and
@@ -220,7 +220,7 @@ function buildHubFilterParams(
     const isList = FILTER_KEY_KIND[key] === "list";
     // The only cast in the mapper: `FILTER_KEY_KIND` ties every key to the filter schema at compile time
     // (completeness), and the shared snake_case naming convention ties each key's value type to the Hub
-    // param of the same name — a property `satisfies` can pin per-key but can't verify through a dynamic
+    // param of the same name; a property `satisfies` can pin per-key but can't verify through a dynamic
     // key without this cast. `FeedbackRecordCountParams` has too many disjoint optional keys for TS to see
     // any overlap with `Record<string, unknown>` directly, hence the `unknown` step the compiler asks for.
     (params as unknown as Record<string, unknown>)[key] = isList && !Array.isArray(value) ? [value] : value;
@@ -230,7 +230,7 @@ function buildHubFilterParams(
 }
 
 /**
- * The two similarity searches — by query text and by example record — differ only in what they send to
+ * The two similarity searches (by query text and by example record) differ only in what they send to
  * the Hub. Everything around that is shared: the same locally-enforced bounds, the same scored-match rows,
  * and the same `meta`. These three helpers hold that common part so each operation states just its own
  * difference.
@@ -255,7 +255,7 @@ const buildSimilarityParams = (filters: {
  *
  * Every operation validates rather than trusting its caller: these operations are the transport-independent
  * face of this surface, so they cannot assume an MCP schema has already screened the input. It also matters
- * upstream — the Hub silently coerces an out-of-range `limit`/`min_score` to its own default instead of
+ * upstream: the Hub silently coerces an out-of-range `limit`/`min_score` to its own default instead of
  * rejecting it, so without this a caller would quietly get something other than what it asked for.
  */
 function parseQueryInput<T>(
@@ -345,7 +345,7 @@ export async function listV3FeedbackDatasets({
   }
 }
 
-/** Workspace/dataset selection plus the shared filter set — the common input of list and count. */
+/** Workspace/dataset selection plus the shared filter set: the common input of list and count. */
 type TFeedbackRecordQueryParams = TV3FeedbackRecordFilters & {
   workspaceId: string;
   datasetId?: string;
@@ -406,7 +406,7 @@ export async function listV3FeedbackRecords({
     };
     if (parsed.data.cursor) listParams.cursor = parsed.data.cursor;
     // Only ever forwarded when asked for. The Hub defaults to collected_at/desc, and a cursor issued
-    // before sort control records no ordering — sending an explicit default *ought* to be equivalent, but
+    // before sort control records no ordering; sending an explicit default *ought* to be equivalent, but
     // that is an assumption about Hub internals this layer does not need to make.
     if (parsed.data.sort) listParams.sort = parsed.data.sort;
     if (parsed.data.order) listParams.order = parsed.data.order;
@@ -429,8 +429,8 @@ export async function listV3FeedbackRecords({
       {
         limit: result.data.limit,
         nextCursor: result.data.next_cursor ?? null,
-        // Echo the dataset we resolved. Without it an empty `data` is ambiguous to the caller — "this
-        // dataset holds no matching records" reads identically to "I don't know what was searched" — and
+        // Echo the dataset we resolved. Without it an empty `data` is ambiguous to the caller ("this
+        // dataset holds no matching records" reads identically to "I don't know what was searched"), and
         // a caller that auto-resolved the dataset would have to make a second call to find out.
         datasetId: resolution.tenantId,
         datasetName: resolution.datasetName,
@@ -446,7 +446,7 @@ export async function listV3FeedbackRecords({
  * Count the feedback records matching a filter set, without returning any of them.
  *
  * Answers "how many" in one upstream call instead of paging, and deliberately returns only the total: a
- * caller asking for a count never has record content — end-user text, ids, metadata — pulled into its
+ * caller asking for a count never has record content (end-user text, ids, metadata) pulled into its
  * context to get it.
  */
 export async function countV3FeedbackRecords({
@@ -613,7 +613,7 @@ export async function createV3FeedbackRecord({
         { hubStatus: result.error?.status, hubCode: result.error?.code },
         "Hub createFeedbackRecord failed"
       );
-      // The caller stamps eventId/status from the response — mirrors the surveys operations.
+      // The caller stamps eventId/status from the response. Mirrors the surveys operations.
       return hubErrorToProblemResponse(result.error, requestId, instance);
     }
 
@@ -638,7 +638,7 @@ type TCreateV3FeedbackRecordsParams = {
   requestId: string;
   instance: string;
   /**
-   * One audit log per input record, **indexed by record position** — pass a sparse array rather than a
+   * One audit log per input record, **indexed by record position**: pass a sparse array rather than a
    * compacted one, or entries will be attributed to the wrong records. Entries for records that were
    * actually created come back with `targetId` set; the caller queues those as successes. Empty or all-holes
    * when auditing is off.
@@ -657,11 +657,11 @@ type TCreateV3FeedbackRecordsParams = {
  * - **Partial success is reported, not hidden.** A batch where some records were rejected by the Hub (a
  *   duplicate submission, say) returns the ones that were created plus a per-index account of the rest, so
  *   a caller can retry precisely. If nothing was created at all, the upstream failure is returned as the
- *   response instead — an empty success would read as "there was nothing to do".
+ *   response instead; an empty success would read as "there was nothing to do".
  *
  * A batch is not a submission: each record without a `submission_id` gets its own generated one, exactly as
  * in the single-record case. Callers that mean "these answers were given together" must set a shared
- * `submission_id` themselves — otherwise the records are stored as unrelated submissions, which nothing
+ * `submission_id` themselves; otherwise the records are stored as unrelated submissions, which nothing
  * downstream can tell apart from the intended shape.
  */
 export async function createV3FeedbackRecords({
@@ -770,7 +770,7 @@ type TUpdateV3FeedbackRecordParams = {
  * Update the mutable fields of one feedback record.
  *
  * Like get/delete/similar, the Hub's `PATCH /{id}` takes a bare record id and derives the tenant from the
- * stored record, so ownership is asserted first — and the record that guard returns is also the pre-update
+ * stored record, so ownership is asserted first, and the record that guard returns is also the pre-update
  * state the audit log needs, so the check costs nothing extra.
  *
  * There is a window between that check and the write, but it cannot be used to cross a tenant boundary: a
@@ -784,7 +784,7 @@ type TUpdateV3FeedbackRecordParams = {
  *   `language` re-queues the translation pair only. The response therefore reflects the *cleared* state,
  *   which must not be read as "this record has no sentiment".
  * - Changing `value_text` (or a field label) re-queues the embedding, so semantic search catches up with
- *   the edit asynchronously — and clearing the text removes the embedding, making the record unsearchable.
+ *   the edit asynchronously, and clearing the text removes the embedding, making the record unsearchable.
  */
 export async function updateV3FeedbackRecord({
   workspaceId,
@@ -844,7 +844,7 @@ export async function updateV3FeedbackRecord({
       return owned.response;
     }
 
-    // Only now can the patch be checked against the record's `field_type` — it is immutable, so it is not in
+    // Only now can the patch be checked against the record's `field_type`: it is immutable, so it is not in
     // the body and had to be read first. The Hub does not enforce this, so skipping it would let a patch
     // build a record create rejects: `value_number` on a `text` record leaves both values set at once.
     const conflicts = conflictingUpdateValueFields(parsed.data, owned.record.field_type);
@@ -865,7 +865,7 @@ export async function updateV3FeedbackRecord({
     const result = await updateFeedbackRecord(feedbackRecordId, buildHubUpdateParams(parsed.data));
     if (result.error || !result.data) {
       // The record was there a moment ago (the guard just read it), so a 404 means it was deleted in
-      // between. Nothing was updated, and the service is fine — reporting the generic 502 would blame an
+      // between. Nothing was updated, and the service is fine; reporting the generic 502 would blame an
       // outage. Answered with the guard's own 403, so a vanished record is indistinguishable from one the
       // caller never had access to.
       if (result.error?.status === 404) {
@@ -909,7 +909,7 @@ type TDeleteV3FeedbackRecordParams = {
  * soft-delete to recover from.
  *
  * The Hub's delete takes a bare record id and derives the tenant from the record, so ownership is
- * asserted *before* the delete — a foreign id must fail without touching anything. The pre-delete record
+ * asserted *before* the delete: a foreign id must fail without touching anything. The pre-delete record
  * is captured for the audit log, which is the only remaining trace afterwards.
  */
 export async function deleteV3FeedbackRecord({
@@ -963,7 +963,7 @@ export async function deleteV3FeedbackRecord({
     }
 
     const result = await deleteFeedbackRecord(feedbackRecordId);
-    // A 404 here means the record was deleted between our ownership check and this call — the caller's
+    // A 404 here means the record was deleted between our ownership check and this call; the caller's
     // intended end state holds, so it is reported as success. Reporting the generic 502 instead would tell
     // an agent the service is down and invite a retry loop against a record that is already gone.
     if (result.error && result.error.status !== 404) {
@@ -980,7 +980,7 @@ export async function deleteV3FeedbackRecord({
     if (auditLog) {
       auditLog.organizationId = resolution.organizationId;
       auditLog.targetId = feedbackRecordId;
-      // The deleted content, kept only in the audit trail — the record itself is gone.
+      // The deleted content, kept only in the audit trail: the record itself is gone.
       auditLog.oldObject = serializeV3FeedbackRecord(owned.record);
     }
 
@@ -1008,7 +1008,7 @@ type TSearchV3FeedbackRecordsParams = {
  * Semantic search over the resolved dataset: the query is embedded and compared to record embeddings by
  * cosine similarity, so it matches meaning rather than keywords.
  *
- * `tenant_id` is injected from the resolved dataset — never from input — and is normalised by the resolver,
+ * `tenant_id` is injected from the resolved dataset (never from input) and is normalised by the resolver,
  * because the Hub uses it verbatim in the vector query.
  */
 export async function searchV3FeedbackRecords({
@@ -1091,7 +1091,7 @@ type TFindSimilarV3FeedbackRecordsParams = {
  * Find the records most similar to a given one, by embedding distance.
  *
  * The Hub endpoint takes a bare record id and scopes the neighbour search to whatever tenant that record
- * belongs to — so without an ownership check it would read other tenants' records. Hence the same
+ * belongs to, so without an ownership check it would read other tenants' records. Hence the same
  * `requireOwnedFeedbackRecord` guard as get/delete, before any neighbour is fetched.
  *
  * That guard also disambiguates the Hub's 404, which on its own conflates "no such record" with "not
@@ -1149,7 +1149,7 @@ export async function findSimilarV3FeedbackRecords({
     const result = await findSimilarFeedbackRecords(feedbackRecordId, buildSimilarityParams(filters.data));
     if (result.error || !result.data) {
       const status = result.error?.status ?? 0;
-      // Ownership is already proven, so a 404 is not an authorization signal — the record is there and
+      // Ownership is already proven, so a 404 is not an authorization signal: the record is there and
       // simply has no embedding. Reported distinctly, and as a retryable state rather than a 404.
       if (status === 404) {
         log.info({ statusCode: 409, datasetId: resolution.tenantId }, "Feedback record has no embedding");

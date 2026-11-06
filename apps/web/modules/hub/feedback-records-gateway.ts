@@ -7,9 +7,9 @@ import { RequestBodyTooLargeError, readRequestBodyWithLimit } from "@/app/lib/ap
 import { can } from "@/lib/authorization";
 import { withAuthorizationSurface } from "@/lib/authorization/context";
 import { getFeedbackDirectoryAuthorizationAction } from "@/lib/authorization/permission-action";
+import { getFeedbackDirectoryAuthContext } from "@/lib/feedback-directory/service";
 import { verifyFeedbackRecordsGatewayToken } from "@/lib/jwt";
 import { getBearerTokenFromHeaders } from "@/modules/api/lib/api-key-auth";
-import { getFeedbackDirectoryAuthContext } from "@/modules/ee/feedback-directory/lib/feedback-directory";
 import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 import {
   type TGatewayJsonBodyRejectionReason,
@@ -52,7 +52,7 @@ type TParsedGatewayRoute = {
 /**
  * Operations that change or destroy records that already exist. A feedback directory is shared by
  * every workspace it is assigned to and its records carry no workspace of their own, so a workspace
- * permission cannot tell one workspace's records from another's — a `readWrite` member of workspace B
+ * permission cannot tell one workspace's records from another's: a `readWrite` member of workspace B
  * would otherwise edit or delete records that workspace A's surveys ingested (ENG-1770). For session
  * users these are restricted to organization owners and managers. `create` is deliberately not in
  * this set: adding records to a shared directory is ordinary workspace work, like a CSV import.
@@ -60,7 +60,7 @@ type TParsedGatewayRoute = {
  * API keys are gated on this too, by a different rule: a key has no organization role to check, so it
  * authorizes on its per-workspace permissions and may therefore mutate only a directory that is not
  * shared at all (ENG-2189, see `canApiKeyMutateFeedbackDirectoryRecords`). Both rules answer the same
- * question — a workspace permission cannot identify whose records these are — and neither applies to
+ * question (a workspace permission cannot identify whose records these are) and neither applies to
  * `create`.
  */
 const RECORD_MUTATING_OPERATIONS = new Set<TFeedbackRecordsGatewayOperation>([
@@ -158,7 +158,7 @@ const INVALID_REQUEST_BODY_MESSAGE = "Invalid request body";
 const AMBIGUOUS_TENANT_ID_MESSAGE = "Ambiguous tenant_id";
 
 /**
- * A refused ambiguous request is a likely probe, so it is logged — with the reason only. The keys are
+ * A refused ambiguous request is a likely probe, so it is logged, with the reason only. The keys are
  * caller-controlled and never logged, and neither are directory or record ids.
  */
 const logAmbiguousRequest = (
@@ -183,7 +183,7 @@ const parseTenantId = (tenantId: string | null): string | null => {
 /**
  * Reads the body the upstream will receive verbatim. A body whose keys could be read more than one way
  * is refused rather than authorized, because the Hub would not necessarily act on the `tenant_id` this
- * authorizer checked (ENG-3658) — see `parseGatewayJsonObject`. Hubs from the ENG-3658 release on
+ * authorizer checked (ENG-3658); see `parseGatewayJsonObject`. Hubs from the ENG-3658 release on
  * refuse such bodies too; this gate is what protects deployments still running an older one.
  */
 const parseJsonBody = async (

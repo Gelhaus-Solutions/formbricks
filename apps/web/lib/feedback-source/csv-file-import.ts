@@ -10,7 +10,7 @@ import {
   CSV_MAX_RECORDS_ERROR_CODE,
   CSV_PARSE_ERROR_CODE,
   MAX_CSV_VALUES,
-} from "@/modules/ee/unify-feedback/sources/types";
+} from "./csv-constants";
 import type { TImportResult } from "./import";
 
 export type TCsvImportErrorCode =

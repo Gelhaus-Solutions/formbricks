@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { requireUnifyFeedbackWorkspaceAccess } from "@/app/api/v3/lib/feedback-access";
 import type { V3WorkspaceContext } from "@/app/api/v3/lib/workspace-context";
-import { getFeedbackDirectoriesByWorkspaceId } from "@/modules/ee/feedback-directory/lib/feedback-directory";
-import type { TEnrichmentStatusResponse } from "@/modules/ee/unify-feedback/enrichment-status/lib/enrichment";
+import { getFeedbackDirectoriesByWorkspaceId } from "@/lib/feedback-directory/service";
 import { getEnrichmentStatus } from "@/modules/hub/service";
 import type { EnrichmentStatusResponse } from "@/modules/hub/types";
 import { NO_CONFIG_ERROR } from "@/modules/hub/utils";
 import { getV3EnrichmentStatus } from "./operations";
+import type { TEnrichmentStatusResponse } from "./types";
 
 vi.mock("server-only", () => ({}));
 
@@ -14,7 +14,7 @@ vi.mock("@/app/api/v3/lib/feedback-access", () => ({
   requireUnifyFeedbackWorkspaceAccess: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
+vi.mock("@/lib/feedback-directory/service", () => ({
   getFeedbackDirectoriesByWorkspaceId: vi.fn(),
 }));
 
@@ -108,7 +108,7 @@ describe("getV3EnrichmentStatus", () => {
 
     const response = await getV3EnrichmentStatus(base);
 
-    // The failed directory is left out entirely — counting it as zero-done would invent a backlog.
+    // The failed directory is left out entirely: counting it as zero-done would invent a backlog.
     await expect(readBody(response)).resolves.toEqual({
       enrichments: [{ kind: "translation", eligible: 100, done: 25, failedTerminal: 0, pending: 75 }],
       unavailable: false,

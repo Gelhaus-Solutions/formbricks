@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { InvalidInputError } from "@formbricks/types/errors";
 import type { TFeedbackSourceWithMappings } from "@formbricks/types/feedback-source";
-import { CSV_IMPORT_MISSING_COLUMNS_ERROR_CODE } from "@/modules/ee/unify-feedback/sources/types";
+import { CSV_IMPORT_MISSING_COLUMNS_ERROR_CODE } from "./csv-constants";
 import { importCsvData } from "./csv-import";
 
 vi.mock("@/modules/hub", () => ({
@@ -231,7 +231,7 @@ describe("importCsvData", () => {
     expect(result).toEqual({ successes: 0, failures: 0, skipped: 2 });
   });
 
-  test("mixed 200/409/500 — successes, skipped, and failures counted separately", async () => {
+  test("mixed 200/409/500: successes, skipped, and failures counted separately", async () => {
     transformCsvRowsToFeedbackRecords.mockReturnValue({
       records: [
         {

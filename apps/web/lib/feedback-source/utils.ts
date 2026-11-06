@@ -7,7 +7,7 @@ import {
   CSV_HIDDEN_STATIC_MAPPINGS,
   CSV_PROTECTED_TARGET_IDS,
   CSV_REQUIRED_UI_FIELDS,
-} from "@/modules/ee/unify-feedback/sources/types";
+} from "./csv-constants";
 
 export const sanitizeCsvFieldMappings = (
   fieldMappings: TFeedbackSourceFieldMappingCreateInput[] | undefined
@@ -18,7 +18,7 @@ export const sanitizeCsvFieldMappings = (
     CSV_PROTECTED_TARGET_IDS.every((id) => mapping.targetFieldId !== id)
   );
 
-  return [...userMappings, ...(CSV_HIDDEN_STATIC_MAPPINGS as TFeedbackSourceFieldMappingCreateInput[])];
+  return [...userMappings, ...CSV_HIDDEN_STATIC_MAPPINGS];
 };
 
 type TCsvFieldMappingLike = {

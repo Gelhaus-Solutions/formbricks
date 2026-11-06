@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ResourceNotFoundError } from "@formbricks/types/errors";
 import { can } from "@/lib/authorization";
-import { getOrganizationIdFromDirectoryId } from "@/modules/ee/feedback-directory/lib/feedback-directory";
+import { getOrganizationIdFromDirectoryId } from "@/lib/feedback-directory/service";
 import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 import { requireFeedbackDatasetMutationAccess } from "./access";
 
@@ -11,7 +11,7 @@ vi.mock("@/lib/authorization", () => ({
   can: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
+vi.mock("@/lib/feedback-directory/service", () => ({
   getOrganizationIdFromDirectoryId: vi.fn(),
 }));
 
@@ -36,7 +36,7 @@ describe("requireFeedbackDatasetMutationAccess", () => {
     expect(result).toEqual({ organizationId: "org_1" });
   });
 
-  // The organization must be derived from the dataset, never taken from the caller — otherwise a
+  // The organization must be derived from the dataset, never taken from the caller; otherwise a
   // caller could reach another organization's dataset by supplying its id.
   test("checks the caller's role against the dataset's own organization", async () => {
     vi.mocked(getOrganizationIdFromDirectoryId).mockResolvedValue("org_other");

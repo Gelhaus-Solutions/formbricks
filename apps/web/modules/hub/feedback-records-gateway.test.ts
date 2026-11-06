@@ -4,7 +4,7 @@ import { logger } from "@formbricks/logger";
 import type { TAuthenticationApiKey } from "@formbricks/types/auth";
 import { can } from "@/lib/authorization";
 import { withAuthorizationSurface } from "@/lib/authorization/context";
-import { getFeedbackDirectoryAuthContext } from "@/modules/ee/feedback-directory/lib/feedback-directory";
+import { getFeedbackDirectoryAuthContext } from "@/lib/feedback-directory/service";
 import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 import type { TGatewayAuthenticatedPrincipal } from "@/modules/gateway-auth/lib/request";
 import { feedbackRecordsGatewayAuthorizer } from "./feedback-records-gateway";
@@ -35,7 +35,7 @@ vi.mock("@/lib/authorization/context", () => ({
   withAuthorizationSurface: vi.fn((_surface, callback) => callback()),
 }));
 
-vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
+vi.mock("@/lib/feedback-directory/service", () => ({
   getFeedbackDirectoryAuthContext: vi.fn(),
 }));
 
@@ -107,7 +107,7 @@ describe("feedbackRecordsGatewayAuthorizer", () => {
   });
 
   // ENG-1770: records in a shared directory carry no workspace, so a workspace permission cannot
-  // authorize changing or deleting them — only the organization role can.
+  // authorize changing or deleting them; only the organization role can.
   describe("session principal", () => {
     test.each([
       ["delete", "DELETE", `/api/v3/feedbackRecords/${recordId}`],
@@ -373,7 +373,7 @@ describe("feedbackRecordsGatewayAuthorizer", () => {
   });
 
   // The directory-not-found half of the combined guard (!feedbackDirectory ||
-  // feedbackDirectory.isArchived) — only the isArchived half is exercised above.
+  // feedbackDirectory.isArchived): only the isArchived half is exercised above.
   test("denies everything when the directory cannot be resolved", async () => {
     vi.mocked(getFeedbackDirectoryAuthContext).mockResolvedValue(null);
 

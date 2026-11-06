@@ -2,11 +2,11 @@ import "server-only";
 import { requireUnifyFeedbackWorkspaceAccess } from "@/app/api/v3/lib/feedback-access";
 import { successResponse } from "@/app/api/v3/lib/response";
 import type { TV3Authentication } from "@/app/api/v3/lib/types";
-import { getFeedbackDirectoriesByWorkspaceId } from "@/modules/ee/feedback-directory/lib/feedback-directory";
-import type { TEnrichmentStatusResponse } from "@/modules/ee/unify-feedback/enrichment-status/lib/enrichment";
+import { getFeedbackDirectoriesByWorkspaceId } from "@/lib/feedback-directory/service";
 import { getEnrichmentStatus } from "@/modules/hub/service";
 import type { EnrichmentStatusResponse } from "@/modules/hub/types";
 import { aggregateEnrichmentStatus } from "./aggregate";
+import type { TEnrichmentStatusResponse } from "./types";
 
 /**
  * Enrichment progress for every feedback directory assigned to a workspace.
@@ -17,7 +17,7 @@ import { aggregateEnrichmentStatus } from "./aggregate";
  * the caller.
  *
  * The indicator is a non-critical enhancement above the records table, so a Hub that is down or
- * unconfigured degrades to `unavailable: true` with a 200 rather than erroring — the client reads that
+ * unconfigured degrades to `unavailable: true` with a 200 rather than erroring: the client reads that
  * flag to render nothing and stop polling, exactly as the taxonomy fields read does.
  */
 export async function getV3EnrichmentStatus(params: {
@@ -44,7 +44,7 @@ export async function getV3EnrichmentStatus(params: {
 
   const results = await Promise.all(directories.map((directory) => getEnrichmentStatus(directory.id)));
 
-  // A directory that failed is left out rather than counted as zero — folding a failure in as "nothing
+  // A directory that failed is left out rather than counted as zero: folding a failure in as "nothing
   // done yet" would invent a backlog. If every directory failed there is nothing to show at all.
   const statuses = results
     .map((result) => result.data)

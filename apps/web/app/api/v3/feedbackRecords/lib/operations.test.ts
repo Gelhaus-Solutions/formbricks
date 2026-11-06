@@ -6,7 +6,7 @@ import { can } from "@/lib/authorization";
 import {
   getFeedbackDirectoriesByWorkspaceId,
   getFeedbackDirectoryAuthContext,
-} from "@/modules/ee/feedback-directory/lib/feedback-directory";
+} from "@/lib/feedback-directory/service";
 import { getIsFeedbackDirectoriesEnabled } from "@/modules/features/lib/flags";
 import {
   countFeedbackRecords,
@@ -45,7 +45,7 @@ vi.mock("@/app/api/v3/lib/auth", () => ({
 }));
 vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
 vi.mock("@/modules/features/lib/flags", () => ({ getIsFeedbackDirectoriesEnabled: vi.fn() }));
-vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
+vi.mock("@/lib/feedback-directory/service", () => ({
   getFeedbackDirectoriesByWorkspaceId: vi.fn(),
   getFeedbackDirectoryAuthContext: vi.fn(),
 }));
@@ -86,7 +86,7 @@ const record: FeedbackRecordData = {
 // null`, which the mutation-role gate skips, so these are used where the caller's role is the subject.
 const sessionAuth = { user: { id: "user_1" } } as TV3Authentication;
 // Carries an `organizationId` because the mutation gate compares the *key's* organization against the
-// dataset's — a fixture without one would let that check pass vacuously.
+// dataset's; a fixture without one would let that check pass vacuously.
 const apiKeyAuth = {
   apiKeyId: "key_1",
   organizationId: context.organizationId,
@@ -160,7 +160,7 @@ describe("shared authorization + tenant resolution", () => {
     expect(listFeedbackRecords).not.toHaveBeenCalled();
   });
 
-  // An agent can only help the user if the dead-end says who does what, and where — so the detail has
+  // An agent can only help the user if the dead-end says who does what, and where, so the detail has
   // to name the role and the settings location, not just the problem.
   test("returns an actionable 422 when no dataset is assigned to the workspace", async () => {
     vi.mocked(getFeedbackDirectoriesByWorkspaceId).mockResolvedValue([]);
@@ -288,7 +288,7 @@ describe("listV3FeedbackRecords", () => {
     expect(retrieveFeedbackRecord).not.toHaveBeenCalled();
   });
 
-  // An empty list used to be ambiguous — a caller could not tell "this dataset has no matching records"
+  // An empty list used to be ambiguous: a caller could not tell "this dataset has no matching records"
   // from "I don't know which dataset was searched", and had to make a second call to find out. The
   // response now names the dataset it resolved, empty or not.
   test("names the resolved dataset even when no records match", async () => {
@@ -435,7 +435,7 @@ describe("getV3FeedbackRecord", () => {
   });
 
   // The no-existence-oracle guarantee: cross-tenant and not-found must be byte-identical, not merely
-  // both 403 — a one-sided message tweak would otherwise silently reopen the oracle.
+  // both 403; a one-sided message tweak would otherwise silently reopen the oracle.
   test("returns an identical body for cross-tenant and not-found", async () => {
     vi.mocked(retrieveFeedbackRecord).mockResolvedValue({
       data: { ...record, tenant_id: otherDirectoryId },
@@ -452,7 +452,7 @@ describe("getV3FeedbackRecord", () => {
     expect(crossTenant).toEqual(notFound);
   });
 
-  // A Hub failure that isn't a 404 is an upstream problem, not an authorization one — collapsing it into
+  // A Hub failure that isn't a 404 is an upstream problem, not an authorization one; collapsing it into
   // the 403 would tell the caller its permissions are wrong when the service is simply down.
   test("maps a non-404 Hub failure on retrieval to 502, not 403", async () => {
     vi.mocked(retrieveFeedbackRecord).mockResolvedValue({
@@ -579,7 +579,7 @@ describe("createV3FeedbackRecord", () => {
   });
 
   // The Hub still owns content rules we don't duplicate (NUL bytes, its own limits) and reports them as
-  // 400 — its field-level detail must reach the caller, or an agent can't correct its own request.
+  // 400; its field-level detail must reach the caller, or an agent can't correct its own request.
   // (Verified against a real Hub: a NUL byte in value_text produces exactly this shape.)
   test("relays the Hub's validation detail and invalid_params on a 400", async () => {
     vi.mocked(createFeedbackRecord).mockResolvedValue({
@@ -787,7 +787,7 @@ describe("deleteV3FeedbackRecord", () => {
   });
 
   // The whole point of the ownership guard: the Hub's delete derives the tenant from the record, so a
-  // foreign id must be refused *before* the delete call — not merely reported as failed afterwards.
+  // foreign id must be refused *before* the delete call, not merely reported as failed afterwards.
   test("refuses a cross-tenant record with 403 and never calls the Hub delete", async () => {
     vi.mocked(retrieveFeedbackRecord).mockResolvedValue({
       data: { ...record, tenant_id: otherDirectoryId },
@@ -1025,7 +1025,7 @@ describe("findSimilarV3FeedbackRecords", () => {
     expect(await notFound.json()).toEqual(crossTenant);
   });
 
-  // Once ownership is proven the Hub's 404 can only mean "no embedding for this record" — reporting it as
+  // Once ownership is proven the Hub's 404 can only mean "no embedding for this record"; reporting it as
   // the generic 403 would be actively misleading, since the caller does own the record.
   test("reports a post-ownership 404 as a retryable embedding-pending conflict, not a 403", async () => {
     vi.mocked(findSimilarFeedbackRecords).mockResolvedValue({
@@ -1039,7 +1039,7 @@ describe("findSimilarV3FeedbackRecords", () => {
     expect(response.status).toBe(409);
     expect(body.detail).toContain("no embedding");
     expect(body.detail).toContain("background");
-    // An update can *clear* a record's text, which removes its embedding for good — so the message must
+    // An update can *clear* a record's text, which removes its embedding for good, so the message must
     // not tell the caller to keep retrying something that will never succeed.
     expect(body.detail).toContain("retrying will not help");
   });
@@ -1080,7 +1080,7 @@ describe("countV3FeedbackRecords", () => {
     expect(countFeedbackRecords).toHaveBeenCalledWith({ tenant_id: directoryId });
   });
 
-  // A count answers "how many" without any record content crossing the boundary — that is the whole point
+  // A count answers "how many" without any record content crossing the boundary: that is the whole point
   // of having it rather than making the caller page through records.
   test("returns no record content at all", async () => {
     const body = JSON.stringify(await (await countV3FeedbackRecords(base)).json());
@@ -1142,7 +1142,7 @@ describe("countV3FeedbackRecords", () => {
 
 describe("list/count validate their own input", () => {
   // These operations are the transport-independent face of this surface, so they can't assume an MCP
-  // schema screened the input first — and the Hub silently coerces an out-of-range limit to its default.
+  // schema screened the input first, and the Hub silently coerces an out-of-range limit to its default.
   test.each([
     ["limit", { limit: 5000 }],
     ["limit", { limit: 0 }],
@@ -1158,7 +1158,7 @@ describe("list/count validate their own input", () => {
   /**
    * A filter this surface does not have used to be dropped silently, which on a filter fails in the wrong
    * direction: the query runs unfiltered and the caller is told it succeeded. `userId` is the realistic
-   * mistake — the old spelling of `user_id` — and it must now be a 422 naming the offending key.
+   * mistake (the old spelling of `user_id`), and it must now be a 422 naming the offending key.
    */
   test.each([
     ["the old camelCase spelling", { userId: "user-1" }],
@@ -1200,7 +1200,7 @@ describe("listV3FeedbackRecords error relaying", () => {
 });
 
 describe("listV3FeedbackRecords filters", () => {
-  // The Hub's count endpoint takes the same parameters as list, and both go through one mapper — so this
+  // The Hub's count endpoint takes the same parameters as list, and both go through one mapper, so this
   // pins that list really does send the full filter set, not a subset of it.
   test("sends every filter to the Hub alongside pagination", async () => {
     vi.mocked(listFeedbackRecords).mockResolvedValue({
@@ -1309,7 +1309,7 @@ describe("feedback-record filters accept multiple values", () => {
 
   test("names the accepted values when a filter value is not one of them", async () => {
     // A wrong value matches neither union branch, and zod's own `invalid_union` message is "Invalid
-    // input" — useless to an agent, and a regression on the single-value schema this replaced.
+    // input", useless to an agent, and a regression on the single-value schema this replaced.
     // Cast because the params type now rejects this at compile time; the point is the runtime guard, which
     // is what an MCP client (whose input is untyped JSON) actually hits.
     const response = await listV3FeedbackRecords({
@@ -1344,7 +1344,7 @@ describe("feedback-record filters with meaningful falsy values", () => {
 
   /**
    * The mapper guards every filter on `!== undefined`. With a truthiness guard each of these is dropped
-   * and the Hub answers a wider question than the caller asked — `has_sentiment: false` in particular
+   * and the Hub answers a wider question than the caller asked; `has_sentiment: false` in particular
    * silently turns "records enrichment has not labelled yet" into "all records".
    */
   test.each([
@@ -1460,7 +1460,7 @@ describe("feedback-record filters with meaningful falsy values", () => {
 
   test("sends no ordering at all when none was asked for", async () => {
     // The Hub defaults to collected_at/desc, and a cursor issued before sort control existed records no
-    // ordering — so an explicit default is an assumption this layer does not need to make.
+    // ordering, so an explicit default is an assumption this layer does not need to make.
     await listV3FeedbackRecords({ ...base });
 
     const sent = vi.mocked(listFeedbackRecords).mock.calls[0][0];
@@ -1590,7 +1590,7 @@ describe("createV3FeedbackRecords", () => {
   });
 
   // A batch is not a submission. Grouping is the caller's job, and getting it wrong stores data nothing
-  // downstream can distinguish from the intended shape — so both halves are pinned.
+  // downstream can distinguish from the intended shape, so both halves are pinned.
   test("gives each record its own submission_id when omitted, and preserves a shared one", async () => {
     vi.mocked(createFeedbackRecordsBatch).mockResolvedValue({
       results: [
@@ -1657,7 +1657,7 @@ describe("createV3FeedbackRecords", () => {
   });
 
   // A 5xx can carry upstream internals, so a per-record failure must be as tight-lipped as a whole-request
-  // one — the batch path must not become the leak the single path isn't.
+  // one; the batch path must not become the leak the single path isn't.
   test("does not relay upstream internals in a per-record failure", async () => {
     vi.mocked(createFeedbackRecordsBatch).mockResolvedValue({
       results: [
@@ -1774,7 +1774,7 @@ describe("updateV3FeedbackRecord", () => {
 
   /**
    * The Hub does not check the populated `value_*` against `field_type`, and `field_type` is immutable so it
-   * is not in the patch — without reading the record first, a patch could assemble what create rejects. This
+   * is not in the patch; without reading the record first, a patch could assemble what create rejects. This
    * was reproduced against a live Hub: `{value_number, value_id}` on a `text` record returned 200 with text,
    * number and id all set, leaving no way to tell which value the record means.
    */
@@ -1795,7 +1795,7 @@ describe("updateV3FeedbackRecord", () => {
 
   /**
    * `field_type` comes from a remote service and the record DTO treats it as optional, so the cross-check
-   * must not turn its absence into a failed update — it used to throw here, which surfaced as a generic 500
+   * must not turn its absence into a failed update; it used to throw here, which surfaced as a generic 500
    * on an otherwise valid patch.
    */
   test("lets the patch through when the Hub returned no field_type to check against", async () => {
@@ -1818,7 +1818,7 @@ describe("updateV3FeedbackRecord", () => {
     expect(updateFeedbackRecord).toHaveBeenCalledWith(record.id, { value_text: "corrected" });
   });
 
-  // `value_id` is a legitimate value for a categorical record — the option's stable id — so the check has to
+  // `value_id` is a legitimate value for a categorical record (the option's stable id), so the check has to
   // be per-type rather than a blanket ban, or correcting a mis-mapped choice id becomes impossible.
   test("allows value_id on a categorical record", async () => {
     const categorical = { ...record, field_type: "categorical", value_id: "opt-1" } as FeedbackRecordData;
@@ -1998,7 +1998,7 @@ describe("updateV3FeedbackRecord", () => {
 
 // ENG-1770: a dataset is shared by every workspace it is assigned to, and its records carry no workspace
 // of their own. Resolving the tenant and asserting ownership prove a record sits in one of the caller's
-// datasets — not that it is their workspace's record — so changing one is organization-level.
+// datasets (not that it is their workspace's record), so changing one is organization-level.
 describe("feedback record mutation role (ENG-1770)", () => {
   const updateArgs = {
     ...base,
@@ -2123,7 +2123,7 @@ describe("feedback record mutation role (ENG-1770)", () => {
 
   // Defense in depth: each is already implied by how the dataset was resolved, but the values are in hand
   // and the gateway's twin asserts them, so relying on the transitive invariant would be the same bug
-  // class as ENG-1980. None of them is a sharing problem, so none may claim to be one — an integrator told
+  // class as ENG-1980. None of them is a sharing problem, so none may claim to be one: an integrator told
   // to "assign this dataset to a single workspace" would be chasing a problem they do not have.
   //
   // The organization case is compared against the *key's* org: asserting the dataset's org against
@@ -2208,7 +2208,7 @@ describe("feedback record mutation role (ENG-1770)", () => {
   });
 
   // The API key above is the only shape routed to the sharing rule instead of the organization role.
-  // Anything else that resolves to no user is refused rather than admitted by the absence of a field —
+  // Anything else that resolves to no user is refused rather than admitted by the absence of a field:
   // the dispatch has to stay an allowlist.
   test.each([
     ["no principal", null],
