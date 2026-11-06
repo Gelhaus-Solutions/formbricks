@@ -6,7 +6,6 @@ import {
   FoldersIcon,
   Loader2,
   MessageCircle,
-  MessageSquareTextIcon,
   PlusIcon,
   SettingsIcon,
   UserIcon,
@@ -169,22 +168,6 @@ export const MainNavigation = ({
               pathname?.includes("/contacts") ||
               pathname?.includes("/segments") ||
               pathname?.includes("/attributes"),
-            disabled: isMembershipPending || isBilling,
-          },
-        ],
-      },
-      {
-        id: "unify-feedback",
-        // Same policy as "Ask" above: product section labels stay English in every locale.
-        // Was "Unify" until ENG-2742 settled on Ask / Analyze / Act as the three pillars.
-        name: "Analyze",
-        items: [
-          {
-            name: t("workspace.unify.feedback_data"),
-            href: `/workspaces/${workspace.id}/unify/sources`,
-            icon: MessageSquareTextIcon,
-            isActive: pathname?.includes("/unify/"),
-            isHidden: false,
             disabled: isMembershipPending || isBilling,
           },
         ],

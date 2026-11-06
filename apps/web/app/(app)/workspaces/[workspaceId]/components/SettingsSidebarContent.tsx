@@ -261,7 +261,7 @@ export const SettingsSidebarContent = ({
 }: SettingsSidebarContentProps) => {
   const pathname = usePathname();
   const { t } = useTranslation();
-  const { isMember, isBilling, isOwner, isManager } = getAccessFlags(membershipRole);
+  const { isBilling, isOwner, isManager } = getAccessFlags(membershipRole);
   const isOwnerOrManager = isOwner || isManager;
   const iconClassName = "h-4 w-4 shrink-0";
 
@@ -357,14 +357,6 @@ export const SettingsSidebarContent = ({
       href: organizationSettingsPath(organizationId, "api-keys"),
       icon: <KeyIcon className={iconClassName} />,
       hidden: !isOwnerOrManager,
-    },
-    {
-      id: "org-feedback-directories",
-      label: t("workspace.settings.feedback_directories.nav_label"),
-      href: organizationSettingsPath(organizationId, "feedback-directories"),
-      icon: <FoldersIcon className={iconClassName} />,
-      hidden: isMember,
-      disabled: !isOwnerOrManager,
     },
     {
       id: "org-domain",
