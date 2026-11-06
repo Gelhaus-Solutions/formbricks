@@ -60,10 +60,6 @@ vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: mocks.appl
 vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_event, _target, handler) => handler),
 }));
-vi.mock("@/modules/ee/feedback-directory/lib/feedback-directory", () => ({
-  getFeedbackDirectoriesByWorkspaceId: vi.fn(),
-}));
-vi.mock("@/modules/ee/unify-feedback/lib/contacts", () => ({ getContactIdsByUserIds: vi.fn() }));
 vi.mock("@/modules/hub/service", () => ({ listFeedbackRecords: vi.fn() }));
 vi.mock("./access", () => ({
   assertFeedbackSourceDirectoryAccess: mocks.assertFeedbackSourceDirectoryAccess,

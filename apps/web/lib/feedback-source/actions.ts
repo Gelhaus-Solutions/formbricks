@@ -23,7 +23,6 @@ import {
 import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { getContactIdsByUserIds } from "@/modules/ee/unify-feedback/lib/contacts";
 import { assertFeedbackSourceDirectoryAccess } from "./access";
 import { importHistoricalResponses } from "./import";
 import { resolveFormbricksMappingsInput } from "./mappings";
@@ -221,8 +220,8 @@ export const updateFeedbackSourceWithMappingsAction = authenticatedActionClient
 
       // The check above proves the caller may act in `workspaceId`; it does not prove this feedback
       // source lives there, and the organization it was authorized against came from the source
-      // rather than the workspace. Pin the two together up front so every branch below — and the
-      // mappings resolved against the same workspace — operates on one tenant, and so a mismatch
+      // rather than the workspace. Pin the two together up front so every branch below (and the
+      // mappings resolved against the same workspace) operates on one tenant, and so a mismatch
       // fails here rather than as a Prisma error from the update.
       const feedbackSource = await prisma.feedbackSource.findUnique({
         where: { id: parsedInput.feedbackSourceId, workspaceId: parsedInput.workspaceId },
@@ -346,7 +345,7 @@ export const importHistoricalResponsesAction = authenticatedActionClient
         throw new ResourceNotFoundError("Survey", parsedInput.surveyId);
       }
 
-      // The authorization above covers the feedback source's workspace, not this survey — and the
+      // The authorization above covers the feedback source's workspace, not this survey, and the
       // import reads every response of `surveyId` and copies them into the source's feedback
       // directory. Without this check any caller with readWrite on one workspace could name a survey
       // from another organization and exfiltrate its responses into their own directory. Survey ids
@@ -368,29 +367,4 @@ export const importHistoricalResponsesAction = authenticatedActionClient
       ctx.auditLoggingCtx.newObject = importResult;
       return importResult;
     })
-  );
-
-const ZGetFeedbackRecordContactsAction = z.object({
-  workspaceId: ZId,
-  userIds: z.array(z.string()).max(1000),
-});
-
-// Resolves a page of feedback records' user_ids to Formbricks contact ids (batched, deduped).
-export const getFeedbackRecordContactsAction = authenticatedActionClient
-  .inputSchema(ZGetFeedbackRecordContactsAction)
-  .action(
-    async ({
-      ctx,
-      parsedInput,
-    }: {
-      ctx: AuthenticatedActionClientCtx;
-      parsedInput: z.infer<typeof ZGetFeedbackRecordContactsAction>;
-    }): Promise<Record<string, string>> => {
-      await assertCan({ type: "user", id: ctx.user.id }, "workspace.read", {
-        type: "workspace",
-        id: parsedInput.workspaceId,
-      });
-
-      return getContactIdsByUserIds(parsedInput.workspaceId, parsedInput.userIds);
-    }
   );
