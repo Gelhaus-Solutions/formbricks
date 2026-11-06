@@ -259,45 +259,6 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": ["unify-feedback/overview"]
-          },
-          {
-            "group": "Unify Feedback Features",
-            "pages": [
-              "unify-feedback/feedback-datasets",
-              "unify-feedback/feedback-sources",
-              "unify-feedback/feedback-records",
-              "unify-feedback/enrichment",
-              "unify-feedback/topics-subtopics"
-            ]
-          },
-          {
-            "group": "Best Practices",
-            "pages": [
-              {
-                "group": "Journey Management",
-                "icon": "map",
-                "pages": [
-                  "unify-feedback/journey-management/map-feedback-to-journeys",
-                  "unify-feedback/journey-management/journey-scorecards",
-                  "unify-feedback/journey-management/detection-signals",
-                  "unify-feedback/journey-management/recurring-patterns",
-                  "unify-feedback/journey-management/close-the-loop"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Powered by",
-            "pages": ["unify-feedback/formbricks-hub"]
-          }
-        ],
-        "tab": "Unify Feedback (Analyze)"
-      },
-      {
-        "groups": [
-          {
-            "group": "Overview",
             "pages": ["workflows/overview"]
           },
           {
@@ -390,7 +351,6 @@
                   "self-hosting/advanced/enterprise-features/oidc-sso",
                   "self-hosting/advanced/enterprise-features/saml-sso",
                   "self-hosting/advanced/enterprise-features/audit-logging",
-                  "self-hosting/advanced/enterprise-features/unify-feedback",
                   "self-hosting/advanced/enterprise-features/ai-features",
                   "self-hosting/advanced/enterprise-features/workflows"
                 ]
@@ -547,10 +507,6 @@
     {
       "destination": "/docs/self-hosting/configuration/auth-sso/setup-saml-with-identity-providers",
       "source": "/docs/development/guides/auth-and-provision/setup-saml-with-identity-providers"
-    },
-    {
-      "destination": "/docs/unify-feedback/feedback-datasets",
-      "source": "/docs/unify-feedback/feedback-directories"
     },
     {
       "destination": "/docs/platform/introduction",
