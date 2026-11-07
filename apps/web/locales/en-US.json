@@ -409,8 +409,6 @@
     "remove_item": "Remove {item}",
     "rename": "Rename",
     "report_survey": "Report Survey",
-    "request_lite_license": "Request Lite License",
-    "request_trial_license": "Request trial license",
     "reset_to_default": "Reset to default",
     "response": "Response",
     "response_id": "Response ID",
@@ -2347,9 +2345,7 @@
         "security_list_tip": "Are you signed up for our Security List? Stay informed to keep your instance secure!",
         "security_list_tip_link": "Sign up here.",
         "share_invite_link": "Share Invite Link",
-        "share_this_link_to_let_your_organization_member_join_your_organization": "Share this link to let your organization member join your organization:",
-        "unlock_ai_features_description": "AI-powered translations and smart tools are available on higher plans. Upgrade to supercharge your surveys with AI.",
-        "unlock_ai_features_with_a_higher_plan": "Unlock AI features with a higher plan"
+        "share_this_link_to_let_your_organization_member_join_your_organization": "Share this link to let your organization member join your organization:"
       },
       "notifications": {
         "auto_subscribe_to_new_surveys": "Auto-subscribe to new surveys",
@@ -2384,8 +2380,6 @@
       "teams": {
         "billing": "Billing",
         "bulk_invite": "Bulk Invite",
-        "bulk_invite_scale_only_description": "Inviting members in bulk via CSV is available on the Scale plan. Upgrade to invite your whole team at once.",
-        "bulk_invite_scale_only_title": "Unlock bulk invite with a higher plan",
         "contributor": "Contributor",
         "create_first_team_message": "You need to create a team first.",
         "individual": "Individual",
@@ -2396,8 +2390,7 @@
         "member_role_info_message": "To give new members access to a workspace, please add them to a Team below. With Teams you can manage who has access to which workspace.",
         "organization_role": "Organization role",
         "owner": "Owner",
-        "team_select_placeholder": "Search team name…",
-        "upgrade_plan_notice_message": "Unlock Organization Roles with a higher plan."
+        "team_select_placeholder": "Search team name…"
       },
       "usage": {
         "load_error": "Could not load usage. Reload the page to try again.",
