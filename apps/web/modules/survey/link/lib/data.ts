@@ -147,7 +147,7 @@ export const getSurveyWithMetadata = reactCache(async (surveyId: string): Promis
     // This survey object is handed to a client component on the *public* link-survey page, so every
     // field in it ends up in the page payload for anonymous visitors. Follow-up configuration carries
     // internal recipient addresses, subjects and email bodies, and segment filters carry targeting
-    // rules built from contact attributes — none of which the survey renderer reads. They are selected
+    // rules built from contact attributes, none of which the survey renderer reads. They are selected
     // above only because `TSurvey` requires the keys, so blank them out before they leave the server.
     return {
       ...transformedSurvey,
@@ -201,38 +201,6 @@ export const getResponseBySingleUseId = reactCache((surveyId: string, singleUseI
     });
 
     return response;
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new DatabaseError(error.message);
-    }
-    throw error;
-  }
-});
-
-/**
- * Get existing contact response for contact surveys
- * NO CACHING - response data changes frequently and needs to be fresh
- */
-export const getExistingContactResponse = reactCache((surveyId: string, contactId: string) => async () => {
-  try {
-    // A contact can hold a finished response and an unfinished attempt at once, so the unordered pick could
-    // return the unfinished one and hide the finished one. Prefer the finished row: the contact page gates
-    // "already answered" on it, and only an unfinished row is left to resume.
-    const response = await prisma.response.findFirst({
-      where: {
-        surveyId,
-        contactId,
-      },
-      orderBy: {
-        finished: "desc",
-      },
-      select: {
-        id: true,
-        finished: true,
-      },
-    });
-
-    return response ?? undefined;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new DatabaseError(error.message);

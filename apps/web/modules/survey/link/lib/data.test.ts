@@ -8,7 +8,6 @@ import { selectPublicSurveyEmbeddedDataLinks } from "@/lib/embedded-data/survey-
 import { getOrganizationBillingWithReadThroughSync } from "@/modules/ee/billing/lib/organization-billing";
 import { transformPrismaSurvey } from "@/modules/survey/lib/utils";
 import {
-  getExistingContactResponse,
   getOrganizationBilling,
   getResponseBySingleUseId,
   getSurveyMetadata,
@@ -129,8 +128,8 @@ describe("data", () => {
 
     /**
      * ENG-1845: this payload is the renderer's allow-list for link surveys. `getSurveyEmbeddedFields`
-     * fails closed, so a select that loses the join is indistinguishable from a survey with no fields
-     * — and every value in the URL would be silently dropped instead of ingested.
+     * fails closed, so a select that loses the join is indistinguishable from a survey with no fields,
+     * and every value in the URL would be silently dropped instead of ingested.
      *
      * Pinned to the *public* selector on purpose: an anonymous respondent has no use for the
      * workspace-library row id, so swapping this for the write-path selector is a regression even
@@ -319,71 +318,6 @@ describe("data", () => {
     });
   });
 
-  describe("getExistingContactResponse", () => {
-    const mockResponse = {
-      id: "response-1",
-      finished: false,
-    };
-
-    test("should find existing contact response", async () => {
-      const surveyId = "survey-1";
-      const contactId = "contact-1";
-
-      vi.mocked(prisma.response.findFirst).mockResolvedValue(mockResponse as any);
-
-      const result = await getExistingContactResponse(surveyId, contactId)();
-
-      expect(result).toEqual(mockResponse);
-      expect(prisma.response.findFirst).toHaveBeenCalledWith({
-        where: {
-          surveyId,
-          contactId,
-        },
-        orderBy: {
-          finished: "desc",
-        },
-        select: {
-          id: true,
-          finished: true,
-        },
-      });
-    });
-
-    test("should return undefined when contact response not found", async () => {
-      const surveyId = "survey-1";
-      const contactId = "nonexistent-contact";
-
-      vi.mocked(prisma.response.findFirst).mockResolvedValue(null);
-
-      const result = await getExistingContactResponse(surveyId, contactId)();
-
-      expect(result).toBeUndefined();
-    });
-
-    test("should throw DatabaseError on Prisma error", async () => {
-      const surveyId = "survey-1";
-      const contactId = "contact-1";
-      const prismaError = new Prisma.PrismaClientKnownRequestError("Database error", {
-        code: "P2025",
-        clientVersion: "5.0.0",
-      });
-
-      vi.mocked(prisma.response.findFirst).mockRejectedValue(prismaError);
-
-      await expect(getExistingContactResponse(surveyId, contactId)()).rejects.toThrow(DatabaseError);
-    });
-
-    test("should rethrow non-Prisma errors", async () => {
-      const surveyId = "survey-1";
-      const contactId = "contact-1";
-      const genericError = new Error("Generic error");
-
-      vi.mocked(prisma.response.findFirst).mockRejectedValue(genericError);
-
-      await expect(getExistingContactResponse(surveyId, contactId)()).rejects.toThrow(genericError);
-    });
-  });
-
   describe("getOrganizationBilling", () => {
     const mockBilling = {
       stripeCustomerId: "cus_123",
@@ -438,10 +372,10 @@ describe("data", () => {
 
 /**
  * ENG-1838. The link-survey page renders through a bundled `packages/surveys`, so this payload is
- * never version-skewed the way an embedded SDK bundle is — but the shape is still a contract the
+ * never version-skewed the way an embedded SDK bundle is, but the shape is still a contract the
  * renderer's recall and logic engines read. ENG-2404 dropped the two columns it came from, so
  * `variables` / `hiddenFields` are now derived from the Embedded Data rows by `transformPrismaSurvey`
- * (mocked in this file) — which makes the rows in the select the whole contract.
+ * (mocked in this file), which makes the rows in the select the whole contract.
  */
 describe("legacy Embedded Data shape on the wire (ENG-1838)", () => {
   test("the link-survey query asks for the rows the legacy keys are derived from", async () => {

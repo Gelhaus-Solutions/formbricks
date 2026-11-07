@@ -13,9 +13,8 @@ import {
 } from "./lib/metadata-utils";
 
 /**
- * What a survey page shows while it can't name the survey: /c/<token> with a bad token or a survey that isn't
- * public, and /s/<id> for a single-use survey opened without a valid link. A fresh object per call, since Next
- * receives it by reference.
+ * What a survey page shows while it can't name the survey: /s/<id> for a single-use survey opened without a
+ * valid link. A fresh object per call, since Next receives it by reference.
  */
 export const getGenericSurveyMetadata = (): Metadata => ({
   title: "Survey",
@@ -123,41 +122,4 @@ export const getMetadataForLinkSurvey = async ({
     ...(await getServableSurveyMetadata(survey, languageCode, acceptedLanguages)),
     ...pageMetadata,
   };
-};
-
-/**
- * Metadata for /c/<token>, once the token has named a survey. The page 404s a survey that is no longer
- * public (draft, archived, non-link) even with a valid token, so its name or welcome headline must not
- * reach <title> / og:title either (ENG-4032). A survey that can't be loaded gets the same generic metadata, and
- * so does a single-use survey opened without its link, which the page shows as "link invalid", or through one
- * already answered (ENG-4041).
- */
-export const getMetadataForContactSurvey = async ({
-  surveyId,
-  acceptedLanguages = [],
-  suId,
-  suToken,
-}: {
-  surveyId: string;
-  acceptedLanguages?: string[];
-  /** The single-use link, as it appears in the URL. */
-  suId?: TSingleUseSearchParam;
-  suToken?: TSingleUseSearchParam;
-}): Promise<Metadata> => {
-  const survey = await getSurveyWithMetadata(surveyId).catch(() => null);
-  if (!survey || !isLinkSurveyServable(survey)) {
-    return getGenericSurveyMetadata();
-  }
-
-  // Shares the contact page's one resolution per request.
-  const singleUse = await getUnansweredLinkSurveySingleUseAccess({
-    survey,
-    suId,
-    suToken,
-    surface: "contact_link_page",
-  });
-  if (!singleUse.allowed) {
-    return getGenericSurveyMetadata();
-  }
-  return getServableSurveyMetadata(survey, undefined, acceptedLanguages);
 };

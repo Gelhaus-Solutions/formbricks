@@ -10,11 +10,9 @@ import {
   Settings,
   Share2Icon,
   SquareStack,
-  UserIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TSegment } from "@formbricks/types/segment";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { TUser } from "@formbricks/types/user";
 import { AnonymousLinksTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/anonymous-links-tab";
@@ -23,7 +21,6 @@ import { CustomHtmlTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[sur
 import { DynamicPopupTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/dynamic-popup-tab";
 import { EmailTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/email-tab";
 import { LinkSettingsTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/link-settings-tab";
-import { PersonalLinksTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/personal-links-tab";
 import { PrettyUrlTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/pretty-url-tab";
 import { QRCodeTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/qr-code-tab";
 import { SocialMediaTab } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/social-media-tab";
@@ -48,14 +45,11 @@ interface ShareSurveyModalProps {
   modalView: ModalView;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   user: TUser;
-  segments: TSegment[];
-  isContactsEnabled: boolean;
   isFormbricksCloud: boolean;
   isReadOnly: boolean;
   canManage: boolean;
   isStorageConfigured: boolean;
   workspaceCustomScripts?: string | null;
-  enterpriseLicenseRequestFormUrl: string;
 }
 
 export const ShareSurveyModal = ({
@@ -65,14 +59,11 @@ export const ShareSurveyModal = ({
   modalView,
   setOpen,
   user,
-  segments,
-  isContactsEnabled,
   isFormbricksCloud,
   isReadOnly,
   canManage,
   isStorageConfigured,
   workspaceCustomScripts,
-  enterpriseLicenseRequestFormUrl,
 }: Readonly<ShareSurveyModalProps>) => {
   const [surveyUrl, setSurveyUrl] = useState<string>(getSurveyUrl(survey, publicDomain, "default"));
   const [showView, setShowView] = useState<ModalView>(modalView);
@@ -96,23 +87,6 @@ export const ShareSurveyModal = ({
           surveyUrl,
           isReadOnly,
         },
-      },
-      {
-        id: ShareViaType.PERSONAL_LINKS,
-        type: LinkTabsType.SHARE_VIA,
-        label: t("workspace.surveys.share.personal_links.nav_title"),
-        icon: UserIcon,
-        title: t("workspace.surveys.share.personal_links.nav_title"),
-        description: t("workspace.surveys.share.personal_links.description"),
-        componentType: PersonalLinksTab,
-        componentProps: {
-          surveyId: survey.id,
-          segments,
-          isContactsEnabled,
-          isFormbricksCloud,
-          enterpriseLicenseRequestFormUrl,
-        },
-        disabled: survey.singleUse?.enabled,
       },
       {
         id: ShareViaType.WEBSITE_EMBED,
@@ -215,13 +189,10 @@ export const ShareSurveyModal = ({
     surveyUrl,
     isReadOnly,
     canManage,
-    segments,
-    isContactsEnabled,
     isFormbricksCloud,
     email,
     isStorageConfigured,
     workspaceCustomScripts,
-    enterpriseLicenseRequestFormUrl,
   ]);
 
   const getDefaultActiveId = useCallback(() => {
@@ -260,11 +231,6 @@ export const ShareSurveyModal = ({
     setShowView(view);
   };
 
-  const handleEmbedViewWithTab = (tabId: ShareViaType | ShareSettingsType) => {
-    setShowView("share");
-    setActiveId(tabId);
-  };
-
   const renderContent = () => {
     if (showView === "start") {
       return (
@@ -274,9 +240,7 @@ export const ShareSurveyModal = ({
           publicDomain={publicDomain}
           setSurveyUrl={setSurveyUrl}
           user={user}
-          tabs={linkTabs}
           handleViewChange={handleViewChange}
-          handleEmbedViewWithTab={handleEmbedViewWithTab}
           isReadOnly={isReadOnly}
         />
       );

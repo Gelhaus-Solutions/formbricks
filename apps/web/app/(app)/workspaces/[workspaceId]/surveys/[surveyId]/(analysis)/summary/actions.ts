@@ -9,19 +9,14 @@ import { persistExampleResponseDataset } from "@/app/(app)/workspaces/[workspace
 import { assertOrganizationAIConfigured } from "@/lib/ai/service";
 import { assertCan } from "@/lib/authorization";
 import { getOrganizationLogoUrl } from "@/lib/organization/logo";
-import { capturePostHogEvent } from "@/lib/posthog";
 import { getResponseCountBySurveyId } from "@/lib/response/service";
 import { getSurvey, updateSurvey } from "@/lib/survey/service";
 import { authenticatedActionClient } from "@/lib/utils/action-client";
-import { convertToCsv } from "@/lib/utils/file-conversion";
 import { getOrganizationIdFromSurveyId, getWorkspaceIdFromSurveyId } from "@/lib/utils/helper";
 import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { generatePersonalLinks } from "@/modules/ee/contacts/lib/contacts";
-import { NO_CONTACTS_IN_SEGMENT_ERROR_CODE } from "@/modules/ee/contacts/lib/personal-link-errors";
 import { sendEmbedSurveyPreviewEmail } from "@/modules/email";
-import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { deleteResponsesAndDisplaysForSurvey } from "./lib/survey";
 
 const ZSendEmbedSurveyPreviewEmailAction = z.object({
@@ -139,7 +134,7 @@ export const generateExampleResponsesAction = authenticatedActionClient
       });
 
       // Set before the gates below so a rejected or failed attempt is still attributed to the right
-      // organization and survey — the wrapper audits failures too, which is how a rolled-back batch
+      // organization and survey: the wrapper audits failures too, which is how a rolled-back batch
       // leaves a trace now that the write is all-or-nothing.
       ctx.auditLoggingCtx.organizationId = organizationId;
       ctx.auditLoggingCtx.surveyId = parsedInput.surveyId;
@@ -208,87 +203,6 @@ export const getEmailHtmlAction = authenticatedActionClient
     });
 
     return await getEmailTemplateHtml(parsedInput.surveyId, ctx.user.locale);
-  });
-
-const ZGeneratePersonalLinksAction = z.object({
-  surveyId: ZId,
-  segmentId: ZId,
-  expirationDays: z.number().optional(),
-});
-
-export const generatePersonalLinksAction = authenticatedActionClient
-  .inputSchema(ZGeneratePersonalLinksAction)
-  .action(async ({ ctx, parsedInput }) => {
-    const organizationId = await getOrganizationIdFromSurveyId(parsedInput.surveyId);
-    const workspaceId = await getWorkspaceIdFromSurveyId(parsedInput.surveyId);
-    const isContactsEnabled = await getIsContactsEnabled(organizationId);
-    if (!isContactsEnabled) {
-      throw new OperationNotAllowedError("Contacts are not enabled for this workspace");
-    }
-
-    await assertCan({ type: "user", id: ctx.user.id }, "survey.write", {
-      type: "survey",
-      id: parsedInput.surveyId,
-    });
-
-    // Get contacts and generate personal links
-    const contactsResult = await generatePersonalLinks(
-      parsedInput.surveyId,
-      parsedInput.segmentId,
-      parsedInput.expirationDays
-    );
-
-    if (!contactsResult || contactsResult.length === 0) {
-      throw new InvalidInputError(NO_CONTACTS_IN_SEGMENT_ERROR_CODE);
-    }
-
-    capturePostHogEvent(
-      ctx.user.id,
-      "personal_link_created",
-      {
-        organization_id: organizationId,
-        workspace_id: workspaceId,
-        survey_id: parsedInput.surveyId,
-        link_count: contactsResult.length,
-      },
-      { organizationId, workspaceId }
-    );
-
-    // Prepare CSV data with the specified headers and order
-    const csvHeaders = [
-      "Formbricks Contact ID",
-      "User ID",
-      "First Name",
-      "Last Name",
-      "Email",
-      "Personal Link",
-    ];
-
-    const csvData = contactsResult
-      .map((contact) => {
-        if (!contact) {
-          return null;
-        }
-        const attributes = contact.attributes ?? {};
-        return {
-          "Formbricks Contact ID": contact.contactId,
-          "User ID": attributes.userId ?? "",
-          "First Name": attributes.firstName ?? "",
-          "Last Name": attributes.lastName ?? "",
-          Email: attributes.email ?? "",
-          "Personal Link": contact.surveyUrl,
-        };
-      })
-      .filter((contact) => contact !== null);
-
-    // Convert to CSV using the file conversion utility
-    const csvContent = await convertToCsv(csvHeaders, csvData);
-    const fileName = `personal-links-${parsedInput.surveyId}-${Date.now()}.csv`;
-
-    return {
-      fileName,
-      csvContent,
-    };
   });
 
 const ZUpdateSingleUseLinksAction = z.object({

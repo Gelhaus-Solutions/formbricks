@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { TSegment } from "@formbricks/types/segment";
 import { TUser } from "@formbricks/types/user";
 import { useWorkspaceContext } from "@/app/(app)/workspaces/[workspaceId]/context/workspace-context";
 import { useResponseFilter } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/components/response-filter-context";
@@ -33,11 +32,8 @@ interface SurveyAnalysisCTAProps {
   user: TUser;
   publicDomain: string;
   responseCount: number;
-  segments: TSegment[];
-  isContactsEnabled: boolean;
   isFormbricksCloud: boolean;
   isStorageConfigured: boolean;
-  enterpriseLicenseRequestFormUrl: string;
   aiUnavailableReason: TAIUnavailableReason | null;
 }
 
@@ -52,11 +48,8 @@ export const SurveyAnalysisCTA = ({
   user,
   publicDomain,
   responseCount,
-  segments,
-  isContactsEnabled,
   isFormbricksCloud,
   isStorageConfigured,
-  enterpriseLicenseRequestFormUrl,
   aiUnavailableReason,
 }: Readonly<SurveyAnalysisCTAProps>) => {
   const { t } = useTranslation();
@@ -317,14 +310,11 @@ export const SurveyAnalysisCTA = ({
           }}
           user={user}
           modalView={modalState.start ? "start" : "share"}
-          segments={segments}
-          isContactsEnabled={isContactsEnabled}
           isFormbricksCloud={isFormbricksCloud}
           isReadOnly={isReadOnly}
           canManage={canManage}
           isStorageConfigured={isStorageConfigured}
           workspaceCustomScripts={workspace.customHeadScripts}
-          enterpriseLicenseRequestFormUrl={enterpriseLicenseRequestFormUrl}
         />
       )}
       <SuccessMessage />

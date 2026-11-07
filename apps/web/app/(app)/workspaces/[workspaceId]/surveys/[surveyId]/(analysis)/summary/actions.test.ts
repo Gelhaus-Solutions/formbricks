@@ -49,14 +49,9 @@ vi.mock(
   () => ({ persistExampleResponseDataset: vi.fn() })
 );
 vi.mock("@/lib/ai/service", () => ({ assertOrganizationAIConfigured: vi.fn() }));
-vi.mock("@/lib/posthog", () => ({ capturePostHogEvent: vi.fn() }));
 vi.mock("@/lib/response/service", () => ({ getResponseCountBySurveyId: vi.fn() }));
-vi.mock("@/lib/utils/file-conversion", () => ({ convertToCsv: vi.fn() }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: vi.fn() }));
 vi.mock("@/modules/core/rate-limit/rate-limit-configs", () => ({ rateLimitConfigs: { actions: {} } }));
-vi.mock("@/modules/ee/contacts/lib/contacts", () => ({ generatePersonalLinks: vi.fn() }));
-vi.mock("@/modules/ee/contacts/lib/personal-link-errors", () => ({ NO_CONTACTS_IN_SEGMENT_ERROR_CODE: "x" }));
-vi.mock("@/modules/features/lib/flags", () => ({ getIsContactsEnabled: vi.fn() }));
 vi.mock("@/lib/organization/logo", () => ({
   getOrganizationLogoUrl: mocks.getOrganizationLogoUrl,
 }));

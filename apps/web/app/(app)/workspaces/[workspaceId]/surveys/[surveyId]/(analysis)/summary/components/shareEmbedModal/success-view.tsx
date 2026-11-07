@@ -1,14 +1,10 @@
-import { BellRing, BlocksIcon, Share2Icon, UserIcon } from "lucide-react";
+import { BellRing, BlocksIcon, Share2Icon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { TUser } from "@formbricks/types/user";
 import { useWorkspace } from "@/app/(app)/workspaces/[workspaceId]/context/workspace-context";
-import {
-  ShareSettingsType,
-  ShareViaType,
-} from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/types/share";
 import { ShareSurveyLink } from "@/modules/analysis/components/ShareSurveyLink";
 
 interface SuccessViewProps {
@@ -17,9 +13,7 @@ interface SuccessViewProps {
   readonly publicDomain: string;
   readonly setSurveyUrl: (url: string) => void;
   readonly user: TUser;
-  readonly tabs: { id: ShareViaType | ShareSettingsType; label: string; icon: React.ElementType }[];
   readonly handleViewChange: (view: "start" | "share") => void;
-  readonly handleEmbedViewWithTab: (tabId: ShareViaType | ShareSettingsType) => void;
   readonly isReadOnly: boolean;
 }
 
@@ -29,9 +23,7 @@ export const SuccessView: React.FC<SuccessViewProps> = ({
   publicDomain,
   setSurveyUrl,
   user,
-  tabs,
   handleViewChange,
-  handleEmbedViewWithTab,
   isReadOnly,
 }) => {
   const { t } = useTranslation();
@@ -56,20 +48,13 @@ export const SuccessView: React.FC<SuccessViewProps> = ({
       )}
       <div className="flex h-full flex-col items-center justify-center gap-8 rounded-b-lg bg-slate-50 px-8 py-4">
         <p className="text-sm font-medium text-slate-900">{t("workspace.surveys.summary.whats_next")}</p>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => handleViewChange("share")}
             className="flex flex-col items-center gap-3 rounded-lg border border-slate-100 bg-white p-4 text-center text-sm text-slate-900 hover:border-slate-200 md:p-8">
             <Share2Icon className="size-8 stroke-1 text-slate-900" />
             {t("workspace.surveys.summary.share_survey")}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleEmbedViewWithTab(tabs[1].id)}
-            className="flex flex-col items-center gap-3 rounded-lg border border-slate-100 bg-white p-4 text-center text-sm text-slate-900 hover:border-slate-200 md:p-8">
-            <UserIcon className="size-8 stroke-1 text-slate-900" />
-            {t("workspace.surveys.summary.use_personal_links")}
           </button>
           <Link
             href={`/account/settings/notifications`}

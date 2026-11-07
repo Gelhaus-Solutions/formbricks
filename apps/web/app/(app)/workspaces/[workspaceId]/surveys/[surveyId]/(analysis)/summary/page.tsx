@@ -6,14 +6,11 @@ import { SummaryPage } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surve
 import { SurveyAnalysisCTA } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/SurveyAnalysisCTA";
 import { getSurveySummary } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/lib/surveySummary";
 import { getAISmartToolsUnavailableReason, getOrganizationAIConfig } from "@/lib/ai/service";
-import { DEFAULT_LOCALE, ENTERPRISE_LICENSE_REQUEST_FORM_URL, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
+import { DEFAULT_LOCALE, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
 import { getSurvey } from "@/lib/survey/service";
-import { getUserVisibleSurveyWhere } from "@/lib/survey/visibility/actor-context";
 import { getUser } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
-import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
-import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 import { getSurveyAuth } from "@/modules/survey/lib/survey-auth";
 import { RestrictedSurveyBanner } from "@/modules/survey/visibility/components/restricted-survey-banner";
@@ -35,10 +32,7 @@ const SurveyPage = async (
     return notFound();
   }
 
-  const { session, isReadOnly, canManage, workspace, organization } = await getSurveyAuth(
-    params.workspaceId,
-    surveyId
-  );
+  const { session, isReadOnly, canManage, organization } = await getSurveyAuth(params.workspaceId, surveyId);
 
   const survey = await getSurvey(params.surveyId);
 
@@ -51,12 +45,6 @@ const SurveyPage = async (
   if (!user) {
     throw new AuthenticationError(t("common.not_authenticated"));
   }
-
-  const isContactsEnabled = await getIsContactsEnabled(organization.id);
-  // ENG-3282: segments reach the browser, so their survey references name only surveys this viewer sees.
-  const segments = isContactsEnabled
-    ? await getSegments(workspace.id, await getUserVisibleSurveyWhere(session.user.id, organization.id))
-    : [];
 
   if (!organization) {
     throw new ResourceNotFoundError(t("common.organization"), null);
@@ -89,11 +77,8 @@ const SurveyPage = async (
             user={user}
             publicDomain={publicDomain}
             responseCount={initialSurveySummary?.meta.totalResponses ?? 0}
-            segments={segments}
-            isContactsEnabled={isContactsEnabled}
             isFormbricksCloud={IS_FORMBRICKS_CLOUD}
             isStorageConfigured={isStorageAvailable()}
-            enterpriseLicenseRequestFormUrl={ENTERPRISE_LICENSE_REQUEST_FORM_URL}
             aiUnavailableReason={aiUnavailableReason}
           />
         }>

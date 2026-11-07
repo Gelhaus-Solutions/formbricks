@@ -5,7 +5,7 @@ import { generateSurveySingleUseLinkParams } from "@/lib/utils/single-use-survey
 import { getResponseBySingleUseId, getSurveyWithMetadata } from "@/modules/survey/link/lib/data";
 import { getWorkspaceContextForLinkSurvey } from "@/modules/survey/link/lib/workspace";
 import { getBasicSurveyMetadata, getSurveyOpenGraphMetadata } from "./lib/metadata-utils";
-import { getGenericSurveyMetadata, getMetadataForContactSurvey, getMetadataForLinkSurvey } from "./metadata";
+import { getGenericSurveyMetadata, getMetadataForLinkSurvey } from "./metadata";
 
 vi.mock("@/modules/survey/link/lib/data", () => ({
   getResponseBySingleUseId: vi.fn(),
@@ -367,98 +367,6 @@ describe("link-survey metadata", () => {
       });
 
       expect(result).toMatchObject({ title: mockSurveyName, ...indexingRules });
-    });
-  });
-
-  describe("getMetadataForContactSurvey", () => {
-    const contactSurvey = (overrides: Record<string, unknown> = {}) =>
-      ({
-        id: mockSurveyId,
-        name: mockSurveyName,
-        workspaceId: "workspace-123",
-        type: "link",
-        status: "inProgress",
-        archivedAt: null,
-        ...overrides,
-      }) as never;
-
-    test.each([
-      ["a draft", { status: "draft" }],
-      ["an archived", { status: "completed", archivedAt: new Date("2026-10-01T00:00:00Z") }],
-      ["an app", { type: "app" }],
-    ])("gives %s survey generic metadata, never its name", async (_label, state) => {
-      vi.mocked(getSurveyWithMetadata).mockResolvedValue(contactSurvey(state));
-
-      expect(await getMetadataForContactSurvey({ surveyId: mockSurveyId })).toEqual(
-        getGenericSurveyMetadata()
-      );
-      expect(getBasicSurveyMetadata).not.toHaveBeenCalled();
-    });
-
-    test("gives a survey that can't be loaded generic metadata", async () => {
-      vi.mocked(getSurveyWithMetadata).mockRejectedValue(new ResourceNotFoundError("Survey", mockSurveyId));
-
-      expect(await getMetadataForContactSurvey({ surveyId: mockSurveyId })).toEqual(
-        getGenericSurveyMetadata()
-      );
-    });
-
-    test("gives a single-use survey opened without its link generic metadata (ENG-4041)", async () => {
-      vi.mocked(getSurveyWithMetadata).mockResolvedValue(
-        contactSurvey({ singleUse: { enabled: true, isEncrypted: false } })
-      );
-
-      expect(await getMetadataForContactSurvey({ surveyId: mockSurveyId })).toEqual(
-        getGenericSurveyMetadata()
-      );
-      expect(getBasicSurveyMetadata).not.toHaveBeenCalled();
-    });
-
-    test("names a single-use survey opened with a valid link", async () => {
-      vi.mocked(getSurveyWithMetadata).mockResolvedValue(
-        contactSurvey({ singleUse: { enabled: true, isEncrypted: false } })
-      );
-      const link = generateSurveySingleUseLinkParams(mockSurveyId, false);
-
-      expect(await getMetadataForContactSurvey({ surveyId: mockSurveyId, ...link })).toMatchObject({
-        title: mockSurveyName,
-      });
-    });
-
-    test("gives a single-use survey opened with an already answered link generic metadata", async () => {
-      vi.mocked(getSurveyWithMetadata).mockResolvedValue(
-        contactSurvey({ singleUse: { enabled: true, isEncrypted: false } })
-      );
-      const link = generateSurveySingleUseLinkParams(mockSurveyId, false);
-      answeredWith(true);
-
-      expect(await getMetadataForContactSurvey({ surveyId: mockSurveyId, ...link })).toEqual(
-        getGenericSurveyMetadata()
-      );
-      expect(getBasicSurveyMetadata).not.toHaveBeenCalled();
-    });
-
-    test("names a public survey, without the /s canonical or robots rules", async () => {
-      const survey = contactSurvey();
-      vi.mocked(getSurveyWithMetadata).mockResolvedValue(survey);
-
-      const result = await getMetadataForContactSurvey({ surveyId: mockSurveyId, acceptedLanguages: ["de"] });
-
-      expect(getBasicSurveyMetadata).toHaveBeenCalledWith(mockSurveyId, undefined, survey, ["de"]);
-      expect(result).toEqual({
-        title: mockSurveyName,
-        description: mockDescription,
-        openGraph: {
-          title: mockSurveyName,
-          description: mockDescription,
-          images: ["/api/v1/client/og?brandColor=%2364748b&name=Test%20Survey"],
-        },
-        twitter: {
-          title: mockSurveyName,
-          description: mockDescription,
-          images: ["/api/v1/client/og?brandColor=%2364748b&name=Test%20Survey"],
-        },
-      });
     });
   });
 });

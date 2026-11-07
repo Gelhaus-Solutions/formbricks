@@ -5,20 +5,14 @@ import { SurveyAnalysisNavigation } from "@/app/(app)/workspaces/[workspaceId]/s
 import { ResponsePage } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/responses/components/ResponsePage";
 import { SurveyAnalysisCTA } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/SurveyAnalysisCTA";
 import { getAISmartToolsUnavailableReason, getOrganizationAIConfig } from "@/lib/ai/service";
-import {
-  ENTERPRISE_LICENSE_REQUEST_FORM_URL,
-  IS_FORMBRICKS_CLOUD,
-  RESPONSES_PER_PAGE,
-} from "@/lib/constants";
+import { IS_FORMBRICKS_CLOUD, RESPONSES_PER_PAGE } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
 import { getResponseCountBySurveyId, getResponses } from "@/lib/response/service";
 import { getSurvey } from "@/lib/survey/service";
-import { getUserVisibleSurveyWhere } from "@/lib/survey/visibility/actor-context";
 import { getTagsByWorkspaceId } from "@/lib/tag/service";
 import { getUser } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
-import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
-import { getIsContactsEnabled, getIsQuotasEnabled } from "@/modules/features/lib/flags";
+import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { getQuotas } from "@/modules/quotas/lib/quotas";
 import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 import { getSurveyAuth } from "@/modules/survey/lib/survey-auth";
@@ -37,11 +31,10 @@ const Page = async (props: Readonly<{ params: Promise<{ workspaceId: string; sur
     params.surveyId
   );
 
-  const [survey, user, tags, isContactsEnabled, responseCount] = await Promise.all([
+  const [survey, user, tags, responseCount] = await Promise.all([
     getSurvey(params.surveyId),
     getUser(session.user.id),
     getTagsByWorkspaceId(workspace.id),
-    getIsContactsEnabled(organization.id),
     getResponseCountBySurveyId(params.surveyId),
   ]);
 
@@ -56,11 +49,6 @@ const Page = async (props: Readonly<{ params: Promise<{ workspaceId: string; sur
   if (!organization) {
     throw new ResourceNotFoundError(t("common.organization"), null);
   }
-
-  // ENG-3282: segments reach the browser, so their survey references name only surveys this viewer sees.
-  const segments = isContactsEnabled
-    ? await getSegments(workspace.id, await getUserVisibleSurveyWhere(session.user.id, organization.id))
-    : [];
 
   const publicDomain = getPublicDomain();
 
@@ -94,11 +82,8 @@ const Page = async (props: Readonly<{ params: Promise<{ workspaceId: string; sur
             user={user}
             publicDomain={publicDomain}
             responseCount={responseCount}
-            segments={segments}
-            isContactsEnabled={isContactsEnabled}
             isFormbricksCloud={IS_FORMBRICKS_CLOUD}
             isStorageConfigured={isStorageAvailable()}
-            enterpriseLicenseRequestFormUrl={ENTERPRISE_LICENSE_REQUEST_FORM_URL}
             aiUnavailableReason={aiUnavailableReason}
           />
         }>
