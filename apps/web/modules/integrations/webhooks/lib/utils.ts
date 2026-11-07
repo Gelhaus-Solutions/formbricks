@@ -18,8 +18,7 @@ export const validWebHookURL = (urlInput: string, allowInternalUrls = false) => 
       return { valid: false, error: "URL must start with https://" };
     }
 
-    const domainError: string =
-      "Please enter a complete URL with a valid domain (e.g., https://formbricks.com)";
+    const domainError: string = "Please enter a complete URL with a valid domain (e.g., https://example.com)";
 
     const multipleSlashesPattern = /(?<!:)\/\/+/;
     if (multipleSlashesPattern.test(trimmedInput)) {

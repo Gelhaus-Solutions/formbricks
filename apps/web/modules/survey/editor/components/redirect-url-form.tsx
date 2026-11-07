@@ -55,7 +55,7 @@ export const RedirectUrlForm = ({ localSurvey, endingCard, updateSurvey }: Redir
                   id="redirectUrl"
                   name="redirectUrl"
                   className="relative text-black caret-black"
-                  placeholder="https://formbricks.com"
+                  placeholder="https://example.com"
                   value={
                     recallToHeadline(
                       {
