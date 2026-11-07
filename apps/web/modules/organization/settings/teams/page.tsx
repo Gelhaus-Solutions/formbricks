@@ -1,12 +1,11 @@
 import { USER_MANAGEMENT_MINIMUM_ROLE } from "@/lib/constants";
 import { getUserManagementAccess } from "@/lib/membership/utils";
 import { getTranslate } from "@/lingodotdev/server";
-import { getTeamsWhereUserIsAdmin } from "@/modules/ee/teams/lib/roles";
-import { TeamsView } from "@/modules/ee/teams/team-list/components/teams-view";
 import { getAccessControlPermission } from "@/modules/features/lib/flags";
 import { getOrganizationAuth } from "@/modules/organization/lib/utils";
 import { MembersView } from "@/modules/organization/settings/teams/components/members-view";
 import { redirectBillingRoleFromRestrictedOrgSettings } from "@/modules/settings/lib/redirect-billing-role";
+import { getTeamsWhereUserIsAdmin } from "@/modules/teams/lib/roles";
 import { PageContentWrapper } from "@/modules/ui/components/page-content-wrapper";
 import { PageHeader } from "@/modules/ui/components/page-header";
 
@@ -43,12 +42,6 @@ export const TeamsPage = async (props: Readonly<{ params: Promise<{ organization
         currentUserId={session.user.id}
         isAccessControlAllowed={isAccessControlAllowed}
         isUserManagementDisabledFromUi={!hasUserManagementAccess}
-      />
-      <TeamsView
-        organizationId={organization.id}
-        membershipRole={currentUserMembership?.role}
-        currentUserId={session.user.id}
-        isAccessControlAllowed={isAccessControlAllowed}
       />
     </PageContentWrapper>
   );

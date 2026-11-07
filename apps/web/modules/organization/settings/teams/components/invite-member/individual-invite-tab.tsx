@@ -9,9 +9,8 @@ import { OrganizationRole } from "@formbricks/database/prisma-browser";
 import { ZId } from "@formbricks/types/common";
 import { TOrganizationRole, ZOrganizationRole } from "@formbricks/types/memberships";
 import { ZUserName } from "@formbricks/types/user";
-import { AddMemberRole } from "@/modules/ee/role-management/components/add-member-role";
-import { TOrganizationTeam } from "@/modules/ee/teams/team-list/types/team";
 import { organizationSettingsPath } from "@/modules/settings/lib/routes";
+import { TOrganizationTeam } from "@/modules/teams/team-list/types/team";
 import { Alert, AlertDescription } from "@/modules/ui/components/alert";
 import { Button } from "@/modules/ui/components/button";
 import { FormError, FormField, FormItem, FormLabel } from "@/modules/ui/components/form";
@@ -29,7 +28,6 @@ interface IndividualInviteTabProps {
   readonly organizationId: string;
   readonly isAccessControlAllowed: boolean;
   readonly isFormbricksCloud: boolean;
-  readonly membershipRole?: TOrganizationRole;
   readonly showTeamAdminRestrictions: boolean;
   readonly enterpriseLicenseRequestFormUrl: string;
 }
@@ -41,7 +39,6 @@ export const IndividualInviteTab = ({
   organizationId,
   isAccessControlAllowed,
   isFormbricksCloud,
-  membershipRole,
   showTeamAdminRestrictions,
   enterpriseLicenseRequestFormUrl,
 }: IndividualInviteTabProps) => {
@@ -124,30 +121,19 @@ export const IndividualInviteTab = ({
           />
           {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
         </div>
-        <div>
-          {showTeamAdminRestrictions ? (
-            <div className="flex flex-col gap-y-2">
-              <Label htmlFor="memberRoleSelect">{t("workspace.settings.teams.organization_role")}</Label>
-              <Input value={t("workspace.settings.teams.member")} disabled />
-            </div>
-          ) : (
-            <>
-              <AddMemberRole
-                control={control}
-                isAccessControlAllowed={isAccessControlAllowed}
-                isFormbricksCloud={isFormbricksCloud}
-                membershipRole={membershipRole}
-              />
-              {watch("role") === "member" && (
-                <Alert className="mt-2" variant="info">
-                  <AlertDescription>
-                    {t("workspace.settings.teams.member_role_info_message")}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </>
-          )}
-        </div>
+        {/* No role picker: the role is the form default, which is "owner" unless access control or team
+            admin restrictions apply. Choosing a role is role management, rebuilt separately (GFORMS-12). */}
+        {showTeamAdminRestrictions && (
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="memberRoleSelect">{t("workspace.settings.teams.organization_role")}</Label>
+            <Input value={t("workspace.settings.teams.member")} disabled />
+          </div>
+        )}
+        {!showTeamAdminRestrictions && watch("role") === "member" && (
+          <Alert variant="info">
+            <AlertDescription>{t("workspace.settings.teams.member_role_info_message")}</AlertDescription>
+          </Alert>
+        )}
 
         {isAccessControlAllowed && (
           <>

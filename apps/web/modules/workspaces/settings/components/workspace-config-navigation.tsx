@@ -47,13 +47,6 @@ export const WorkspaceConfigNavigation = ({ activeId, loading }: WorkspaceConfig
       current: pathname?.includes("/integrations"),
     },
     {
-      id: "teams",
-      label: t("common.team_access"),
-      icon: <UsersIcon className="size-5" />,
-      href: `${workspaceBasePath}/settings/workspace/teams`,
-      current: pathname?.includes("/teams"),
-    },
-    {
       id: "languages",
       label: t("common.survey_languages"),
       icon: <LanguagesIcon className="size-5" />,

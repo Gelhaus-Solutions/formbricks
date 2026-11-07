@@ -1,6 +1,5 @@
 import { TOrganizationRole } from "@formbricks/types/memberships";
 import { TOrganization } from "@formbricks/types/organizations";
-import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { getAccessFlags } from "@/lib/membership/utils";
 import { MembersInfo } from "@/modules/organization/settings/teams/components/edit-memberships/members-info";
 import { getInvitesByOrganizationId } from "@/modules/organization/settings/teams/lib/invite";
@@ -16,7 +15,7 @@ interface EditMembershipsProps {
 
 /**
  * The column headers used to live here, hand-rolled as a `grid-cols-12` of divs, while the rows lived in
- * `MembersInfo` — two files repeating the same `col-span-*` sequence and the same two feature flags. They
+ * `MembersInfo`: two files repeating the same `col-span-*` sequence and the same two feature flags. They
  * are now one column array in `MembersInfo`, which is where the flags already were.
  */
 export const EditMemberships = async ({
@@ -47,7 +46,6 @@ export const EditMemberships = async ({
       members={visibleMembers}
       currentUserRole={role}
       isAccessControlAllowed={isAccessControlAllowed}
-      isFormbricksCloud={IS_FORMBRICKS_CLOUD}
       isUserManagementDisabledFromUi={isUserManagementDisabledFromUi}
     />
   );

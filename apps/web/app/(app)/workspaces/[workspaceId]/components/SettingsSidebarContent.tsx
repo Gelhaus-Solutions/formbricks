@@ -277,13 +277,6 @@ export const SettingsSidebarContent = ({
       disabled: isBilling,
     },
     {
-      id: "teams",
-      label: t("common.team_access"),
-      href: workspaceSettingsPath(workspaceId, "teams"),
-      icon: <UsersIcon className={iconClassName} />,
-      disabled: isBilling,
-    },
-    {
       id: "languages",
       label: t("common.survey_languages"),
       href: workspaceSettingsPath(workspaceId, "languages"),

@@ -10,7 +10,6 @@ import { TOrganization } from "@formbricks/types/organizations";
 import { FORMBRICKS_ENVIRONMENT_ID_LS } from "@/lib/localStorage";
 import { getAccessFlags } from "@/lib/membership/utils";
 import { getFormattedErrorMessage } from "@/lib/utils/error-message";
-import { TOrganizationTeam } from "@/modules/ee/teams/team-list/types/team";
 import {
   bulkInviteUsersAction,
   inviteUserAction,
@@ -23,6 +22,7 @@ import {
   getInviteFailureReasonFromMessage,
 } from "@/modules/organization/settings/teams/lib/invite-failure";
 import { TInvitee } from "@/modules/organization/settings/teams/types/invites";
+import { TOrganizationTeam } from "@/modules/teams/team-list/types/team";
 import { Button } from "@/modules/ui/components/button";
 import {
   Dialog,
@@ -194,7 +194,6 @@ export const OrganizationActions = ({
         open={isInviteMemberModalOpen}
         setOpen={setIsInviteMemberModalOpen}
         onSubmit={handleAddMembers}
-        membershipRole={membershipRole}
         organizationId={organization.id}
         isAccessControlAllowed={isAccessControlAllowed}
         isFormbricksCloud={isFormbricksCloud}

@@ -8,9 +8,8 @@ import { useTranslation } from "react-i18next";
 import { TMember, TOrganizationRole } from "@formbricks/types/memberships";
 import { TOrganization } from "@formbricks/types/organizations";
 import { getReportingTimeZone } from "@/lib/date-ranges";
-import { getAccessFlags } from "@/lib/membership/utils";
+import { getAccessFlags, getOrganizationRoleLabels } from "@/lib/membership/utils";
 import { formatDateForDisplay, formatDateWithOrdinal } from "@/lib/utils/datetime";
-import { EditMembershipRole } from "@/modules/ee/role-management/components/edit-membership-role";
 import { MemberActions } from "@/modules/organization/settings/teams/components/edit-memberships/member-actions";
 import {
   type TLastSignInSort,
@@ -125,17 +124,15 @@ const LastSignInHeader = ({
  * nothing.
  *
  * The two optional columns are pushed onto one array instead of being guarded in both a header file and a
- * row file. That duplication — the same two flags spelled out twice, in two components — is what let the
+ * row file. That duplication (the same two flags spelled out twice, in two components) is what let the
  * header and the rows drift apart in the first place.
  */
 const getMemberColumns = ({
   t,
   locale,
   organization,
-  currentUserRole,
   currentUserId,
   isAccessControlAllowed,
-  isFormbricksCloud,
   isUserManagementDisabledFromUi,
   isOwnerOrManager,
   isManager,
@@ -147,10 +144,8 @@ const getMemberColumns = ({
   t: TFunction;
   locale: string;
   organization: TOrganization;
-  currentUserRole: TOrganizationRole;
   currentUserId: string;
   isAccessControlAllowed: boolean;
-  isFormbricksCloud: boolean;
   isUserManagementDisabledFromUi: boolean;
   isOwnerOrManager: boolean;
   isManager: boolean;
@@ -184,25 +179,14 @@ const getMemberColumns = ({
   ];
 
   if (isAccessControlAllowed) {
+    // Read-only: changing a member's role is role management, rebuilt separately (GFORMS-12).
+    const roleLabels = getOrganizationRoleLabels(t);
     columns.push({
       id: "role",
       header: t("common.role"),
       headerClassName: "w-[15%]",
       cellClassName: "ph-no-capture",
-      cell: (member) => (
-        <EditMembershipRole
-          currentUserRole={currentUserRole}
-          memberRole={member.role}
-          memberId={!isInvitee(member) ? member.userId : ""}
-          organizationId={organization.id}
-          userId={currentUserId}
-          memberAccepted={!isInvitee(member) ? member.accepted : undefined}
-          inviteId={isInvitee(member) ? member.id : ""}
-          doesOrgHaveMoreThanOneOwner={doesOrgHaveMoreThanOneOwner}
-          isFormbricksCloud={isFormbricksCloud}
-          isUserManagementDisabledFromUi={isUserManagementDisabledFromUi}
-        />
-      ),
+      cell: (member) => roleLabels[member.role],
     });
   }
 
@@ -237,7 +221,7 @@ const getMemberColumns = ({
       // old header used, so the label sits over the controls it names.
       //
       // Nothing goes on `cellClassName`: `MemberActions` already renders its own `flex justify-end`
-      // wrapper, and putting the flex on the `<td>` would stop it being a table-cell — killing the shared
+      // wrapper, and putting the flex on the `<td>` would stop it being a table-cell, killing the shared
       // `align-middle` and leaving the buttons baseline-aligned rather than centred.
       align: "right",
       cell: (member) => (
@@ -279,7 +263,6 @@ interface MembersInfoProps {
   currentUserRole: TOrganizationRole;
   currentUserId: string;
   isAccessControlAllowed: boolean;
-  isFormbricksCloud: boolean;
   isUserManagementDisabledFromUi: boolean;
 }
 
@@ -290,7 +273,6 @@ export const MembersInfo = ({
   members,
   currentUserId,
   isAccessControlAllowed,
-  isFormbricksCloud,
   isUserManagementDisabledFromUi,
 }: Readonly<MembersInfoProps>) => {
   const { t, i18n } = useTranslation();
@@ -318,10 +300,8 @@ export const MembersInfo = ({
           t,
           locale,
           organization,
-          currentUserRole,
           currentUserId,
           isAccessControlAllowed,
-          isFormbricksCloud,
           isUserManagementDisabledFromUi,
           isOwnerOrManager,
           isManager,
@@ -336,7 +316,7 @@ export const MembersInfo = ({
         // Effectively unreachable: whoever is looking at this page is themselves a member.
         emptyMessage={t("common.no_results")}
         // These two ids are what `organization.spec.ts` and `invite-existing-account.spec.ts` locate. Kept
-        // exactly where they were — on the row container and on each row — so this conversion needs no
+        // exactly where they were (on the row container and on each row), so this conversion needs no
         // spec changes. `#singleMemberInfo` repeating per row is invalid HTML and worth retiring, but that
         // is a spec change, so it stays a follow-up.
         bodyProps={{ id: "membersInfoWrapper" }}
