@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -24,7 +24,6 @@ import {
 } from "@/modules/auth/lib/verification-links";
 import { createUserAction } from "@/modules/auth/signup/actions";
 import { TermsPrivacyLinks } from "@/modules/auth/signup/components/terms-privacy-links";
-import { SSOOptions } from "@/modules/ee/sso/components/sso-options";
 import { Button } from "@/modules/ui/components/button";
 import { FormControl, FormError, FormField, FormItem, FormLabel } from "@/modules/ui/components/form";
 import { Input } from "@/modules/ui/components/input";
@@ -44,17 +43,9 @@ interface SignupFormProps {
   webAppUrl: string;
   privacyUrl: string | undefined;
   termsUrl: string | undefined;
-  emailAuthEnabled: boolean;
-  googleOAuthEnabled: boolean;
-  githubOAuthEnabled: boolean;
-  azureOAuthEnabled: boolean;
-  oidcOAuthEnabled: boolean;
-  oidcDisplayName?: string;
   userLocale: TUserLocale;
   emailFromSearchParams?: string;
   emailVerificationDisabled: boolean;
-  isSsoEnabled: boolean;
-  samlSsoEnabled: boolean;
   isTurnstileConfigured: boolean;
   turnstileSiteKey?: string;
 }
@@ -63,17 +54,9 @@ export const SignupForm = ({
   webAppUrl,
   privacyUrl,
   termsUrl,
-  emailAuthEnabled,
-  googleOAuthEnabled,
-  githubOAuthEnabled,
-  azureOAuthEnabled,
-  oidcOAuthEnabled,
-  oidcDisplayName,
   userLocale,
   emailFromSearchParams,
   emailVerificationDisabled,
-  isSsoEnabled,
-  samlSsoEnabled,
   isTurnstileConfigured,
   turnstileSiteKey,
 }: Readonly<SignupFormProps>) => {
@@ -85,19 +68,6 @@ export const SignupForm = ({
   const [turnstileToken, setTurnstileToken] = useState<string>();
 
   const turnstile = useTurnstile();
-
-  // An SSO sign-up rejected for a personal email domain redirects back here with ?error=<code>.
-  // Match the known code exactly (never echo the raw param). Track the last error value we toasted
-  // (rather than a permanent boolean) so strict-mode's double effect invocation and locale re-renders
-  // are deduped, but a fresh, distinct rejection value would still notify.
-  const oauthError = searchParams?.get("error");
-  const lastToastedOauthError = useRef<string | null>(null);
-  useEffect(() => {
-    if (oauthError !== SIGNUP_EMAIL_DOMAIN_BLOCKED_ERROR_CODE) return;
-    if (lastToastedOauthError.current === oauthError) return;
-    lastToastedOauthError.current = oauthError;
-    toast.error(t("auth.signup.company_email_required"));
-  }, [oauthError, t]);
 
   const returnToUrl = useMemo(() => {
     if (inviteToken) {
@@ -209,144 +179,130 @@ export const SignupForm = ({
   return (
     <div className="text-center">
       <h1 className="mb-4 text-xl font-semibold text-balance text-slate-800">{t("auth.signup.title")}</h1>
-      {emailAuthEnabled && (
-        <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="mb-2">
-            {showLogin && (
-              <div>
-                <div className="space-y-2">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem className="w-full text-left">
-                        <FormLabel>{t("common.full_name")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            data-testid="signup-name"
-                            value={field.value}
-                            name="name"
-                            autoComplete="name"
-                            autoFocus
-                            onBlur={field.onBlur}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            placeholder="Full name"
-                            className="bg-white"
-                          />
-                        </FormControl>
-                        <FormError role="alert" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem className="w-full text-left">
-                        <FormLabel>{t("common.email")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            data-testid="signup-email"
-                            type="email"
-                            value={field.value}
-                            name="email"
-                            autoComplete="email"
-                            inputMode="email"
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                            spellCheck={false}
-                            onBlur={field.onBlur}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            placeholder="work@email.com"
-                            className="bg-white"
-                          />
-                        </FormControl>
-                        <FormError role="alert" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem className="w-full text-left">
-                        <FormLabel>{t("common.password")}</FormLabel>
-                        <FormControl>
-                          <PasswordInput
-                            data-testid="signup-password"
-                            name="password"
-                            value={field.value}
-                            onBlur={field.onBlur}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            // This form creates the account, so a password manager should be
-                            // offering to generate and store, not autofill the current one.
-                            autoComplete="new-password"
-                            placeholder="*******"
-                            required
-                            className="bg-white"
-                          />
-                        </FormControl>
-                        <FormError role="alert" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <PasswordChecks password={form.watch("password")} />
+      <FormProvider {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="mb-2">
+          {showLogin && (
+            <div>
+              <div className="space-y-2">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="w-full text-left">
+                      <FormLabel>{t("common.full_name")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          data-testid="signup-name"
+                          value={field.value}
+                          name="name"
+                          autoComplete="name"
+                          autoFocus
+                          onBlur={field.onBlur}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          placeholder="Full name"
+                          className="bg-white"
+                        />
+                      </FormControl>
+                      <FormError role="alert" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="w-full text-left">
+                      <FormLabel>{t("common.email")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          data-testid="signup-email"
+                          type="email"
+                          value={field.value}
+                          name="email"
+                          autoComplete="email"
+                          inputMode="email"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          onBlur={field.onBlur}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          placeholder="work@email.com"
+                          className="bg-white"
+                        />
+                      </FormControl>
+                      <FormError role="alert" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="w-full text-left">
+                      <FormLabel>{t("common.password")}</FormLabel>
+                      <FormControl>
+                        <PasswordInput
+                          data-testid="signup-password"
+                          name="password"
+                          value={field.value}
+                          onBlur={field.onBlur}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          // This form creates the account, so a password manager should be
+                          // offering to generate and store, not autofill the current one.
+                          autoComplete="new-password"
+                          placeholder="*******"
+                          required
+                          className="bg-white"
+                        />
+                      </FormControl>
+                      <FormError role="alert" />
+                    </FormItem>
+                  )}
+                />
               </div>
-            )}
-            {isTurnstileConfigured && showLogin && turnstileSiteKey && (
-              // The widget is a fixed 300px-wide iframe, wider than the card's content box on a
-              // small phone. "flexible" lets it use the container where there is room; below xs
-              // it is scaled to fit, and the clipping wrapper keeps its 300px layout box from
-              // widening the page (the scaled content is narrower than the wrapper, so nothing
-              // is actually cut off).
-              <div data-testid="turnstile-fit" className="mt-4 w-full overflow-hidden">
-                <div className="origin-top-left scale-80 xs:origin-top xs:scale-100">
-                  <Turnstile
-                    sitekey={turnstileSiteKey}
-                    size="flexible"
-                    onSuccess={(token) => {
-                      setTurnstileToken(token);
-                    }}
-                    onError={() => {
-                      setTurnstileToken(undefined);
-                      toast.error(t("auth.signup.captcha_failed"));
-                    }}
-                  />
-                </div>
+              <PasswordChecks password={form.watch("password")} />
+            </div>
+          )}
+          {isTurnstileConfigured && showLogin && turnstileSiteKey && (
+            // The widget is a fixed 300px-wide iframe, wider than the card's content box on a
+            // small phone. "flexible" lets it use the container where there is room; below xs
+            // it is scaled to fit, and the clipping wrapper keeps its 300px layout box from
+            // widening the page (the scaled content is narrower than the wrapper, so nothing
+            // is actually cut off).
+            <div data-testid="turnstile-fit" className="mt-4 w-full overflow-hidden">
+              <div className="origin-top-left scale-80 xs:origin-top xs:scale-100">
+                <Turnstile
+                  sitekey={turnstileSiteKey}
+                  size="flexible"
+                  onSuccess={(token) => {
+                    setTurnstileToken(token);
+                  }}
+                  onError={() => {
+                    setTurnstileToken(undefined);
+                    toast.error(t("auth.signup.captcha_failed"));
+                  }}
+                />
               </div>
-            )}
+            </div>
+          )}
 
-            <Button
-              data-testid={showLogin ? "signup-submit" : "signup-show-login"}
-              type={showLogin ? "submit" : "button"}
-              onClick={
-                showLogin
-                  ? undefined
-                  : () => {
-                      setShowLogin(true);
-                    }
-              }
-              disabled={showLogin && !form.formState.isValid}
-              className="h-11 w-full justify-center sm:h-10"
-              loading={showLogin && form.formState.isSubmitting}>
-              {t("auth.continue_with_email")}
-            </Button>
-          </form>
-        </FormProvider>
-      )}
-      {isSsoEnabled && (
-        <SSOOptions
-          googleOAuthEnabled={googleOAuthEnabled}
-          githubOAuthEnabled={githubOAuthEnabled}
-          azureOAuthEnabled={azureOAuthEnabled}
-          oidcOAuthEnabled={oidcOAuthEnabled}
-          oidcDisplayName={oidcDisplayName}
-          samlSsoEnabled={samlSsoEnabled}
-          returnToUrl={returnToUrl}
-          source="signup"
-        />
-      )}
+          <Button
+            data-testid={showLogin ? "signup-submit" : "signup-show-login"}
+            type={showLogin ? "submit" : "button"}
+            onClick={
+              showLogin
+                ? undefined
+                : () => {
+                    setShowLogin(true);
+                  }
+            }
+            disabled={showLogin && !form.formState.isValid}
+            className="h-11 w-full justify-center sm:h-10"
+            loading={showLogin && form.formState.isSubmitting}>
+            {t("auth.continue_with_email")}
+          </Button>
+        </form>
+      </FormProvider>
       <TermsPrivacyLinks termsUrl={termsUrl} privacyUrl={privacyUrl} />
       <div className="mt-9 text-center text-xs">
         <span className="leading-5 text-slate-500">{t("auth.signup.have_an_account")}</span>

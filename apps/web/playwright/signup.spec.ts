@@ -75,7 +75,7 @@ const horizontalOverflow = (page: Page) =>
 test.describe("Signed-out screens on a phone", () => {
   test("reflow to 320px without horizontal scrolling", async ({ page }) => {
     // Two widths, each with a reason: 320 is the WCAG 1.4.10 floor, and 430 is the repo's
-    // own `xs` breakpoint — the only place the auth surface changes behaviour between them.
+    // own `xs` breakpoint, the only place the auth surface changes behaviour between them.
     for (const width of [320, 430]) {
       await page.setViewportSize({ width, height: 812 });
 
@@ -85,8 +85,8 @@ test.describe("Signed-out screens on a phone", () => {
         expect(await horizontalOverflow(page), `${path} at ${width}px`).toBe(0);
       }
 
-      // The email step is what actually fills the card — six SSO buttons, two fields and a
-      // captcha only exist once it is expanded.
+      // The email step is what actually fills the card: the two fields only exist once it is
+      // expanded.
       await page.goto("/auth/login");
       await page.getByRole("button", { name: "Log in with Email" }).dispatchEvent("click");
       await expect(page.getByPlaceholder("work@email.com")).toBeVisible();
@@ -106,7 +106,7 @@ test.describe("Signed-out screens on a phone", () => {
     await page.getByTestId("signup-email").fill(mobileEmail);
     await page.getByTestId("signup-password").fill(password);
 
-    // axe's `label` rule (wcag2a) is what holds the labels to account — it fails on any
+    // axe's `label` rule (wcag2a) is what holds the labels to account: it fails on any
     // input without an accessible name, without pinning the copy to a string in this spec.
 
     const results = await new AxeBuilder({ page }).withTags(WCAG_AA_TAGS).analyze();
