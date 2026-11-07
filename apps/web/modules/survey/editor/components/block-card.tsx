@@ -75,7 +75,6 @@ interface BlockCardProps {
   lastElementIndex: number;
   invalidElements?: string[];
   addElement: (element: any, index?: number) => void;
-  isFormbricksCloud: boolean;
   isCxMode: boolean;
   locale: TUserLocale;
   responseCount: number;
@@ -114,7 +113,6 @@ const BlockCardComponent = ({
   lastElementIndex,
   invalidElements,
   addElement,
-  isFormbricksCloud,
   isCxMode,
   locale,
   responseCount,
@@ -534,8 +532,6 @@ const BlockCardComponent = ({
                                   updateElement={updateElement}
                                   updateBlockLogic={updateBlockLogic}
                                   updateBlockLogicFallback={updateBlockLogicFallback}
-                                  workspace={workspace}
-                                  isFormbricksCloud={isFormbricksCloud}
                                 />
                               }
                             />

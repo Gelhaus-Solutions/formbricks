@@ -14,7 +14,6 @@ import { getUser } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
 import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { getQuotas } from "@/modules/quotas/lib/quotas";
-import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 import { getSurveyAuth } from "@/modules/survey/lib/survey-auth";
 import { RestrictedSurveyBanner } from "@/modules/survey/visibility/components/restricted-survey-banner";
 import { getSurveyVisibilityViewer } from "@/modules/survey/visibility/lib/gate";
@@ -51,11 +50,6 @@ const Page = async (props: Readonly<{ params: Promise<{ workspaceId: string; sur
   }
 
   const publicDomain = getPublicDomain();
-
-  const organizationBilling = await getOrganizationBilling(organization.id);
-  if (!organizationBilling) {
-    throw new ResourceNotFoundError(t("common.organization"), organization.id);
-  }
 
   const isQuotasAllowed = await getIsQuotasEnabled(organization.id);
   const quotas = isQuotasAllowed ? await getQuotas(survey.id) : [];

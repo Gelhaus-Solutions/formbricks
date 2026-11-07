@@ -57,7 +57,6 @@ vi.mock("@/modules/survey/editor/lib/survey", () => ({
 vi.mock("@/modules/survey/follow-ups/lib/utils", () => ({ getSurveyFollowUpsPermission: vi.fn() }));
 vi.mock("@/modules/survey/lib/permission", () => ({ checkSpamProtectionPermission: vi.fn() }));
 vi.mock("@/modules/survey/lib/survey", () => ({
-  getOrganizationBilling: vi.fn(),
   getSurvey: vi.fn(),
 }));
 vi.mock("@/modules/survey/list/lib/survey", () => ({ getSurveyCount: vi.fn() }));

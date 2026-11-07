@@ -11,7 +11,6 @@ import { getPublicDomain } from "@/lib/getPublicUrl";
 import { getSurvey } from "@/lib/survey/service";
 import { getUser } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
-import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 import { getSurveyAuth } from "@/modules/survey/lib/survey-auth";
 import { RestrictedSurveyBanner } from "@/modules/survey/visibility/components/restricted-survey-banner";
 import { getSurveyVisibilityViewer } from "@/modules/survey/visibility/lib/gate";
@@ -49,11 +48,6 @@ const SurveyPage = async (
   if (!organization) {
     throw new ResourceNotFoundError(t("common.organization"), null);
   }
-  const organizationBilling = await getOrganizationBilling(organization.id);
-  if (!organizationBilling) {
-    throw new ResourceNotFoundError(t("common.organization"), organization.id);
-  }
-
   const aiConfig = await getOrganizationAIConfig(organization.id);
   const aiUnavailableReason = getAISmartToolsUnavailableReason(aiConfig) ?? null;
 

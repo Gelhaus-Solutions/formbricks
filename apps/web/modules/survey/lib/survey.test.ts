@@ -3,10 +3,8 @@ import { prisma } from "@formbricks/database";
 import { Prisma } from "@formbricks/database/prisma";
 import { PrismaErrorType } from "@formbricks/database/types/error";
 import { DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
-import { TOrganizationBilling } from "@formbricks/types/organizations";
 import { TSurvey } from "@formbricks/types/surveys/types";
-import { getOrganizationBillingWithReadThroughSync } from "@/modules/ee/billing/lib/organization-billing";
-import { getOrganizationBilling, getSurvey, selectSurvey } from "./survey";
+import { getSurvey, selectSurvey } from "./survey";
 
 // Mock prisma
 vi.mock("@formbricks/database", () => ({
@@ -17,10 +15,6 @@ vi.mock("@formbricks/database", () => ({
   },
 }));
 
-vi.mock("@/modules/ee/billing/lib/organization-billing", () => ({
-  getOrganizationBillingWithReadThroughSync: vi.fn(),
-}));
-
 // Mock transformPrismaSurvey
 vi.mock("@/modules/survey/lib/utils", () => ({
   transformPrismaSurvey: vi.fn((survey) => survey),
@@ -29,33 +23,6 @@ vi.mock("@/modules/survey/lib/utils", () => ({
 describe("Survey Library Tests", () => {
   afterEach(() => {
     vi.clearAllMocks();
-  });
-
-  describe("getOrganizationBilling", () => {
-    test("should return organization billing when found", async () => {
-      const mockBilling = {
-        stripeCustomerId: "cus_123",
-        features: { linkSurvey: { status: "active" } },
-        subscriptionStatus: "active",
-        nextRenewalDate: new Date(),
-      } as unknown as TOrganizationBilling;
-      vi.mocked(getOrganizationBillingWithReadThroughSync).mockResolvedValueOnce(mockBilling);
-
-      const billing = await getOrganizationBilling("org_123");
-      expect(billing).toEqual(mockBilling);
-      expect(getOrganizationBillingWithReadThroughSync).toHaveBeenCalledWith("org_123");
-    });
-
-    test("should throw ResourceNotFoundError when organization not found", async () => {
-      vi.mocked(getOrganizationBillingWithReadThroughSync).mockResolvedValueOnce(null);
-      await expect(getOrganizationBilling("org_nonexistent")).rejects.toThrow(ResourceNotFoundError);
-    });
-
-    test("should throw other errors", async () => {
-      const genericError = new Error("Generic error");
-      vi.mocked(getOrganizationBillingWithReadThroughSync).mockRejectedValueOnce(genericError);
-      await expect(getOrganizationBilling("org_error")).rejects.toThrow(genericError);
-    });
   });
 
   describe("getSurvey", () => {

@@ -1,9 +1,8 @@
-import { OperationNotAllowedError, ResourceNotFoundError } from "@formbricks/types/errors";
+import { OperationNotAllowedError } from "@formbricks/types/errors";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { isDefaultEndingCardButtonLink } from "@/lib/survey/default-ending-card";
 import { getElementsFromBlocks } from "@/lib/survey/utils";
 import { getExternalUrlsPermission } from "@/modules/survey/lib/permission";
-import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 
 /**
  * Checks if external URLs can be added or modified for the given organization.
@@ -13,7 +12,6 @@ import { getOrganizationBilling } from "@/modules/survey/lib/survey";
  * @param { TSurvey } newSurvey  The new survey state.
  * @param { TSurvey | null } oldSurvey  The old survey state (or null for new surveys).
  * @returns { Promise<void> }  A promise that resolves if the permission is granted.
- * @throws { ResourceNotFoundError }  If the organization is not found.
  * @throws { OperationNotAllowedError }  If external URLs are not allowed and new/changed URLs are detected.
  */
 export const checkExternalUrlsPermission = async (
@@ -23,11 +21,6 @@ export const checkExternalUrlsPermission = async (
 ): Promise<void> => {
   const newQuestions = getElementsFromBlocks(newSurvey.blocks);
   const oldQuestions = oldSurvey?.blocks ? getElementsFromBlocks(oldSurvey.blocks) : [];
-
-  const organizationBilling = await getOrganizationBilling(organizationId);
-  if (!organizationBilling) {
-    throw new ResourceNotFoundError("Organization", organizationId);
-  }
 
   const isExternalUrlsAllowed = await getExternalUrlsPermission(organizationId);
   if (isExternalUrlsAllowed) {

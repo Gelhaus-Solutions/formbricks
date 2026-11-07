@@ -1,8 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
-import { toast } from "react-hot-toast";
 import { Trans, useTranslation } from "react-i18next";
 import type {
   TSurveyCesElement,
@@ -13,10 +10,8 @@ import type {
   TSurveyOpenTextElement,
   TSurveyRatingElement,
 } from "@formbricks/types/surveys/elements";
-import { type TWorkspaceWithoutCustomCss } from "@/modules/custom-css/lib/types";
 import { AdvancedOptionToggle } from "@/modules/ui/components/advanced-option-toggle";
 import { Input } from "@/modules/ui/components/input";
-import { useGetBillingInfo } from "@/modules/utils/hooks/useGetBillingInfo";
 
 /**
  * The switches that change how a question behaves rather than what the respondent reads. They sit in the
@@ -73,42 +68,15 @@ export const FileUploadSettings = ({
   element,
   elementIdx,
   updateElement,
-  workspace,
-  isFormbricksCloud,
 }: Readonly<{
   element: TSurveyFileUploadElement;
   elementIdx: number;
   updateElement: TUpdateElement;
-  workspace: TWorkspaceWithoutCustomCss;
-  isFormbricksCloud: boolean;
 }>) => {
   const { t } = useTranslation();
-  const [isMaxSizeError, setIsMaxSizeError] = useState(false);
-  const {
-    billingInfo,
-    error: billingInfoError,
-    isLoading: billingInfoLoading,
-  } = useGetBillingInfo(workspace.organizationId);
-
-  const maxSizeInMBLimit = useMemo(() => {
-    if (billingInfoError || billingInfoLoading || !billingInfo) {
-      return 10;
-    }
-
-    const hasPaidCloudCapacity =
-      billingInfo.limits.workspaces === null ||
-      (typeof billingInfo.limits.workspaces === "number" && billingInfo.limits.workspaces > 1);
-
-    if (hasPaidCloudCapacity) {
-      // 1GB in MB
-      return 1024;
-    }
-
-    return 10;
-  }, [billingInfo, billingInfoError, billingInfoLoading]);
-
   const handleMaxSizeInMBToggle = (checked: boolean) => {
-    const defaultMaxSizeInMB = isFormbricksCloud ? maxSizeInMBLimit : 1024;
+    // 1 GB. The Cloud plans' smaller cap went with Cloud billing (GFORMS-7).
+    const defaultMaxSizeInMB = 1024;
 
     updateElement(elementIdx, { maxSizeInMB: checked ? defaultMaxSizeInMB : undefined });
   };
@@ -147,17 +115,6 @@ export const FileUploadSettings = ({
                     onChange={(e) => {
                       const parsedValue = Number.parseInt(e.target.value, 10);
 
-                      if (isFormbricksCloud && parsedValue > maxSizeInMBLimit) {
-                        toast.error(
-                          t("workspace.surveys.edit.max_file_size_limit_is_mb", {
-                            maxSize: maxSizeInMBLimit,
-                          })
-                        );
-                        setIsMaxSizeError(true);
-                        updateElement(elementIdx, { maxSizeInMB: maxSizeInMBLimit });
-                        return;
-                      }
-
                       // A file size limit below 1 MB is meaningless, so clamp zero and negative values.
                       updateElement(elementIdx, { maxSizeInMB: Math.max(1, parsedValue) });
                     }}
@@ -167,23 +124,6 @@ export const FileUploadSettings = ({
               }}
             />
           </p>
-          {isMaxSizeError && (
-            <p className="text-xs text-red-500">
-              <Trans
-                i18nKey="workspace.surveys.edit.max_file_size_limit_is_mb_upgrade"
-                values={{ maxSize: maxSizeInMBLimit }}
-                components={{
-                  upgradeLink: (
-                    <Link
-                      className="underline"
-                      target="_blank"
-                      href={`/organizations/${workspace.organizationId}/settings/billing`}
-                    />
-                  ),
-                }}
-              />
-            </p>
-          )}
         </label>
       </AdvancedOptionToggle>
     </div>

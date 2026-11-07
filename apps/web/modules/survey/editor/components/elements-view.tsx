@@ -819,7 +819,6 @@ export const ElementsView = ({
           setActiveElementId={setActiveElementId}
           invalidElements={invalidElements}
           addElement={stableAddElement}
-          isFormbricksCloud={isFormbricksCloud}
           isCxMode={isCxMode}
           locale={locale}
           responseCount={responseCount}

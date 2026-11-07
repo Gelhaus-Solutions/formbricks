@@ -11,7 +11,6 @@ import { authenticatedActionClient } from "@/lib/utils/action-client";
 import { getOrganizationIdFromSurveyId } from "@/lib/utils/helper";
 import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { getQuotas } from "@/modules/quotas/lib/quotas";
-import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 
 const ZGetSurveyFilterDataAction = z.object({
   surveyId: ZId,
@@ -34,11 +33,6 @@ export const getSurveyFilterDataAction = authenticatedActionClient
     }
 
     const organizationId = await getOrganizationIdFromSurveyId(parsedInput.surveyId);
-
-    const organizationBilling = await getOrganizationBilling(organizationId);
-    if (!organizationBilling) {
-      throw new ResourceNotFoundError("Organization", organizationId);
-    }
 
     const isQuotasAllowed = await getIsQuotasEnabled(organizationId);
 

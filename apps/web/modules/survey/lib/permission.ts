@@ -1,7 +1,4 @@
 import { OperationNotAllowedError } from "@formbricks/types/errors";
-import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
-import { hasCloudEntitlementWithLicenseGuard } from "@/modules/billing/lib/feature-access";
-import { CLOUD_STRIPE_FEATURE_LOOKUP_KEYS } from "@/modules/billing/lib/stripe-catalog";
 import { getIsSpamProtectionEnabled } from "@/modules/features/lib/flags";
 
 /**
@@ -17,21 +14,6 @@ export const checkSpamProtectionPermission = async (organizationId: string): Pro
   }
 };
 
-export const getExternalUrlsPermission = async (organizationId: string): Promise<boolean> => {
-  if (IS_FORMBRICKS_CLOUD) {
-    const [canUseCustomRedirectUrl, canUseCustomLinksInSurveys] = await Promise.all([
-      hasCloudEntitlementWithLicenseGuard(
-        organizationId,
-        CLOUD_STRIPE_FEATURE_LOOKUP_KEYS.CUSTOM_REDIRECT_URL
-      ),
-      hasCloudEntitlementWithLicenseGuard(
-        organizationId,
-        CLOUD_STRIPE_FEATURE_LOOKUP_KEYS.CUSTOM_LINKS_IN_SURVEYS
-      ),
-    ]);
-
-    return canUseCustomRedirectUrl && canUseCustomLinksInSurveys;
-  }
-
-  return true;
-};
+// GForms sells no plans (GFORMS-7): custom redirect URLs and links in surveys are open to every
+// organization.
+export const getExternalUrlsPermission = async (_organizationId: string): Promise<boolean> => true;

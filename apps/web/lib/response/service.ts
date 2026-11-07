@@ -29,7 +29,6 @@ import {
   resolveStorageUrlsInObject,
 } from "@/modules/storage/utils";
 import { getOrganizationIdFromWorkspaceId } from "@/modules/survey/lib/organization";
-import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 import { ITEMS_PER_PAGE } from "../constants";
 import { deleteDisplay } from "../display/service";
 import { getOrganization } from "../organization/service";
@@ -474,14 +473,7 @@ export const getResponseDownloadFile = async (
       throw new ResourceNotFoundError("Organization", null);
     }
 
-    const [organizationBilling, organization] = await Promise.all([
-      getOrganizationBilling(organizationId),
-      getOrganization(organizationId),
-    ]);
-
-    if (!organizationBilling) {
-      throw new ResourceNotFoundError("OrganizationBilling", organizationId);
-    }
+    const organization = await getOrganization(organizationId);
     const isQuotasAllowed = await getIsQuotasEnabled(organizationId);
 
     const headers = standardHeaders(

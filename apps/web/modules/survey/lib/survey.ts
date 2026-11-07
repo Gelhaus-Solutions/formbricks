@@ -2,10 +2,8 @@ import { cache as reactCache } from "react";
 import { prisma } from "@formbricks/database";
 import { Prisma } from "@formbricks/database/prisma";
 import { DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
-import { TOrganizationBilling } from "@formbricks/types/organizations";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { selectSurveyEmbeddedDataLinks } from "@/lib/embedded-data/survey-fields";
-import { getOrganizationBillingWithReadThroughSync } from "@/modules/ee/billing/lib/organization-billing";
 import { transformPrismaSurvey } from "@/modules/survey/lib/utils";
 
 export const selectSurvey = {
@@ -114,14 +112,6 @@ export const selectSurvey = {
   // `transformPrismaSurvey`. Read-only — the rows are written by `reconcileEmbeddedData`.
   embeddedDataLinks: selectSurveyEmbeddedDataLinks,
 } satisfies Prisma.SurveySelect;
-
-export const getOrganizationBilling = reactCache(
-  async (organizationId: string): Promise<TOrganizationBilling> => {
-    const billing = await getOrganizationBillingWithReadThroughSync(organizationId);
-    if (!billing) throw new ResourceNotFoundError("Organization", organizationId);
-    return billing;
-  }
-);
 
 export const getSurvey = reactCache(async (surveyId: string): Promise<TSurvey> => {
   try {

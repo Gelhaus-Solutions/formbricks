@@ -31,10 +31,6 @@ vi.mock("@/modules/survey/lib/organization", () => ({
   getOrganizationIdFromWorkspaceId: vi.fn(() => Promise.resolve("org-123")),
 }));
 
-vi.mock("@/modules/survey/lib/survey", () => ({
-  getOrganizationBilling: vi.fn(() => Promise.resolve({ limits: {} })),
-}));
-
 vi.mock("@/modules/features/lib/flags", () => ({
   getIsQuotasEnabled: vi.fn(() => Promise.resolve(false)),
 }));

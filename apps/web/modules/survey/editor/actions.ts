@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { ZActionClassInput } from "@formbricks/types/action-classes";
 import { ZId } from "@formbricks/types/common";
-import { OperationNotAllowedError, ResourceNotFoundError } from "@formbricks/types/errors";
+import { OperationNotAllowedError } from "@formbricks/types/errors";
 import { TSurvey, TSurveyVariable, ZSurvey } from "@formbricks/types/surveys/types";
 import { assertCan } from "@/lib/authorization";
 import {
@@ -32,7 +32,7 @@ import { getSurveyFollowUpsPermission } from "@/modules/survey/follow-ups/lib/ut
 import { getElementsFromBlocks } from "@/modules/survey/lib/client-utils";
 import { assertCanWriteCustomHeadScripts } from "@/modules/survey/lib/custom-head-scripts-permission";
 import { checkSpamProtectionPermission } from "@/modules/survey/lib/permission";
-import { getOrganizationBilling, getSurvey } from "@/modules/survey/lib/survey";
+import { getSurvey } from "@/modules/survey/lib/survey";
 import { getSurveyCount } from "@/modules/survey/list/lib/survey";
 import { getWorkspace, getWorkspaceLanguages } from "./lib/workspace";
 
@@ -176,11 +176,6 @@ const checkSurveyFollowUpsPermission = async (
   newFollowUpIds: string[],
   oldFollowUpIds: Set<string>
 ): Promise<void> => {
-  const organizationBilling = await getOrganizationBilling(organizationId);
-  if (!organizationBilling) {
-    throw new ResourceNotFoundError("Organization", organizationId);
-  }
-
   const isSurveyFollowUpsEnabled = await getSurveyFollowUpsPermission(organizationId);
   if (isSurveyFollowUpsEnabled) return;
 

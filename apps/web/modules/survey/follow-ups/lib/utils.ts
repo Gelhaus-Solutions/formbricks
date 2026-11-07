@@ -1,10 +1,3 @@
-import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
-import { hasCloudEntitlementWithLicenseGuard } from "@/modules/billing/lib/feature-access";
-import { CLOUD_STRIPE_FEATURE_LOOKUP_KEYS } from "@/modules/billing/lib/stripe-catalog";
-
-export const getSurveyFollowUpsPermission = async (organizationId: string): Promise<boolean> => {
-  if (IS_FORMBRICKS_CLOUD) {
-    return hasCloudEntitlementWithLicenseGuard(organizationId, CLOUD_STRIPE_FEATURE_LOOKUP_KEYS.FOLLOW_UPS);
-  }
-  return true;
-};
+// GForms sells no plans (GFORMS-7), so follow-ups are open to every organization. The getter stays for
+// its call sites and for an upstream merge that adds one.
+export const getSurveyFollowUpsPermission = async (_organizationId: string): Promise<boolean> => true;

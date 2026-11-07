@@ -5,23 +5,12 @@ import { Prisma } from "@formbricks/database/prisma";
 import { DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { selectPublicSurveyEmbeddedDataLinks } from "@/lib/embedded-data/survey-fields";
-import { getOrganizationBillingWithReadThroughSync } from "@/modules/ee/billing/lib/organization-billing";
 import { transformPrismaSurvey } from "@/modules/survey/lib/utils";
-import {
-  getOrganizationBilling,
-  getResponseBySingleUseId,
-  getSurveyMetadata,
-  getSurveyOwnerId,
-  getSurveyWithMetadata,
-} from "./data";
+import { getResponseBySingleUseId, getSurveyMetadata, getSurveyOwnerId, getSurveyWithMetadata } from "./data";
 
 vi.mock("server-only", () => ({}));
 
 // Mock dependencies
-vi.mock("@/modules/ee/billing/lib/organization-billing", () => ({
-  getOrganizationBillingWithReadThroughSync: vi.fn(),
-}));
-
 vi.mock("@/modules/survey/lib/utils", () => ({
   transformPrismaSurvey: vi.fn(),
 }));
@@ -315,57 +304,6 @@ describe("data", () => {
       vi.mocked(prisma.response.findFirst).mockRejectedValue(genericError);
 
       await expect(getResponseBySingleUseId(surveyId, singleUseId)()).rejects.toThrow(genericError);
-    });
-  });
-
-  describe("getOrganizationBilling", () => {
-    const mockBilling = {
-      stripeCustomerId: "cus_123",
-      limits: {
-        monthly: {
-          responses: 1000,
-        },
-      },
-      usageCycleAnchor: new Date(),
-    };
-
-    test("should fetch organization billing successfully", async () => {
-      const organizationId = "org-1";
-      vi.mocked(getOrganizationBillingWithReadThroughSync).mockResolvedValue(mockBilling as any);
-
-      const result = await getOrganizationBilling(organizationId);
-
-      expect(result).toEqual(mockBilling);
-      expect(getOrganizationBillingWithReadThroughSync).toHaveBeenCalledWith(organizationId);
-    });
-
-    test("should throw ResourceNotFoundError when organization not found", async () => {
-      const organizationId = "nonexistent-org";
-      vi.mocked(getOrganizationBillingWithReadThroughSync).mockResolvedValue(null);
-
-      await expect(getOrganizationBilling(organizationId)).rejects.toThrow(ResourceNotFoundError);
-      await expect(getOrganizationBilling(organizationId)).rejects.toThrow("Organization");
-    });
-
-    test("should rethrow non-Prisma errors", async () => {
-      const organizationId = "org-1";
-      const genericError = new Error("Generic error");
-
-      vi.mocked(getOrganizationBillingWithReadThroughSync).mockRejectedValue(genericError);
-
-      await expect(getOrganizationBilling(organizationId)).rejects.toThrow(genericError);
-    });
-
-    test("should rethrow known database errors from sync service", async () => {
-      const organizationId = "org-1";
-      const prismaError = new Prisma.PrismaClientKnownRequestError("Database error", {
-        code: "P2025",
-        clientVersion: "5.0.0",
-      });
-
-      vi.mocked(getOrganizationBillingWithReadThroughSync).mockRejectedValue(prismaError);
-
-      await expect(getOrganizationBilling(organizationId)).rejects.toThrow(prismaError);
     });
   });
 });

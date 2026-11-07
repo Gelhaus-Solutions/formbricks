@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isStorageAvailable } from "@formbricks/storage";
-import { ResourceNotFoundError } from "@formbricks/types/errors";
 import { type TSurvey } from "@formbricks/types/surveys/types";
 import {
   DEFAULT_LOCALE,
@@ -34,7 +33,7 @@ import {
   getFinishedResponseCountBySurveyId,
   getResponseCountBySurveyId,
 } from "@/modules/survey/lib/response";
-import { getOrganizationBilling, getSurvey } from "@/modules/survey/lib/survey";
+import { getSurvey } from "@/modules/survey/lib/survey";
 import { canReadSurveyInWorkspace, getSurveyAuth } from "@/modules/survey/lib/survey-auth";
 import { getWorkspaceWithTeamIds } from "@/modules/survey/lib/workspace";
 import { SURVEY_SCHEDULING_CONFIG } from "@/modules/survey/scheduling/lib/constants";
@@ -73,8 +72,6 @@ export const SurveyEditorPage = async (props: {
   const { session, isMember, hasReadAccess, currentUserMembership, workspacePermission, workspace } =
     await getSurveyAuth(params.workspaceId, params.surveyId);
 
-  const t = await getTranslate();
-
   const [survey, workspaceWithTeamIds, actionClasses, responseCount, finishedResponseCount] =
     await Promise.all([
       getSurvey(params.surveyId),
@@ -86,11 +83,6 @@ export const SurveyEditorPage = async (props: {
 
   if (!workspaceWithTeamIds) {
     return notFound();
-  }
-
-  const organizationBilling = await getOrganizationBilling(workspaceWithTeamIds.organizationId);
-  if (!organizationBilling) {
-    throw new ResourceNotFoundError(t("common.organization"), workspaceWithTeamIds.organizationId);
   }
 
   const isSurveyCreationDeletionDisabled = isMember && hasReadAccess;
@@ -206,7 +198,8 @@ const getSurveyCustomCssEditorConfig = async (params: {
 
   return {
     planAllowed: params.planAllowed,
-    billingHref: IS_FORMBRICKS_CLOUD ? `/organizations/${params.organizationId}/settings/billing` : null,
+    // GForms has no billing page to upgrade on (GFORMS-7).
+    billingHref: null,
     hasHeadScriptStyles:
       !IS_FORMBRICKS_CLOUD &&
       (hasStylesInHeadScripts(params.workspaceHeadScripts) ||

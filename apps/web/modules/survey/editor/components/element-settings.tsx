@@ -7,7 +7,6 @@ import {
   TSurveyElement,
   TSurveyElementTypeEnum,
 } from "@formbricks/types/surveys/elements";
-import { type TWorkspaceWithoutCustomCss } from "@/modules/custom-css/lib/types";
 import {
   ColorCodingToggle,
   FileUploadSettings,
@@ -22,9 +21,6 @@ interface ElementSettingsProps {
   element: TSurveyElement;
   elementIdx: number;
   updateElement: (elementIdx: number, updatedAttributes: Record<string, unknown>) => void;
-  /** Only the file upload question reads these: its size limit depends on the plan. */
-  workspace?: TWorkspaceWithoutCustomCss;
-  isFormbricksCloud?: boolean;
 }
 
 const OptionOrder = ({
@@ -95,13 +91,7 @@ const getShuffleOptionsTypes = (element: TSurveyElement, t: TFunction) => {
  * options and validation rules. They are the first part of a question's Settings tab; the Recode
  * section follows.
  */
-export const ElementSettings = ({
-  element,
-  elementIdx,
-  updateElement,
-  workspace,
-  isFormbricksCloud = false,
-}: Readonly<ElementSettingsProps>) => {
+export const ElementSettings = ({ element, elementIdx, updateElement }: Readonly<ElementSettingsProps>) => {
   const { t } = useTranslation();
 
   const updateValidation = (validation: unknown) => updateElement(elementIdx, { validation });
@@ -188,15 +178,7 @@ export const ElementSettings = ({
     case TSurveyElementTypeEnum.FileUpload:
       return (
         <div className="flex flex-col gap-4">
-          {workspace && (
-            <FileUploadSettings
-              element={element}
-              elementIdx={elementIdx}
-              updateElement={updateElement}
-              workspace={workspace}
-              isFormbricksCloud={isFormbricksCloud}
-            />
-          )}
+          <FileUploadSettings element={element} elementIdx={elementIdx} updateElement={updateElement} />
           <ValidationRulesEditor
             elementType={element.type}
             validation={element.validation}

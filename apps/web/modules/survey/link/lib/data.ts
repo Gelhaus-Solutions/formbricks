@@ -5,7 +5,6 @@ import { Prisma } from "@formbricks/database/prisma";
 import { DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { selectPublicSurveyEmbeddedDataLinks } from "@/lib/embedded-data/survey-fields";
-import { getOrganizationBillingWithReadThroughSync } from "@/modules/ee/billing/lib/organization-billing";
 import { transformPrismaSurvey } from "@/modules/survey/lib/utils";
 
 /**
@@ -207,18 +206,6 @@ export const getResponseBySingleUseId = reactCache((surveyId: string, singleUseI
     }
     throw error;
   }
-});
-
-/**
- * Get organization billing information for survey limits
- * Cached separately with longer TTL
- */
-export const getOrganizationBilling = reactCache(async (organizationId: string) => {
-  const billing = await getOrganizationBillingWithReadThroughSync(organizationId);
-  if (!billing) {
-    throw new ResourceNotFoundError("Organization", organizationId);
-  }
-  return billing;
 });
 
 /**
