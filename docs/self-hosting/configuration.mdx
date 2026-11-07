@@ -75,38 +75,7 @@ Where Formbricks lives on the network, and how browsers get to it.
 
 ## Signing in
 
-Out of the box people sign in with an email address and a password. Point the instance at your own identity provider instead and sign-in follows the rules you already enforce there.
-
-<Note>
-  Single Sign-On is part of the [Enterprise Edition](/self-hosting/advanced/license) — every provider
-  below, not only SAML. SAML additionally needs the `saml` entitlement on the licence.
-</Note>
-
-<CardGroup cols={2}>
-  <Card title="Authentication Behavior" icon="user" href="/self-hosting/auth-behavior">
-    Who may sign up, and whether an invitation is required.
-  </Card>
-
-  <Card title="Open ID Connect" icon="id-card" href="/self-hosting/configuration/auth-sso/open-id-connect">
-    The generic OIDC setup. Start here if your provider is not listed separately.
-  </Card>
-
-  <Card title="Keycloak OIDC" icon="shield-halved" href="/self-hosting/configuration/auth-sso/keycloak-oidc">
-    OIDC against a Keycloak realm.
-  </Card>
-
-  <Card title="Azure AD OAuth" icon="microsoft" href="/self-hosting/configuration/auth-sso/azure-ad-oauth">
-    Microsoft Entra ID, formerly Azure AD.
-  </Card>
-
-  <Card title="Google OAuth" icon="google" href="/self-hosting/configuration/auth-sso/google-oauth">
-    Google Workspace accounts.
-  </Card>
-
-  <Card title="SAML SSO" icon="building-lock" href="/self-hosting/configuration/auth-sso/saml-sso">
-    SAML 2.0, for providers that do not speak OIDC.
-  </Card>
-</CardGroup>
+People sign in with an email address and a password. An account with two-factor authentication also enters a code from its authenticator app, or one of its backup codes; see [Two-factor authentication](/platform/features/user-management/two-factor-auth).
 
 ## Connecting third-party tools
 

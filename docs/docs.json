@@ -294,20 +294,6 @@
               "self-hosting/configuration/authzed-operations",
               "self-hosting/configuration/rate-limiting",
               {
-                "group": "Auth & SSO",
-                "icon": "lock",
-                "pages": [
-                  "self-hosting/auth-behavior",
-                  "self-hosting/configuration/auth-sso/open-id-connect",
-                  "self-hosting/configuration/auth-sso/keycloak-oidc",
-                  "self-hosting/configuration/auth-sso/okta-oidc",
-                  "self-hosting/configuration/auth-sso/azure-ad-oauth",
-                  "self-hosting/configuration/auth-sso/google-oauth",
-                  "self-hosting/configuration/auth-sso/saml-sso",
-                  "self-hosting/configuration/auth-sso/setup-saml-with-identity-providers"
-                ]
-              },
-              {
                 "group": "Integrations",
                 "icon": "bridge",
                 "pages": [
@@ -339,8 +325,6 @@
                 "pages": [
                   "self-hosting/advanced/enterprise-features/hide-powered-by-formbricks",
                   "self-hosting/advanced/enterprise-features/whitelabel-email-follow-ups",
-                  "self-hosting/advanced/enterprise-features/oidc-sso",
-                  "self-hosting/advanced/enterprise-features/saml-sso",
                   "self-hosting/advanced/enterprise-features/audit-logging",
                   "self-hosting/advanced/enterprise-features/ai-features",
                   "self-hosting/advanced/enterprise-features/workflows"
@@ -494,10 +478,6 @@
     {
       "destination": "/docs/development/overview",
       "source": "/docs/development/support/troubleshooting"
-    },
-    {
-      "destination": "/docs/self-hosting/configuration/auth-sso/setup-saml-with-identity-providers",
-      "source": "/docs/development/guides/auth-and-provision/setup-saml-with-identity-providers"
     },
     {
       "destination": "/docs/platform/introduction",

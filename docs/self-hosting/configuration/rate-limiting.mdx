@@ -79,7 +79,7 @@ These are the limits that still run inside the Formbricks application server:
 | ----------------------------- | ------------ | ---------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `auth.signup`                 | 30 requests  | 60 minutes | IP hash                       | Signup server action                                                                                                                                      |
 | `auth.forgotPassword`         | 5 requests   | 60 minutes | IP hash                       | Forgot password server action                                                                                                                             |
-| `auth.forgotPasswordPerAccount` | 3 emails | 60 minutes | User ID | Password-reset and SSO sign-in-hint emails to one account, however many IPs ask; once spent, further requests get the same answer but no email |
+| `auth.forgotPasswordPerAccount` | 3 emails | 60 minutes | User ID | Password-reset emails to one account, however many IPs ask; once spent, further requests get the same answer but no email |
 | `auth.verifyEmail`            | 10 requests  | 60 minutes | IP hash                       | Resend verification server action                                                                                                                         |
 | `api.v1`                      | 100 requests | 1 minute   | Session user ID               | Session-authenticated v1 management routes, `/api/v1/management/me`, and `/api/v1/integrations/*`                                                         |
 | `api.v2`                      | 100 requests | 1 minute   | API key ID                    | Authenticated v2 API wrapper outside the Envoy-managed `/api/v2/client/*` subset                                                                          |
@@ -115,10 +115,8 @@ The address is stored only as a keyed hash.
 | ----------------------------- | -------------------- | ---------------------- | ----------------- | ------------------ |
 | `invite`                      | see invite limits    | see invite limits      | 3 per day         | 5000 per day       |
 | `email_verification`          | -                    | 3 per hour per account | 5 per hour        | -                  |
-| `sso_recovery_verification`   | -                    | -                      | 5 per hour        | -                  |
 | `email_change_verification`   | -                    | 3 per hour             | -                 | 1000 per hour      |
 | `password_reset`              | -                    | 3 per hour             | 6 per hour        | -                  |
-| `sso_sign_in_hint`            | -                    | 3 per hour per account | 3 per hour        | -                  |
 | `response_notification`       | 2000 per hour        | -                      | -                 | -                  |
 | `survey_preview`              | -                    | 10 per hour            | -                 | -                  |
 | `customization_preview`       | -                    | 10 per hour            | -                 | -                  |
@@ -131,7 +129,7 @@ typed that belongs to a member are not counted against it, so respondents cannot
 per-sender cap is higher than the per-organization one, so respondents flooding one organization cannot use up
 the owner's email in their other organizations.
 
-`invite_accepted`, `password_reset_notification`, `account_deletion` and `sso_recovery_notification` go to an
+`invite_accepted`, `password_reset_notification` and `account_deletion` go to an
 account or an organization's own members and are bounded by the flow that sends them.
 
 A per-deployment cap is shared by every organization, so whoever can reach it stops that email for everyone.
@@ -140,11 +138,10 @@ send. Sign-in and account email has none, and neither does email that respondent
 
 What happens when an email is capped depends on the flow:
 
-- **Previews, invite resends, the verified survey link and SSO account recovery** show a "too many requests"
-  error; a capped recovery email stops that SSO sign-in.
+- **Previews, invite resends and the verified survey link** show a "too many requests" error.
 - **New invites** are still created, and the action reports success; the invite can be resent or shared by link.
-- **Sign-up and resent verification, forgot password, the signed-in password reset, email changes and the SSO
-  sign-in hint** look the same as a sent email, so a capped email cannot reveal whether an account or address
+- **Sign-up and resent verification, forgot password, the signed-in password reset and email changes** look
+  the same as a sent email, so a capped email cannot reveal whether an account or address
   exists. The verification resend and the signed-in reset also have their own per-account limit of 3 an hour,
   which does show an error.
 - **Follow-ups, workflow emails and response notifications** are skipped, and a workflow step is recorded as
@@ -213,7 +210,7 @@ This setting disables only the **application-level** limiter. It does **not** di
 - If application Redis is unavailable at runtime, abuse limits **fail closed** and every other limit **fails open**:
   - **Refused until Redis is back:** sign-up, resending the verification email, organization creation, invites, forgot-password, and the email-change, password-reset and account-deletion requests in account settings, plus the brute-force guards (survey PIN, password-reset and email-change links, the email-token check, failed MCP authentication). These fail with the usual rate-limit error ("Maximum number of requests reached").
   - **Every counted outbound email** is also refused before it reaches your SMTP server. Email sent in the background, such as survey follow-ups and workflow emails, is skipped and logged rather than shown to anyone.
-  - **Allowed without enforcement:** API throughput, other settings changes, storage, AI features and SAML sign-in, so the app and your surveys keep working.
+  - **Allowed without enforcement:** API throughput, other settings changes, storage and AI features, so the app and your surveys keep working.
 - Every rate-limit check that cannot reach Redis is logged at error level (`Redis unavailable` or `Rate limit check failed`) and counted in the `formbricks_rate_limiter_unavailable_total` metric, with `fail_mode` (`open` / `closed`) and `reason` (`no_client` / `error`) labels. The metric is exported when `PROMETHEUS_ENABLED` or `OTEL_EXPORTER_OTLP_ENDPOINT` is set. To be paged on a Redis outage, alert when it keeps increasing, for example `sum(rate(formbricks_rate_limiter_unavailable_total[5m])) > 0` for 5 minutes. The metric only moves when Redis refuses or drops the connection: a Redis that accepts connections but stops answering stalls those requests instead, with nothing logged or counted, so keep a separate health check on Redis itself.
 - Client storage upload rate limits count signed upload URL issuance, not successful object creation in S3-compatible storage.
 - Authentication failure audit logging uses a separate throttle (`shouldLogAuthFailure()`) and is intentionally **fail-closed**: when Redis is unavailable or errors occur, audit log entries are **skipped entirely** rather than written without throttle control. This prevents spam while preserving the hash-integrity chain required for compliance. In other words, if Redis is down, no authentication-failure audit logs will be recorded, and the audit trail for those failures will not be written. This throttle reaches Redis on its own, so a miss there is logged as a warning and is not counted in `formbricks_rate_limiter_unavailable_total`.

@@ -55,13 +55,10 @@ anyone's.
 | `invite` | Single, bulk, onboarding and resend invites | The inviting user | Inviting user and organization (where the invite is created); recipient; deployment |
 | `invite_accepted` | An invite is accepted | Server (the inviter) | Bounded by invites |
 | `email_verification` | Sign-up, resend, sign-in to an unverified account | Whoever signs up | IP, and account for a resend (where it starts); recipient |
-| `sso_recovery_verification` | SSO account recovery | Server (the account) | Recipient; the SSO callback itself is unmetered (ENG-2558) |
 | `email_change_verification` | A user changes their email | The user | User (where it starts); deployment |
 | `password_reset` | Forgot password; reset from profile settings | Whoever asks, or the user | IP and account, or the signed-in user (where it starts); recipient |
 | `password_reset_notification` | A password was reset | Server (the account) | Only a valid reset token sends it |
-| `account_deletion` | An SSO user deletes their account | Server (the account) | User (where it starts) |
-| `sso_recovery_notification` | SSO recovery removed local sign-in factors | Server (the account) | Follows the recovery flow |
-| `sso_sign_in_hint` | Forgot password on an SSO-only account | Whoever asks | Account (where it starts); recipient |
+| `account_deletion` | A user without a password deletes their account | Server (the account) | User (where it starts) |
 | `response_notification` | A response is completed | Server (subscribed members) | Organization |
 | `survey_preview` | "Send preview" from the embed tab | Server (the user) | User |
 | `customization_preview` | Test email from email customization | Server (the user) | User |
