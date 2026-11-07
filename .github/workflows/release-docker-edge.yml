@@ -1,9 +1,10 @@
 name: Edge Docker Image
 
-# Every push to main builds the app image (amd64 only), smoke-tests that digest natively, and
-# only then points ghcr.io/gelhaus-solutions/gforms:edge (plus `main` and a unique
-# 0.0.0-alpha-main-<timestamp> tag) at it. Versioned releases stay with formbricks-release.yml; edge is
-# for Gelhaus Solutions' own deploys (decision D7).
+# Every push to main builds the app image (amd64 only) and pushes it straight to
+# ghcr.io/gelhaus-solutions/gforms:edge, plus `main` and a unique 0.0.0-alpha-main-<timestamp> tag, then
+# signs it. Edge is for Gelhaus Solutions' own deploys (decision D7), so it has no candidate tag, smoke test
+# or promotion job (decision D11): `next build` still type-checks, and a failed build pushes nothing.
+# Versioned releases stay with formbricks-release.yml and keep the verified candidate flow.
 
 on:
   push:
@@ -14,7 +15,7 @@ on:
 permissions:
   contents: read
 
-# Queue rather than cancel: a cancelled run could stop halfway through promotion, and a newer pending run
+# Queue rather than cancel: a cancelled run could stop between pushing the tags, and a newer pending run
 # replaces an older pending one, so edge still ends on the latest main.
 concurrency:
   group: edge-image
@@ -22,51 +23,11 @@ concurrency:
 
 jobs:
   build:
-    name: Build edge candidate
+    name: Build and push edge
     # A manual run on another branch would publish unreviewed code under the edge tag.
     if: github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/build-docker-candidate.yml
-    permissions:
-      contents: read
-      packages: write
-    with:
-      registry_type: ghcr
-      ghcr_image_name: gelhaus-solutions/gforms
-      experimental_mode: true
-    secrets: inherit
-
-  validate:
-    name: Image smoke (${{ matrix.platform }})
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux/amd64
-            runner: ubuntu-24.04
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - name: Harden runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
-        with:
-          egress-policy: audit
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/test-release-image
-        with:
-          image_ref: ${{ needs.build.outputs.IMAGE_REF }}
-          build_identity: ${{ needs.build.outputs.BUILD_IDENTITY }}
-          registry_type: "ghcr"
-          platform: ${{ matrix.platform }}
-
-  promote:
-    name: Promote verified image to edge
-    needs: [build, validate]
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 60
     permissions:
       contents: read
       packages: write
@@ -77,11 +38,25 @@ jobs:
         with:
           egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Resolves the 0.0.0-alpha-main-<timestamp> version (written into apps/web/package.json), the build
+      # identity and the tags.
+      - uses: ./.github/actions/prepare-docker-image
+        id: prepare
+        with:
+          registry_type: ghcr
+          ghcr_image_name: gelhaus-solutions/gforms
+          experimental_mode: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # Identity only needs presence; the upload credential stays a build secret.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN != '' && 'enabled' || '' }}
       - name: Add the edge tag
         id: tags
         shell: bash
         env:
-          TAGS: ${{ needs.build.outputs.TAGS }}
+          TAGS: ${{ steps.prepare.outputs.registry_tags }}
         run: |
           set -euo pipefail
           {
@@ -90,8 +65,65 @@ jobs:
             echo "ghcr.io/gelhaus-solutions/gforms:edge"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-      - uses: ./.github/actions/promote-verified-image
+      - uses: ./.github/actions/image-registry-login
         with:
-          image_ref: ${{ needs.build.outputs.IMAGE_REF }}
-          registry_type: "ghcr"
-          release_tags: ${{ steps.tags.outputs.tags }}
+          registry_type: ghcr
+      # The hosted runner is discarded after the job, so removing the builder (about 35 seconds) buys nothing.
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        id: buildx
+        with:
+          cleanup: false
+      # Turbopack's build cache (.next/cache, a cache mount in apps/web/Dockerfile) carried from the previous
+      # edge build, so `next build` recompiles only what changed. A fresh key per commit, restored from the
+      # newest one; the post steps extract it from BuildKit and save it after the image is already pushed.
+      - name: Restore the Next build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/next-build-cache
+          key: next-build-cache-${{ github.sha }}
+          restore-keys: next-build-cache-
+      - name: Inject the Next build cache into BuildKit
+        uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          scratch-dir: ${{ runner.temp }}/buildkit-cache-dance
+          cache-map: |
+            {
+              "${{ runner.temp }}/next-build-cache": {
+                "target": "/app/apps/web/.next/cache",
+                "id": "next-build-cache"
+              }
+            }
+      # No layer cache: every edge build writes a new version into apps/web/package.json, which the install
+      # layer copies, so no layer after the base images could ever be reused.
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          platforms: linux/amd64
+          pull: true
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: ${{ steps.prepare.outputs.image_labels }}
+          build-args: |
+            FORMBRICKS_DEPLOYMENT_ID=${{ steps.prepare.outputs.build_identity }}
+            FORMBRICKS_BUILD_VARIANT=ghcr
+          secrets: |
+            database_url=${{ secrets.DUMMY_DATABASE_URL }}
+            encryption_key=${{ secrets.DUMMY_ENCRYPTION_KEY }}
+            redis_url=${{ secrets.DUMMY_REDIS_URL }}
+            hub_api_url=${{ secrets.DUMMY_HUB_API_URL }}
+            hub_api_key=${{ secrets.DUMMY_HUB_API_KEY }}
+            cubejs_api_url=${{ secrets.DUMMY_CUBEJS_API_URL }}
+            cubejs_api_secret=${{ secrets.DUMMY_CUBEJS_API_SECRET }}
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+      - uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+      - name: Sign the pushed image
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          cosign sign --yes "ghcr.io/gelhaus-solutions/gforms@$DIGEST"

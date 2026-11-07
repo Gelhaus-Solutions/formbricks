@@ -148,14 +148,21 @@ describe("release workflows", () => {
   });
 });
 
+// Edge pushes straight from its one build job (decision D11): no candidate tag, smoke test or promotion.
+// `next build`'s type check is what keeps a broken commit off :edge, since a failed build pushes nothing.
 describe("edge image", () => {
-  test("builds from main only and never cancels a run halfway through promotion", () => {
+  const edgeSteps = () => readWorkflow(edgeWorkflow).jobs?.build?.steps ?? [];
+
+  test("builds from main only and never cancels a run halfway through pushing", () => {
     const workflow = readWorkflow(edgeWorkflow);
     const triggers = workflow.on ?? workflow.true;
+    const prepare = edgeSteps().find((step) => step.id === "prepare");
 
     expect(triggers?.push?.branches).toEqual(["main"]);
+    expect(Object.keys(workflow.jobs ?? {})).toEqual(["build"]);
     expect(workflow.jobs?.build?.if).toBe("github.ref == 'refs/heads/main'");
-    expect(workflow.jobs?.build?.with).toMatchObject({
+    expect(prepare?.uses).toBe("./.github/actions/prepare-docker-image");
+    expect(prepare?.with).toMatchObject({
       registry_type: "ghcr",
       ghcr_image_name: "gelhaus-solutions/gforms",
       experimental_mode: true,
@@ -163,10 +170,11 @@ describe("edge image", () => {
     expect(workflow.concurrency).toEqual({ group: "edge-image", "cancel-in-progress": false });
   });
 
-  test("adds the edge tag to the validated candidate's tags", () => {
-    const promote = readWorkflow(edgeWorkflow).jobs?.promote;
-    const tagStep = promote?.steps?.find((step) => step.id === "tags");
-    const promoteStep = promote?.steps?.find((step) => step.uses?.endsWith("/promote-verified-image"));
+  test("pushes the prepared tags plus edge from the build, then signs that digest", () => {
+    const steps = edgeSteps();
+    const tagStep = steps.find((step) => step.id === "tags");
+    const build = steps.find((step) => step.id === "build");
+    const sign = steps.find((step) => step.name === "Sign the pushed image");
     const directory = mkdtempSync(join(tmpdir(), "edge-tags-"));
     const output = join(directory, "output");
     try {
@@ -183,9 +191,32 @@ describe("edge image", () => {
       expect(readFileSync(output, "utf8")).toBe(
         "tags<<EOF\nghcr.io/gelhaus-solutions/gforms:main\nghcr.io/gelhaus-solutions/gforms:0.0.0-alpha-main-1\nghcr.io/gelhaus-solutions/gforms:edge\nEOF\n"
       );
-      expect(promoteStep?.with?.release_tags).toBe("${{ steps.tags.outputs.tags }}");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
+    expect(tagStep?.env?.TAGS).toBe("${{ steps.prepare.outputs.registry_tags }}");
+    expect(build?.uses).toMatch(/^docker\/build-push-action@/);
+    expect(build?.with?.push).toBe(true);
+    expect(build?.with?.tags).toBe("${{ steps.tags.outputs.tags }}");
+    expect(sign?.env?.DIGEST).toBe("${{ steps.build.outputs.digest }}");
+    expect(sign?.run).toContain('cosign sign --yes "ghcr.io/gelhaus-solutions/gforms@$DIGEST"');
+  });
+
+  test("restores the Next build cache into the mount the Dockerfile declares, before the build", () => {
+    const steps = edgeSteps();
+    const restore = steps.find((step) => step.uses?.startsWith("actions/cache@"));
+    const inject = steps.find((step) =>
+      step.uses?.startsWith("reproducible-containers/buildkit-cache-dance@")
+    );
+    const build = steps.find((step) => step.id === "build");
+    const cacheMap = JSON.parse(inject!.with!["cache-map"]) as Record<string, { id: string; target: string }>;
+
+    expect(Object.keys(cacheMap)).toEqual([restore!.with!.path]);
+    const [mount] = Object.values(cacheMap);
+    expect(readText("apps/web/Dockerfile")).toContain(
+      `--mount=type=cache,id=${mount.id},target=${mount.target}`
+    );
+    expect(steps.indexOf(restore!)).toBeLessThan(steps.indexOf(inject!));
+    expect(steps.indexOf(inject!)).toBeLessThan(steps.indexOf(build!));
   });
 });

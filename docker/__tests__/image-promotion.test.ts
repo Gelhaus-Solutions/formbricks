@@ -179,14 +179,18 @@ describe("release promotion boundary", () => {
     }
   });
 
-  test("builds amd64 only, natively on a GitHub-hosted runner with its own cache", () => {
+  // Every build writes its version into apps/web/package.json ahead of the install layer, so a layer cache
+  // never hit and only cost the export (about four minutes a run).
+  test("builds amd64 only, natively on a GitHub-hosted runner, without a layer cache", () => {
     const { jobs } = workflow("build-docker-candidate");
     const build = jobs.build.steps.find((step) => step.name === "Build native candidate");
+    const buildx = jobs.build.steps.find((step) => step.uses?.startsWith("docker/setup-buildx-action@"));
     expect(jobs.build.strategy?.matrix.include.map((entry) => entry.runner)).toEqual(["ubuntu-24.04"]);
     expect(jobs.build.steps[0].uses).toMatch(/^step-security\/harden-runner@/);
     expect(build?.uses).toMatch(/^docker\/build-push-action@/);
-    expect(build?.with?.["cache-from"]).toBe("type=gha,scope=web-${{ matrix.arch }}");
-    expect(build?.with?.["cache-to"]).toBe("type=gha,mode=max,scope=web-${{ matrix.arch }}");
+    expect(build?.with?.["cache-from"]).toBeUndefined();
+    expect(build?.with?.["cache-to"]).toBeUndefined();
+    expect(buildx?.with?.cleanup).toBe(false);
   });
 
   test("uses run-specific tags in the selected release repository until validation", () => {
@@ -213,7 +217,7 @@ describe("release promotion boundary", () => {
     expect(jobs.prepare.outputs?.candidate_tag).toBe("${{ steps.candidate.outputs.tag }}");
   });
 
-  test.each(["release-docker-github", "release-docker-edge"])(
+  test.each(["release-docker-github"])(
     "%s gates promotion on the native amd64 smoke test of the same digest",
     (name) => {
       const { jobs } = workflow(name);
@@ -350,7 +354,7 @@ describe("release promotion boundary", () => {
       expect(logins).toHaveLength(1);
       expect(logins[0].with?.registry_type).toBe("${{ inputs.registry_type }}");
     }
-    for (const name of ["release-docker-github", "release-docker-edge"]) {
+    for (const name of ["release-docker-github"]) {
       const jobs = workflow(name).jobs;
       expect((jobs.build ?? jobs["build-community-testing"]).permissions).toEqual({
         contents: "read",
