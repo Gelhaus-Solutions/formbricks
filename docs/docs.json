@@ -1,9 +1,9 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "colors": {
-    "dark": "#00C4B8",
+    "dark": "#038178",
     "light": "#00C4B8",
-    "primary": "#00C4B8"
+    "primary": "#038178"
   },
   "contextual": {
     "options": ["copy", "view", "chatgpt", "claude", "perplexity"]
@@ -16,35 +16,14 @@
   "favicon": "/images/favicon.svg",
   "footer": {
     "socials": {
-      "github": "https://github.com/formbricks/formbricks",
-      "linkedin": "https://linkedin.com/company/formbricks",
-      "x": "https://x.com/formbricks"
-    }
-  },
-  "integrations": {
-    "posthog": {
-      "apiHost": "https://eu.i.posthog.com",
-      "apiKey": "phc_zJO1n3rjHlhqKiJ0gqLDwT4qvfWF1wzHDq2gfl0moQm"
+      "github": "https://github.com/Gelhaus-Solutions/formbricks"
     }
   },
   "logo": {
     "dark": "/images/logo-dark.svg",
     "light": "/images/logo-light.svg"
   },
-  "name": "Documentation - Formbricks",
-  "navbar": {
-    "links": [
-      {
-        "href": "https://github.com/formbricks/formbricks/discussions",
-        "label": "Support"
-      }
-    ],
-    "primary": {
-      "href": "https://app.formbricks.com",
-      "label": "Go to app",
-      "type": "button"
-    }
-  },
+  "name": "GForms Documentation",
   "navigation": {
     "tabs": [
       {
