@@ -9,7 +9,7 @@ import { AuthenticationError, OperationNotAllowedError, ValidationError } from "
 import { TOrganizationRole, ZOrganizationRole } from "@formbricks/types/memberships";
 import { ZUserEmail } from "@formbricks/types/user";
 import { assertCan, can } from "@/lib/authorization";
-import { INVITE_DISABLED, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
+import { INVITE_DISABLED } from "@/lib/constants";
 import { createInviteToken } from "@/lib/jwt";
 import { getMembershipByUserIdOrganizationId } from "@/lib/membership/service";
 import { getAccessFlags } from "@/lib/membership/utils";
@@ -303,7 +303,8 @@ export const inviteUserAction = authenticatedActionClient.inputSchema(ZInviteUse
       throw new AuthenticationError("Invite disabled");
     }
 
-    if (!IS_FORMBRICKS_CLOUD && parsedInput.role === OrganizationRole.billing) {
+    // The billing role went with Cloud billing (GFORMS-7) and can no longer be given.
+    if (parsedInput.role === OrganizationRole.billing) {
       throw new ValidationError("Billing role is not allowed");
     }
 
@@ -454,7 +455,7 @@ export const bulkInviteUsersAction = authenticatedActionClient.inputSchema(ZBulk
     }
 
     // Validate roles for the whole batch up front.
-    if (!IS_FORMBRICKS_CLOUD && invitees.some((invitee) => invitee.role === OrganizationRole.billing)) {
+    if (invitees.some((invitee) => invitee.role === OrganizationRole.billing)) {
       throw new ValidationError("Billing role is not allowed");
     }
 

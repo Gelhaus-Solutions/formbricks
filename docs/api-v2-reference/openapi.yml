@@ -362,8 +362,6 @@ paths:
                           const: manager
                         - type: string
                           const: member
-                        - type: string
-                          const: billing
   /me:
     get:
       operationId: me
@@ -3272,8 +3270,6 @@ components:
                 const: manager
               - type: string
                 const: member
-              - type: string
-                const: billing
       required:
         - data
     me:

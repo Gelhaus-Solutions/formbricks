@@ -134,7 +134,7 @@ export const BulkInviteTab = ({
       const email = readCell(csv, "Email Address", "email").trim();
       const roleCell = readCell(csv, "Organization Role", "Role", "role");
       const orgRole = isAccessControlAllowed ? roleCell.trim().toLowerCase() : "owner";
-      if (!isFormbricksCloud && orgRole === "billing") {
+      if (orgRole === "billing") {
         billingRoleEmails.add(email);
       }
 
