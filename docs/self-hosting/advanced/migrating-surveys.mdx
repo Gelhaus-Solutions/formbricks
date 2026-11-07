@@ -581,7 +581,7 @@ silently misfiled, so a summary that reads correctly is a good signal.
   it is still running; if it is not, they break.
 - **Rebuild what the survey document does not carry**: styling, follow-up emails, single-use
   link settings, survey PIN, reCAPTCHA, custom head scripts, custom slug.
-- **Re-create app-survey targeting** (see below), then re-enable webhooks, integrations and workflows.
+- **Check app surveys that had targeting** (see below), then re-enable webhooks, integrations and workflows.
 - **Update your SDK setup** if you are moving app surveys: `workspaceId` and `appUrl` in
   `Formbricks.setup()` both still point at the old instance.
 
@@ -609,11 +609,11 @@ list, rather than failing the whole survey.
 
 **Targeting** is dropped by the script (`del(.targeting)`). Segment filters reference contact-attribute
 keys, segments and (for `surveyInteraction` filters) other survey IDs, none of which exist under the
-same IDs in the target. Re-create targeting in the app after the import.
+same IDs in the target.
 
 <Warning>
   A live app survey that loses its targeting **targets everyone**. If the source survey was scoped to a
-  segment, keep it as a draft until you have rebuilt the filters in the target.
+  segment, keep it as a draft until you have decided whether it should run for everyone.
 </Warning>
 
 ## Known limitations
@@ -775,9 +775,9 @@ such contact exists, the response is created anonymously; this is silent, not an
 ### Everything outside surveys and responses
 
 Users, teams, organization settings, contacts and their attributes, segments, webhooks, integrations,
-API keys, workflows and dashboards are out of scope here. Contacts and contact-attribute keys have
-their own management endpoints (`/api/v2/management/contacts`,
-`/api/v2/management/contact-attribute-keys`) if you need them; the rest is a `pg_dump` job.
+API keys, workflows and dashboards are out of scope here. Contact-attribute keys have their own
+management endpoint (`/api/v2/management/contact-attribute-keys`) if you need them; the rest is a
+`pg_dump` job.
 
 ## Troubleshooting
 

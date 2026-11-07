@@ -17,11 +17,11 @@ description: "Here is how you can generate an API key which gives you full acces
   
   <Step title="Configure your API key">
     1. Give your API key a descriptive label (e.g., "GitHub Integration", "PostHog", "Slack")
-    2. Configure **Workspace Access** — this controls access to data inside a Workspace (surveys, responses, contacts, webhooks, and so on):
+    2. Configure **Workspace Access**: this controls access to data inside a Workspace (surveys, responses, webhooks, and so on):
        - Add each Workspace this key should reach by clicking "Add Permission"
        - Choose the permission level for each (read, write, or manage)
-       - There is no "all Workspaces" option — a key can only reach the Workspaces you add here
-    3. Configure **Organization Access** — this controls organization administration (members and teams) and does **not** grant access to Workspace data:
+       - There is no "all Workspaces" option: a key can only reach the Workspaces you add here
+    3. Configure **Organization Access**: this controls organization administration (members and teams) and does **not** grant access to Workspace data:
        - Set read and/or write access as needed
   </Step>
 
@@ -40,7 +40,7 @@ An API key has two independent access scopes. They control different families of
 
 | Scope | What it grants | Example endpoints |
 | --- | --- | --- |
-| **Workspace Access** (per Workspace: read / write / manage) | Access to data and configuration inside the selected Workspaces | `/api/v2/management/surveys`, `/responses`, `/contacts`, `/webhooks` |
+| **Workspace Access** (per Workspace: read / write / manage) | Access to data and configuration inside the selected Workspaces | `/api/v2/management/surveys`, `/responses`, `/webhooks` |
 | **Organization Access** (read / write) | Organization administration only | `/api/v2/organizations/{organizationId}/users`, `/teams`, `/api/v2/me` |
 
 <Note>
@@ -48,7 +48,7 @@ An API key has two independent access scopes. They control different families of
 </Note>
 
 <Note>
-  Access scopes are fixed when the key is created. Afterwards you can only rename the key's label — to change its Workspaces or permissions, delete the key and create a new one.
+  Access scopes are fixed when the key is created. Afterwards you can only rename the key's label. To change its Workspaces or permissions, delete the key and create a new one.
 </Note>
 
 <Note>

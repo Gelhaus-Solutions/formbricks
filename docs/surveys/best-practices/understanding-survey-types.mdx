@@ -12,9 +12,7 @@ icon: "road-circle-check"
 | **Best for** | Known touchpoints | Behavior-based intercepts |
 | **SDK required** | No | Yes |
 | **Delivery** | Email, SMS, push, or webview | Triggered in-app by SDK |
-| **Segmentation** | You control externally | Built-in via Formbricks |
 | **Survey fatigue prevention** | You control externally | Automatic |
-| **User identification** | [Personal Links](/surveys/link-surveys/personal-links) | [SDK user attributes](/surveys/website-app-surveys/user-identification) |
 
 ## Link Surveys
 
@@ -34,11 +32,10 @@ Also known as **invitation-based surveys**. No SDK needed. You control when and 
 
 - **[Hidden Fields](/surveys/general-features/hidden-fields)**: Pass user ID, order ID, or any identifier
 - **[Data prefilling](/surveys/link-surveys/data-prefilling)**: Pre-populate answers and optionally skip prefilled questions
-- **[Personal Links](/surveys/link-surveys/personal-links)**: Generate unique survey links for individual contacts
 
 ### Webview with Embed mode
 
-For mobile apps, you can display Link Surveys in a webview with full control over when the survey appears. Your app decides the timing—open the webview when the moment is right.
+For mobile apps, you can display Link Surveys in a webview with full control over when the survey appears. Your app decides the timing: open the webview when the moment is right.
 
 **Enable Embed mode** by appending `?embed=true` to the survey URL:
 
@@ -58,7 +55,7 @@ window.addEventListener("message", (event) => {
 
 This approach gives you full control:
 - **When**: Your app opens the webview at the right moment (after purchase, case closed, etc.)
-- **Who**: Personal links allow you to have unique links for identified contacts.
+- **Who**: Your app decides who gets the survey, and can pass an identifier through [Hidden Fields](/surveys/general-features/hidden-fields)
 - **Display**: Survey renders inside your app
 - **Dismissal**: Close the webview on completion or user exit
 
@@ -70,12 +67,12 @@ Learn more in the [Embed Surveys guide](/surveys/link-surveys/embed-surveys).
 - Survey timing is tied to a known event such as a click on a link or button and in **each case**, you want to show the survey
 - You want fastest approach to production
 - Your platform doesn't have a supported SDK
-- You don't need Formbricks attribute-based targeting & survey fatigue controls
+- You don't need Formbricks survey fatigue controls
 
 
 ## Website & App Surveys (SDK)
 
-Also known as **intercept surveys**. Requires SDK integration. Formbricks handles targeting, triggering, and survey fatigue.
+Also known as **intercept surveys**. Requires SDK integration. Formbricks handles triggering, show conditions, and survey fatigue.
 
 ![In-app survey example](/images/surveys/best-practices/link-surveys-vs-in-app-surveys/in-app-surveys.webp)
 
@@ -94,9 +91,9 @@ formbricks.track("action_name");
 - Global waiting time (e.g., show max 1 survey every 7 days per user)
 - Per-survey overrides for high-priority surveys
 
-**[Attribute-based Targeting](/surveys/website-app-surveys/attribute-based-targeting)**
+**[Show conditions](/surveys/website-app-surveys/show-conditions)**
 
-Target surveys based on user attributes (plan type, language, feature flags).
+Show a survey only on the right page, once the visit has gone on long enough, or on a given device.
 
 **In-app display**
 

@@ -77,7 +77,7 @@ Pages are told apart by their path, the same way **path is any of** compares the
 
 Conditions are checked when a trigger fires, and again right before the survey appears: after its **delay** if it has one, so time on site has grown and a visitor who moved to an excluded page in the meantime doesn't see it. Conditions never show a survey by themselves: a visitor who meets them but triggers nothing sees nothing.
 
-They apply on top of everything else that decides whether a survey shows: the action's own page filters, [Recontact Options](/surveys/website-app-surveys/recontact), the [Cooldown Period](/surveys/website-app-surveys/cooldown-period) and [segment targeting](/surveys/website-app-surveys/attribute-based-targeting). The [display percentage](/surveys/website-app-surveys/show-survey-to-percent-of-users) comes after them, so it samples only visitors who meet the conditions. See [Survey Display Logic](/surveys/website-app-surveys/survey-display-logic) for the full order.
+They apply on top of everything else that decides whether a survey shows: the action's own page filters, [Recontact Options](/surveys/website-app-surveys/recontact) and the [Cooldown Period](/surveys/website-app-surveys/cooldown-period). The [display percentage](/surveys/website-app-surveys/show-survey-to-percent-of-users) comes after them, so it samples only visitors who meet the conditions. See [Survey Display Logic](/surveys/website-app-surveys/survey-display-logic) for the full order.
 
 <Warning>
   Show conditions are for websites only. The mobile SDKs (iOS, Android, React Native, Flutter) ignore them and show the survey on its trigger as before.

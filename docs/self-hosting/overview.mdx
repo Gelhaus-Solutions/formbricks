@@ -16,8 +16,8 @@ See [deployment components](/self-hosting/deployment-components) for the image i
 | Single server, low load   | 4 vCPU    | 8 GB      | 50 GB SSD |
 | Kubernetes, production    | see below | see below | managed   |
 
-Chart defaults request 1.9 vCPU and 2.9 GiB across those services — see `charts/formbricks/values.yaml`,
-plus `charts/spicedb-operator/values.yaml` for the operator. On Kubernetes, add whatever your provider
+Chart defaults request 1.9 vCPU and 2.9 GiB across those services (see `charts/formbricks/values.yaml`,
+plus `charts/spicedb-operator/values.yaml` for the operator). On Kubernetes, add whatever your provider
 reserves per node on top, typically around 0.5 vCPU and 1 GB. The single-server rows are derived from those
 totals rather than load-tested.
 
@@ -34,7 +34,7 @@ totals rather than load-tested.
 
 The single-server rows cover the [Docker](/self-hosting/setup/docker) and
 [one-click](/self-hosting/setup/one-click) installs. Both run every service on one host, so a reboot or an
-upgrade means downtime — usually an acceptable trade at low load, and not on its own a reason to reach for
+upgrade means downtime: usually an acceptable trade at low load, and not on its own a reason to reach for
 Kubernetes. Choose [Kubernetes](/self-hosting/setup/kubernetes) when you need to survive a node failure or
 carry an uptime SLA.
 
@@ -62,18 +62,15 @@ need them constantly.
 ### Sizing for a specific load
 
 **A burst of responses** is a queue question rather than a request-rate one. Each response enqueues several
-`response-pipeline.process` jobs — `responseCreated`, one `responseUpdated` per progress save, then
-`responseFinished` — so the count scales with how often answers are saved, and consumers default to one job
+`response-pipeline.process` jobs (`responseCreated`, one `responseUpdated` per progress save, then
+`responseFinished`), so the count scales with how often answers are saved, and consumers default to one job
 in flight per app replica. Size Redis for the deepest backlog you expect: the chart pins
 `maxmemory-policy noeviction`, so a full Redis refuses writes rather than dropping jobs. See
 [job runner](/self-hosting/configuration/job-runner).
 
-**A large contact list** is storage rather than throughput. Contact attributes are one row per attribute per
-contact, so 50,000 contacts with 10 attributes each is 500,000 rows before a single response is stored.
-
 We publish no responses-per-second figure per replica: it is not load-tested, and a 40-question survey with
 file uploads is not the same write as a one-question NPS. Watch pod CPU and queue depth separately through
-your first campaign — they move independently.
+your first campaign: they move independently.
 
 ## **Self-hosting options**
 

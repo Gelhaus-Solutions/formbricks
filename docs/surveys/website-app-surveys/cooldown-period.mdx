@@ -4,7 +4,7 @@ description: "The Cooldown Period is a workspace-wide guard that limits how ofte
 icon: "hourglass-half"
 ---
 
-The Cooldown Period is a universal blocker that makes sure no user sees too many surveys in a short time. It is measured **across all surveys** in a workspace, which is especially helpful when several teams use Formbricks at the same time. It is one layer of the full display logic — see [Survey Display Logic](/surveys/website-app-surveys/survey-display-logic) for how it combines with targeting, Recontact Options, and triggers.
+The Cooldown Period is a universal blocker that makes sure no user sees too many surveys in a short time. It is measured **across all surveys** in a workspace, which is especially helpful when several teams use Formbricks at the same time. It is one layer of the full display logic: see [Survey Display Logic](/surveys/website-app-surveys/survey-display-logic) for how it combines with Recontact Options, show conditions and triggers.
 
 <Note>The default Cooldown Period is 7 days.</Note>
 
@@ -24,17 +24,15 @@ After a user sees *any* survey, no survey will be shown to them again until the 
 
 In the Survey Editor, under **Settings → Display & Recontact**, each survey chooses how it interacts with the workspace Cooldown Period:
 
-- **Use Cooldown Period** *(default)* — the survey follows the workspace configuration and only shows if no other survey appeared during that period.
-- **Ignore Cooldown Period** — the survey can show whenever its conditions are met, even if another survey was shown recently.
-- **Set custom Cooldown Period** — override the workspace value for this survey only.
+- **Use Cooldown Period** *(default)*: the survey follows the workspace configuration and only shows if no other survey appeared during that period.
+- **Ignore Cooldown Period**: the survey can show whenever its conditions are met, even if another survey was shown recently.
+- **Set custom Cooldown Period**: override the workspace value for this survey only.
 
 ## How the Cooldown Period is measured
 
 <Warning>
-  The Cooldown Period is measured from the last time the user saw **any** survey — not from the last time they saw *this* survey. A per-survey value therefore changes the *length* of the gap, not what resets it: a frequently-shown survey keeps pushing back a less-frequent one.
+  The Cooldown Period is measured from the last time the user saw **any** survey, not from the last time they saw *this* survey. A per-survey value therefore changes the *length* of the gap, not what resets it: a frequently-shown survey keeps pushing back a less-frequent one.
 </Warning>
-
-To run a survey on its **own** schedule regardless of other surveys — for example an NPS survey every 3 months — don't rely on the Cooldown Period alone. Target it with an [interaction-based segment](/surveys/website-app-surveys/survey-display-logic#level-4-—-interaction-based-segments) such as *have not seen this survey within 3 months*, which is evaluated per survey. See [Survey Display Logic](/surveys/website-app-surveys/survey-display-logic#level-4-—-interaction-based-segments) for the full recipe.
 
 ---
 

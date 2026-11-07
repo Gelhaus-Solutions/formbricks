@@ -63,7 +63,6 @@
             "group": "Platform Features",
             "pages": [
               "platform/features/ai-features",
-              "platform/features/contacts",
               {
                 "group": "Integrations",
                 "icon": "bridge",
@@ -166,7 +165,6 @@
                       "surveys/link-surveys/embed-surveys",
                       "surveys/link-surveys/link-settings",
                       "surveys/link-surveys/pretty-url",
-                      "surveys/link-surveys/personal-links",
                       "surveys/link-surveys/single-use-links",
                       "surveys/link-surveys/source-tracking",
                       "surveys/link-surveys/start-at-block",
@@ -193,8 +191,6 @@
                     "icon": "wrench",
                     "pages": [
                       "surveys/website-app-surveys/actions",
-                      "surveys/website-app-surveys/user-identification",
-                      "surveys/website-app-surveys/attribute-based-targeting",
                       "surveys/website-app-surveys/show-conditions",
                       "surveys/website-app-surveys/recontact",
                       "surveys/website-app-surveys/cooldown-period",
@@ -247,7 +243,6 @@
               "surveys/best-practices/pmf-survey",
               "surveys/best-practices/quiz-time",
               "surveys/best-practices/improve-trial-cr",
-              "surveys/best-practices/research-panel",
               "surveys/best-practices/google-reviews"
             ]
           }
@@ -346,7 +341,6 @@
                   "self-hosting/advanced/enterprise-features/hide-powered-by-formbricks",
                   "self-hosting/advanced/enterprise-features/whitelabel-email-follow-ups",
                   "self-hosting/advanced/enterprise-features/team-access",
-                  "self-hosting/advanced/enterprise-features/contact-management-segments",
                   "self-hosting/advanced/enterprise-features/oidc-sso",
                   "self-hosting/advanced/enterprise-features/saml-sso",
                   "self-hosting/advanced/enterprise-features/audit-logging",
@@ -624,10 +618,6 @@
       "source": "/docs/xm-and-surveys/xm/best-practices/headless-surveys"
     },
     {
-      "destination": "/docs/surveys/best-practices/research-panel",
-      "source": "/docs/xm-and-surveys/xm/best-practices/research-panel"
-    },
-    {
       "destination": "/docs/surveys/link-surveys/quickstart",
       "source": "/docs/xm-and-surveys/surveys/link-surveys/quickstart"
     },
@@ -686,10 +676,6 @@
     {
       "destination": "/docs/surveys/link-surveys/pretty-url",
       "source": "/docs/xm-and-surveys/surveys/link-surveys/pretty-url"
-    },
-    {
-      "destination": "/docs/surveys/link-surveys/personal-links",
-      "source": "/docs/xm-and-surveys/surveys/link-surveys/personal-links"
     },
     {
       "destination": "/docs/surveys/link-surveys/single-use-links",
@@ -890,26 +876,6 @@
     {
       "destination": "/docs/surveys/website-app-surveys/actions",
       "source": "/docs/app-surveys/actions"
-    },
-    {
-      "destination": "/docs/surveys/website-app-surveys/attribute-based-targeting",
-      "source": "/docs/xm-and-surveys/surveys/website-app-surveys/advanced-targeting"
-    },
-    {
-      "destination": "/docs/surveys/website-app-surveys/attribute-based-targeting",
-      "source": "/docs/app-surveys/advanced-targeting"
-    },
-    {
-      "destination": "/docs/surveys/website-app-surveys/attribute-based-targeting",
-      "source": "/docs/surveys/website-app-surveys/advanced-targeting"
-    },
-    {
-      "destination": "/docs/surveys/website-app-surveys/user-identification",
-      "source": "/docs/xm-and-surveys/surveys/website-app-surveys/user-identification"
-    },
-    {
-      "destination": "/docs/surveys/website-app-surveys/user-identification",
-      "source": "/docs/app-surveys/user-identification"
     },
     {
       "destination": "/docs/surveys/website-app-surveys/recontact",
