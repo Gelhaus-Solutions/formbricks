@@ -40,7 +40,7 @@ export default defineConfig({
       },
       {
         // ENG-2444: the `page` authorization surface lives in a React `cache()` slot, and `cache` only
-        // does anything in the react-server build — the default build ships it as a permanent no-op,
+        // does anything in the react-server build: the default build ships it as a permanent no-op,
         // and the shared vitestSetup mocks it to identity on top of that. So the `unit` project cannot
         // exercise this surface at all. Here React resolves the way Next.js resolves it for RSC, so
         // the real implementation runs. `ssr.resolve.conditions` is the knob that works: Vitest loads
@@ -74,8 +74,8 @@ export default defineConfig({
         "proxy.ts",
       ],
       // ENG-2432: `**/route.{ts,tsx}`, `**/actions.ts` and `**/action.ts` used to sit in this list, so
-      // the API route handlers and server actions — the layer that does authorization and input
-      // validation — were the only backend code outside the coverage gate. They are ordinary exported
+      // the API route handlers and server actions (the layer that does authorization and input
+      // validation) were the only backend code outside the coverage gate. They are ordinary exported
       // async functions; the ones that hold logic are unit-testable like anything else. `**/*.tsx`
       // still covers `route.tsx`.
       exclude: [
@@ -135,7 +135,6 @@ export default defineConfig({
         "modules/setup/**/intro/**", // Setup intro pages
         "modules/setup/**/signup/**", // Setup signup pages
         "modules/setup/**/layout.tsx", // Setup layouts
-        "modules/ee/contacts/components/**", // Contact components
 
         // Third-party integrations
         "lib/slack/**", // Slack integration
@@ -148,7 +147,7 @@ export default defineConfig({
 
         // Specific components
         "modules/auth/lib/mock-data.ts", // Mock data for authentication
-        // Better Auth instance + wiring — exercised by the integration suite (real Postgres), not unit
+        // Better Auth instance + wiring: exercised by the integration suite (real Postgres), not unit
         // tests, so they are excluded from the unit-coverage gate below (ENG-1054).
         "modules/auth/lib/auth.ts",
         "modules/auth/lib/auth-client.ts",
@@ -164,7 +163,7 @@ export default defineConfig({
         // ENG-1054: keep the new Better Auth code well-tested. Glob aggregate (not perFile) so a single
         // thin file can't trip the gate; the integration-only BA instance/wiring is excluded above.
         "modules/auth/lib/**": { statements: 80, branches: 80, functions: 80, lines: 80 },
-        // ENG-1718: keep the AuthZed client, projections, and backfill/repair tooling well-tested —
+        // ENG-1718: keep the AuthZed client, projections, and backfill/repair tooling well-tested:
         // this code rewrites the authorization graph. Glob aggregate (not perFile) so a single thin
         // file can't trip the gate. `**/scripts/**` is excluded above, so every decision the tooling
         // makes (argv parsing, scoping, classification, prune guards, exit codes) lives under

@@ -1,6 +1,6 @@
 import type { Prisma } from "@formbricks/database/prisma";
 import type { TContactAttributeDataType } from "@formbricks/types/contact-attribute-key";
-import { readAttributeValue } from "@/modules/ee/contacts/lib/attribute-storage";
+import { readAttributeValue } from "@/modules/contacts/lib/attribute-storage";
 
 /** What the list reads per contact: the row plus every attribute value with its key's metadata. */
 export const V3_CONTACT_SELECT = {
@@ -30,7 +30,7 @@ export type TV3ContactAttribute = {
 /**
  * Public v3 contact. Maps 1:1 onto the Contacts table's `TContactTableData`: `userId`, `email`,
  * `firstName` and `lastName` are lifted out of the attributes for convenience (null when the contact
- * has no value for them), and `attributes` lists every attribute the contact *has* — a key the contact
+ * has no value for them), and `attributes` lists every attribute the contact *has*; a key the contact
  * has no row for is absent, which the table renders as an empty cell.
  */
 export type TV3ContactResource = {

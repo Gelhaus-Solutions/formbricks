@@ -25,8 +25,8 @@ export const ZContactAttributeKey = z.object({
   // that already exist, and the default attribute keys are still camelCase (`userId`, `firstName`,
   // `lastName`) until the v5.1 migration moves them to safe identifiers. Refining here would break
   // reads for every existing workspace. The strict rule is enforced by each write path in `apps/web`
-  // instead (e.g. `modules/ee/contacts/lib/attributes.ts`); `attribute-key-policy.ts` there only
-  // reserves the keys that migration will take.
+  // instead; `modules/contacts/lib/attribute-key-policy.ts` there only reserves the keys that
+  // migration will take.
   key: z
     .string()
     .meta({

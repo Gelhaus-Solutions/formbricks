@@ -3,9 +3,9 @@ import type {
   TSegmentSurveyReference,
   TSegmentWithSurveyRefs,
 } from "@formbricks/types/segment";
-import { redactSegmentFilterSurveyIds } from "@/modules/ee/contacts/segments/lib/filter-survey-ids";
+import { redactSegmentFilterSurveyIds } from "@/modules/contacts/segments/lib/filter-survey-ids";
 
-export { collectSegmentFilterSurveyIds } from "@/modules/ee/contacts/segments/lib/filter-survey-ids";
+export { collectSegmentFilterSurveyIds } from "@/modules/contacts/segments/lib/filter-survey-ids";
 
 /**
  * Public v3 segment. The same fields the Segments page hands `SegmentTable` / `EditSegmentModal` today

@@ -6,7 +6,7 @@ import { assertV3ContactsEnabled } from "@/app/api/v3/lib/contacts-entitlement";
 import { mapV3ThrownError } from "@/app/api/v3/lib/errors";
 import { problemBadRequest, successListResponse } from "@/app/api/v3/lib/response";
 import type { TV3Authentication } from "@/app/api/v3/lib/types";
-import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
+import { getContactAttributeKeys } from "@/modules/contacts/lib/contact-attribute-keys";
 import { serializeV3ContactAttributeKey } from "../serializers";
 import { listContactAttributeKeysPage } from "./list";
 import { parseV3ContactAttributeKeysListQuery } from "./parse-v3-contact-attribute-keys-list-query";
@@ -45,7 +45,7 @@ export async function listV3ContactAttributeKeys({
     );
     if (authResult instanceof Response) return authResult;
 
-    // Contact attribute keys belong to the enterprise Contacts feature — gate the list the same way
+    // Contact attribute keys belong to the enterprise Contacts feature: gate the list the same way
     // the UI and management API do, so an unentitled organization can't enumerate them through v3.
     const denied = await assertV3ContactsEnabled(authResult.organizationId, requestId, instance);
     if (denied) return denied;

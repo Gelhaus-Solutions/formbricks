@@ -5,7 +5,7 @@ import { ZGetFilter } from "@/modules/api/v2/types/api-filter";
 import {
   getReservedFutureDefaultAttributeKeyIssue,
   isReservedFutureDefaultAttributeKey,
-} from "@/modules/ee/contacts/lib/attribute-key-policy";
+} from "@/modules/contacts/lib/attribute-key-policy";
 
 export const ZGetContactAttributeKeysFilter = ZGetFilter.extend({})
   .refine(
@@ -58,7 +58,7 @@ export const ZContactAttributeKeyInput = ZContactAttributeKey.pick({
 
 export type TContactAttributeKeyInput = z.infer<typeof ZContactAttributeKeyInput>;
 
-// Route-level schema — both IDs are required; bodyTransform resolves the missing one before validation.
+// Route-level schema: both IDs are required; bodyTransform resolves the missing one before validation.
 export const ZContactAttributeKeyCreateInput = ZContactAttributeKey.pick({
   key: true,
   name: true,

@@ -9,7 +9,7 @@ import { problemBadRequest, successListResponse } from "@/app/api/v3/lib/respons
 import { type TSortCursor, buildSortCursorPage } from "@/app/api/v3/lib/sort-cursor";
 import type { TV3Authentication } from "@/app/api/v3/lib/types";
 import { resolveV3VisibleSurveyWhere } from "@/app/api/v3/surveys/visibility-context";
-import { selectSegment, transformPrismaSegment } from "@/modules/ee/contacts/segments/lib/segments";
+import { selectSegment, transformPrismaSegment } from "@/modules/contacts/segments/lib/segments";
 import { collectSegmentFilterSurveyIds, serializeV3Segment } from "../serializers";
 import { SEGMENTS_CURSOR_KIND, parseV3SegmentsListQuery } from "./parse-v3-segments-list-query";
 import {
@@ -20,7 +20,7 @@ import {
 } from "./segments-where";
 
 /**
- * Which of the surveys the page's survey-interaction filters name the caller may see — one query for
+ * Which of the surveys the page's survey-interaction filters name the caller may see: one query for
  * the whole page, bounded by the filter tree's survey-id cap times the page size.
  */
 const resolveVisibleFilterSurveyIds = async (
@@ -91,7 +91,7 @@ export async function listV3Segments({
     if (denied) return denied;
 
     // ENG-3282: a segment's survey references are read through the caller's survey-visibility clause,
-    // exactly as `getSegments` does for the page — otherwise the list would ship restricted survey
+    // exactly as `getSegments` does for the page; otherwise the list would ship restricted survey
     // names and ids. Fails closed (no survey visible) when the caller cannot be resolved.
     const visibleSurveyWhere = await resolveV3VisibleSurveyWhere(authentication, authResult.organizationId);
 

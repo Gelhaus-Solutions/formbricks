@@ -15,7 +15,7 @@ import { getIntegrationByType } from "@/lib/integration/service";
 import { getNotionDatabases } from "@/lib/notion/service";
 import { getUserLocale } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
-import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
+import { getContactAttributeKeys } from "@/modules/contacts/lib/contact-attribute-keys";
 import { getSettingsPageMetadata } from "@/modules/settings/lib/metadata";
 import { isSurveyVisibilityEnforced } from "@/modules/survey/visibility/lib/gate";
 import { GoBackButton } from "@/modules/ui/components/go-back-button";

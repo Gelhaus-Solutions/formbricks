@@ -11,12 +11,12 @@ import type {
 } from "@formbricks/types/segment";
 import type { InvalidParam } from "@/app/api/v3/lib/response";
 import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
-import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
+import { getContactAttributeKeys } from "@/modules/contacts/lib/contact-attribute-keys";
 import {
   ALL_SEGMENT_SURVEY_REFS,
   getExistingWorkspaceSurveyIds,
   getSegments,
-} from "@/modules/ee/contacts/segments/lib/segments";
+} from "@/modules/contacts/segments/lib/segments";
 import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { V3SurveyReferenceValidationError } from "./reference-validation";
 import type { TV3SurveyTargeting } from "./schemas";
@@ -85,7 +85,7 @@ export function areV3SurveyTargetingFiltersEqual(a: unknown, b: unknown): boolea
 
 /**
  * Persist app-survey contact targeting onto the survey's (auto-created) segment. Writes the segment
- * row directly — mirroring updateSurveyInternal — so empty filters ("show to everyone") are supported,
+ * row directly (mirroring updateSurveyInternal), so empty filters ("show to everyone") are supported,
  * which the EE updateSegment service rejects. Entitlement is gated by the caller before invoking this.
  *
  * Pass a transaction client (`tx`) to write atomically alongside the survey update; defaults to the
@@ -226,7 +226,7 @@ function collectV3TargetingFilterReferences(
 }
 
 /**
- * Validate that every app-survey targeting filter can resolve — contact-attribute keys (incl. the
+ * Validate that every app-survey targeting filter can resolve: contact-attribute keys (incl. the
  * "userId" person identifier) and referenced segments must exist in the workspace, unsupported person
  * identifiers are rejected, and device values must be a known device. Mirrors trigger action-class
  * validation (see resolveV3SurveyTriggers): each problem becomes a structured `invalid_reference` param
@@ -245,7 +245,7 @@ export async function assertV3SurveyTargetingFilterReferences(
 
   const invalidParams: InvalidParam[] = [];
 
-  // Static rejections that can never match — no workspace lookup needed.
+  // Static rejections that can never match; no workspace lookup needed.
   for (const reference of references.filter((ref) => ref.kind === "unsupportedPersonIdentifier")) {
     invalidParams.push({
       name: reference.path,
@@ -279,7 +279,7 @@ export async function assertV3SurveyTargetingFilterReferences(
 
   const segmentRefs = references.filter((ref) => ref.kind === "segment");
   if (segmentRefs.length > 0) {
-    // Scope to the workspace's own segments — `getSegment(id)` is global, so a bare existence check
+    // Scope to the workspace's own segments: `getSegment(id)` is global, so a bare existence check
     // would accept (and store) a reference to another workspace's segment.
     const segments = await getSegments(workspaceId, ALL_SEGMENT_SURVEY_REFS);
     const knownSegmentIds = new Set(segments.map((segment) => segment.id));

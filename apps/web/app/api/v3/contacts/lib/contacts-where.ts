@@ -5,7 +5,7 @@ import type {
 } from "@formbricks/database/prisma";
 import type { TKeysetCursor } from "@/app/api/v3/lib/keyset-cursor";
 import { escapeLikePattern } from "@/lib/utils/like-pattern";
-import { buildContactWhereClause } from "@/modules/ee/contacts/lib/contacts";
+import { buildContactWhereClause } from "@/modules/contacts/lib/contacts";
 import type { TV3ContactAttributeFilter, TV3ContactsSort } from "./parse-v3-contacts-list-query";
 
 const INSENSITIVE = "insensitive" as const;
@@ -92,7 +92,7 @@ const rowCondition = (filter: TV3ContactAttributeFilter): ContactAttributeWhereI
 
 /**
  * One attribute filter as a `Contact` condition. Every branch leads with `attributeKeyId`, so the
- * lookup is served by the `ContactAttribute (attributeKeyId, value|valueNumber|valueDate)` indexes —
+ * lookup is served by the `ContactAttribute (attributeKeyId, value|valueNumber|valueDate)` indexes,
  * and since the key id was resolved inside the authorized workspace, the filter cannot reach another
  * workspace's attribute rows.
  */
@@ -112,7 +112,7 @@ export const buildAttributeFilterCondition = (
 };
 
 /**
- * The full filter for the page and the count. Workspace scope first and always — the search clause
+ * The full filter for the page and the count. Workspace scope first and always; the search clause
  * comes from `buildContactWhereClause`, the same helper the Contacts page uses today, so the two
  * searches cannot drift. Everything else is ANDed.
  */

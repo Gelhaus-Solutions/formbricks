@@ -4,7 +4,7 @@ import { isPrismaKnownRequestError } from "@/lib/utils/prisma-error";
 /**
  * A Postgres deadlock aborts ONE transaction in the cycle (SQLSTATE 40P01) and is safe to retry.
  * Prisma reports it as P2034 on interactive transactions; the pg driver adapter can also surface it
- * as a DriverAdapterError whose message carries "deadlock detected" — the shape seen in Sentry for
+ * as a DriverAdapterError whose message carries "deadlock detected", the shape seen in Sentry for
  * ENG-2038 (login path) and ENG-2252 (contact identify path).
  */
 export const isDeadlockError = (error: unknown): boolean => {
@@ -23,11 +23,11 @@ const DEADLOCK_MAX_ATTEMPTS = 3;
  * first attempt. The caller must be idempotent: a deadlock rolls the whole transaction back, so
  * re-running it must be safe.
  *
- * Retry is the second line of defense — the first is acquiring locks in a deterministic order so no
- * cycle can form in the first place (see updateAttributes in modules/ee/contacts/lib/attributes.ts).
+ * Retry is the second line of defense; the first is acquiring locks in a deterministic order so no
+ * cycle can form in the first place.
  *
- * `context` identifies the caller in the retry log. A swallowed deadlock is otherwise invisible —
- * the request succeeds and nothing reaches Sentry — which would leave "no longer deadlocking" and
+ * `context` identifies the caller in the retry log. A swallowed deadlock is otherwise invisible
+ * (the request succeeds and nothing reaches Sentry), which would leave "no longer deadlocking" and
  * "deadlocking but recovering" indistinguishable in production. Pass ids only: this runs on paths
  * carrying contact attributes and user emails, and none of that belongs in a log line.
  */

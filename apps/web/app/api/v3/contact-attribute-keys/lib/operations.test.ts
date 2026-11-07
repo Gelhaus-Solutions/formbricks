@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DatabaseError } from "@formbricks/types/errors";
 import { requireV3WorkspaceAccess } from "@/app/api/v3/lib/auth";
-import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
+import { getContactAttributeKeys } from "@/modules/contacts/lib/contact-attribute-keys";
 import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { listV3ContactAttributeKeys } from "./operations";
 
@@ -11,7 +11,7 @@ vi.mock("@/app/api/v3/lib/auth", () => ({
   requireV3WorkspaceAccess: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/contacts/lib/contact-attribute-keys", () => ({
+vi.mock("@/modules/contacts/lib/contact-attribute-keys", () => ({
   getContactAttributeKeys: vi.fn(),
 }));
 
@@ -155,7 +155,7 @@ describe("listV3ContactAttributeKeys", () => {
   });
 });
 
-describe("listV3ContactAttributeKeys — search, filters, sort, totals", () => {
+describe("listV3ContactAttributeKeys: search, filters, sort, totals", () => {
   const makeKey = (overrides: Record<string, unknown>) =>
     ({ ...attributeKey, ...overrides }) as unknown as typeof attributeKey;
 

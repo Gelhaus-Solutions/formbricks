@@ -31,7 +31,7 @@ import { DATA_TYPE_ICONS } from "@/modules/ui/components/data-type-badge/lib/dat
  * **This is the one label for an auto-captured field, everywhere it is named.** It started out
  * serving the response table and the response card; ENG-1853 pointed the recall picker and the logic
  * operand pickers at it too, which is why it now lives under `modules/embedded-data` rather than
- * under `modules/analysis` — a reserved field is auto-captured Embedded Data, and the workspace
+ * under `modules/analysis`: a reserved field is auto-captured Embedded Data, and the workspace
  * Embedded Data settings page reads the same list. Before that move the pickers derived their own
  * labels through `formatFieldNameToTitleCase` and rendered `Url`, `Os` and `Action` beside a
  * response table that said `URL`, `OS` and `Action` for the same field.
@@ -41,10 +41,10 @@ import { DATA_TYPE_ICONS } from "@/modules/ui/components/data-type-badge/lib/dat
  * `durationSeconds`, which no column shows but the response filter offers (ENG-1848), and
  * `language`, which no column shows but the mid-survey pickers offer. So `Page Path`,
  * `UTM Source` and `Duration (seconds)` are translated in every locale rather than rendered as
- * English derived from the catalog name — which is what the repo's i18n rule asks for, and what
+ * English derived from the catalog name, which is what the repo's i18n rule asks for, and what
  * shipping them derived would have quietly broken.
  *
- * `formatFieldNameToTitleCase` — the helper the pickers used to label with — stays as the
+ * `formatFieldNameToTitleCase` (the helper the pickers used to label with) stays as the
  * `default` arm, deliberately, as a **last resort rather than the rule**: ENG-1858's next batch of
  * catalog entries still surfaces on every surface with no edit here, reading in English until
  * someone adds its key. So a catalog addition is still free, just not yet localized; that is the
@@ -54,9 +54,9 @@ import { DATA_TYPE_ICONS } from "@/modules/ui/components/data-type-badge/lib/dat
  * A table of literal `t("…")` **calls** rather than of key strings: `pnpm i18n` scans for literal
  * `t()` arguments to find unused keys, so a `{ action: "common.action" }` map would make every
  * `workspace.surveys.responses.*` key below read as dead and get deleted from every other locale.
- * Keeping the call keeps the key alive, and one entry per line reads as the catalog it is — where
+ * Keeping the call keeps the key alive, and one entry per line reads as the catalog it is, where
  * the `case … return …` pairs this replaced were fifty lines whose shape SonarCloud matched against
- * the equally long translation switch in `modules/ee/contacts/segments/lib/utils.ts`.
+ * an equally long translation switch elsewhere.
  */
 const RESERVED_FIELD_LABELS: Record<string, (t: TFunction) => string> = {
   // The seven `primary` fields, all of which predate the catalog and keep their shipped copy.
@@ -93,8 +93,8 @@ const RESERVED_FIELD_LABELS: Record<string, (t: TFunction) => string> = {
   openedByCreativeName: (t) => t("workspace.surveys.responses.opened_by_creative"),
   openedByCreativeId: (t) => t("workspace.surveys.responses.opened_by_creative_id"),
   // The two `display: "none"` entries a picker offers but no column ever shows: `durationSeconds`
-  // to the response filter (ENG-1848/ENG-2894), and `language` — the only `availability: "both"`
-  // entry — to the mid-survey recall and logic pickers (ENG-1853). Both reuse a key that already
+  // to the response filter (ENG-1848/ENG-2894), and `language` (the only `availability: "both"`
+  // entry) to the mid-survey recall and logic pickers (ENG-1853). Both reuse a key that already
   // exists rather than adding copy for a word already translated in every locale.
   durationSeconds: (t) => t("workspace.surveys.responses.duration_seconds"),
   language: (t) => t("common.language"),
@@ -114,14 +114,14 @@ export const formatReservedFieldValue = (name: string, value: string, locale: st
   );
 };
 /**
- * Column and row icons, by catalog entry name. Deliberately sparse — the UTM family shares one icon
- * so a row of five reads as one group — and deliberately complete for every entry a surface can
+ * Column and row icons, by catalog entry name. Deliberately sparse (the UTM family shares one icon
+ * so a row of five reads as one group) and deliberately complete for every entry a surface can
  * reach: the two readers disagree about a miss, so a gap here is not a neutral choice.
  *
  * The response table and the response filter read this map raw and render no icon for a miss
  * (`responses/lib/utils.ts`, `ElementsComboBox.tsx`), while the pickers go through
  * {@link getReservedFieldIcon} and take its fallback. So an entry left out does not render "without
- * one" in the pickers — it borrows the fallback, which is `browser`'s and `url`'s globe. Every
+ * one" in the pickers: it borrows the fallback, which is `browser`'s and `url`'s globe. Every
  * `availability !== "server"` entry therefore has its own icon here, and the fallback exists for the
  * catalog additions ENG-1858 will bring rather than as the rule.
  */
@@ -166,7 +166,7 @@ export const RESERVED_FIELD_ICONS: Record<string, LucideIcon> = {
  *
  * The group merge retired the icon's old job: with a Variables group and a Hidden Fields group,
  * `FileType2Icon` versus `EyeOffIcon` said which group the row was in, which the heading above it
- * said already. In one group the distinction worth drawing is what the value *is* — which is also
+ * said already. In one group the distinction worth drawing is what the value *is*, which is also
  * what decides the operators the next dropdown will offer, and whether the recall token will render
  * a date or a word.
  *

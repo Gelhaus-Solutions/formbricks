@@ -15,7 +15,7 @@ import {
   ZContactAttributeKeyUpdateSchema,
 } from "@/modules/api/v2/management/contact-attribute-keys/[contactAttributeKeyId]/types/contact-attribute-keys";
 import { ApiErrorResponseV2 } from "@/modules/api/v2/types/api-error";
-import { checkContactsEnabledApiV2 } from "@/modules/ee/license-check/lib/contacts-api-guard";
+import { checkContactsEnabledApiV2 } from "@/modules/contacts/lib/contacts-api-guard";
 
 export const GET = async (
   request: NextRequest,
