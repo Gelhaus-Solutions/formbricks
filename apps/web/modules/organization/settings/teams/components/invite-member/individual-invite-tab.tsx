@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -9,7 +8,6 @@ import { OrganizationRole } from "@formbricks/database/prisma-browser";
 import { ZId } from "@formbricks/types/common";
 import { TOrganizationRole, ZOrganizationRole } from "@formbricks/types/memberships";
 import { ZUserName } from "@formbricks/types/user";
-import { organizationSettingsPath } from "@/modules/settings/lib/routes";
 import { TOrganizationTeam } from "@/modules/teams/team-list/types/team";
 import { Alert, AlertDescription } from "@/modules/ui/components/alert";
 import { Button } from "@/modules/ui/components/button";
@@ -25,22 +23,16 @@ interface IndividualInviteTabProps {
     data: { name: string; email: string; role: TOrganizationRole; teamIds: string[] }[]
   ) => Promise<boolean>;
   readonly teams: TOrganizationTeam[];
-  readonly organizationId: string;
   readonly isAccessControlAllowed: boolean;
-  readonly isFormbricksCloud: boolean;
   readonly showTeamAdminRestrictions: boolean;
-  readonly enterpriseLicenseRequestFormUrl: string;
 }
 
 export const IndividualInviteTab = ({
   setOpen,
   onSubmit,
   teams,
-  organizationId,
   isAccessControlAllowed,
-  isFormbricksCloud,
   showTeamAdminRestrictions,
-  enterpriseLicenseRequestFormUrl,
 }: IndividualInviteTabProps) => {
   const ZFormSchema = z.object({
     name: ZUserName,
@@ -166,24 +158,6 @@ export const IndividualInviteTab = ({
               <Input value={t("workspace.settings.teams.contributor")} disabled />
             </div>
           </>
-        )}
-
-        {!isAccessControlAllowed && (
-          <Alert role="status">
-            <AlertDescription className="flex">
-              {t("workspace.settings.teams.upgrade_plan_notice_message")}
-              <Link
-                className="ml-1 underline"
-                target="_blank"
-                href={
-                  isFormbricksCloud
-                    ? organizationSettingsPath(organizationId, "billing")
-                    : enterpriseLicenseRequestFormUrl
-                }>
-                {t("common.upgrade_plan")}
-              </Link>
-            </AlertDescription>
-          </Alert>
         )}
 
         <div className="flex items-end justify-end gap-x-2">

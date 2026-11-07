@@ -5,7 +5,7 @@ import { DeleteOrganization } from "@/app/(app)/workspaces/[workspaceId]/setting
 import { EditOrganizationSettingsForm } from "@/app/(app)/workspaces/[workspaceId]/settings/organization/general/components/EditOrganizationSettingsForm";
 import { SecurityListTip } from "@/app/(app)/workspaces/[workspaceId]/settings/organization/general/components/SecurityListTip";
 import { isInstanceAIConfigured } from "@/lib/ai/service";
-import { ENTERPRISE_LICENSE_REQUEST_FORM_URL, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
+import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { getTranslate } from "@/lingodotdev/server";
 import { getIsAISmartToolsEnabled, getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { getOrganizationAuth } from "@/modules/organization/lib/utils";
@@ -48,8 +48,6 @@ const Page = async (props: Readonly<{ params: Promise<{ organizationId: string }
           membershipRole={currentUserRole}
           isInstanceAIConfigured={isInstanceAIConfigured()}
           hasAIPermission={hasAIPermission}
-          isFormbricksCloud={IS_FORMBRICKS_CLOUD}
-          enterpriseLicenseRequestFormUrl={ENTERPRISE_LICENSE_REQUEST_FORM_URL}
         />
       </SettingsCard>
       {isMultiOrgEnabled && (

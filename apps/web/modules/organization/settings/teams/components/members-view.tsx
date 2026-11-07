@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { TOrganizationRole } from "@formbricks/types/memberships";
 import { TOrganization } from "@formbricks/types/organizations";
 import { SettingsCard } from "@/app/(app)/workspaces/[workspaceId]/settings/components/SettingsCard";
-import { ENTERPRISE_LICENSE_REQUEST_FORM_URL, INVITE_DISABLED, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
+import { INVITE_DISABLED } from "@/lib/constants";
 import { getTranslate } from "@/lingodotdev/server";
 import { getBulkInvitePermission, getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { EditMemberships } from "@/modules/organization/settings/teams/components/edit-memberships";
@@ -71,8 +71,6 @@ export const MembersView = async ({
             isLeaveOrganizationDisabled={isLeaveOrganizationDisabled}
             isInviteDisabled={INVITE_DISABLED}
             isAccessControlAllowed={isAccessControlAllowed}
-            isFormbricksCloud={IS_FORMBRICKS_CLOUD}
-            enterpriseLicenseRequestFormUrl={ENTERPRISE_LICENSE_REQUEST_FORM_URL}
             isMultiOrgEnabled={isMultiOrgEnabled}
             teams={teams}
             isUserManagementDisabledFromUi={isUserManagementDisabledFromUi}

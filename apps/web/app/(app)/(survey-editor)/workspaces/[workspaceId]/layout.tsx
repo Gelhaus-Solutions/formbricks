@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { AuthenticationError } from "@formbricks/types/errors";
 import { WorkspaceContextWrapper } from "@/app/(app)/workspaces/[workspaceId]/context/workspace-context";
 import { SurveysQueryClientProvider } from "@/app/(app)/workspaces/[workspaceId]/surveys/query-client-provider";
-import { ENTERPRISE_LICENSE_REQUEST_FORM_URL, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { getWorkspaceAuth, workspaceIdLayoutChecks } from "@/modules/workspaces/lib/utils";
 
 const SurveyEditorWorkspaceLayout = async (props: {
@@ -32,13 +31,7 @@ const SurveyEditorWorkspaceLayout = async (props: {
   const { workspace, organization } = await getWorkspaceAuth(params.workspaceId);
 
   return (
-    <WorkspaceContextWrapper
-      workspace={workspace}
-      organization={organization}
-      deployment={{
-        isFormbricksCloud: IS_FORMBRICKS_CLOUD,
-        enterpriseLicenseRequestFormUrl: ENTERPRISE_LICENSE_REQUEST_FORM_URL,
-      }}>
+    <WorkspaceContextWrapper workspace={workspace} organization={organization}>
       <div className="flex h-screen flex-col">
         <div className="h-full overflow-y-auto bg-slate-50">
           <SurveysQueryClientProvider>{children}</SurveysQueryClientProvider>

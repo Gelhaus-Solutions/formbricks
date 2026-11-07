@@ -7,56 +7,27 @@ import { organizationSettingsPath } from "@/modules/settings/lib/routes";
  */
 type TTranslate = (key: string) => string;
 
-export type TAIUnavailableActionType = "enable_ai" | "upgrade_plan" | "request_license";
+export type TAIUnavailableActionType = "enable_ai";
 
 export type TAIUnavailableAction = {
   href: string;
   type: TAIUnavailableActionType;
-  /** Self-hosted upgrades leave the app for the licence request form; the other targets are in-app. */
-  isExternal: boolean;
-};
-
-/**
- * The deployment facts the upgrade target depends on. `IS_FORMBRICKS_CLOUD` and the licence request
- * URL live in the server-only `lib/constants`, so client components read them from the workspace
- * context (`useDeploymentInfo`) instead, which the server layouts fill in.
- */
-export type TDeploymentInfo = {
-  isFormbricksCloud: boolean;
-  enterpriseLicenseRequestFormUrl: string;
 };
 
 export const getAIUnavailableAction = (
   reason: TAIUnavailableReason | undefined,
-  organizationId: string,
-  deployment: TDeploymentInfo
+  organizationId: string
 ): TAIUnavailableAction | undefined => {
   if (reason === "not_enabled") {
     return {
       href: organizationSettingsPath(organizationId, "general"),
       type: "enable_ai",
-      isExternal: false,
     };
   }
 
-  if (reason === "not_in_plan") {
-    // Same split every other gated feature uses (see the UpgradePrompt call sites): cloud sends
-    // people to billing, self-hosted to the enterprise licence request form.
-    return deployment.isFormbricksCloud
-      ? {
-          href: organizationSettingsPath(organizationId, "billing"),
-          type: "upgrade_plan",
-          isExternal: false,
-        }
-      : {
-          href: deployment.enterpriseLicenseRequestFormUrl,
-          type: "request_license",
-          isExternal: true,
-        };
-  }
-
-  // `instance_not_configured` is an operator's job and `read_only` a permission the user cannot
-  // grant themselves, so neither offers a self-service action.
+  // `not_in_plan` has no plan or licence to upgrade to in GForms (GFORMS-34), `instance_not_configured`
+  // is an operator's job and `read_only` a permission the user cannot grant themselves, so none of them
+  // offers a self-service action.
   return undefined;
 };
 
@@ -109,13 +80,5 @@ export const getAIUnavailableMessageForErrorCode = (
   return reason ? getAIUnavailableMessage(reason, t) : undefined;
 };
 
-export const getAIUnavailableActionLabel = (type: TAIUnavailableActionType, t: TTranslate): string => {
-  switch (type) {
-    case "enable_ai":
-      return t("common.ai_unavailable.enable_in_settings");
-    case "upgrade_plan":
-      return t("common.upgrade_plan");
-    case "request_license":
-      return t("common.request_trial_license");
-  }
-};
+export const getAIUnavailableActionLabel = (_type: TAIUnavailableActionType, t: TTranslate): string =>
+  t("common.ai_unavailable.enable_in_settings");

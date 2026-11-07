@@ -114,7 +114,6 @@ export const ImportSurveyForm = ({
       <AIUnavailableAlert
         title={t("workspace.surveys.import.feature_name")}
         reason={importer.aiUnavailableReason ?? aiUnavailableReason}
-        feature="qsf_survey_import"
       />
     );
   }

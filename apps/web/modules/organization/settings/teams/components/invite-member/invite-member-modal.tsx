@@ -21,13 +21,10 @@ interface InviteMemberModalProps {
   setOpen: (v: boolean) => void;
   onSubmit: (data: TInvitee[]) => Promise<boolean>;
   teams: TOrganizationTeam[];
-  organizationId: string;
   isAccessControlAllowed: boolean;
-  isFormbricksCloud: boolean;
   isOwnerOrManager: boolean;
   isTeamAdmin: boolean;
   userAdminTeamIds?: string[];
-  enterpriseLicenseRequestFormUrl: string;
   isBulkInviteAllowed: boolean;
 }
 
@@ -36,13 +33,10 @@ export const InviteMemberModal = ({
   setOpen,
   onSubmit,
   teams,
-  organizationId,
   isAccessControlAllowed,
-  isFormbricksCloud,
   isOwnerOrManager,
   isTeamAdmin,
   userAdminTeamIds,
-  enterpriseLicenseRequestFormUrl,
   isBulkInviteAllowed,
 }: Readonly<InviteMemberModalProps>) => {
   const [type, setType] = useState<"individual" | "bulk">("individual");
@@ -62,11 +56,8 @@ export const InviteMemberModal = ({
         setOpen={setOpen}
         onSubmit={onSubmit}
         teams={filteredTeams}
-        organizationId={organizationId}
         isAccessControlAllowed={isAccessControlAllowed}
-        isFormbricksCloud={isFormbricksCloud}
         showTeamAdminRestrictions={showTeamAdminRestrictions}
-        enterpriseLicenseRequestFormUrl={enterpriseLicenseRequestFormUrl}
       />
     ),
     bulk: (
@@ -74,11 +65,8 @@ export const InviteMemberModal = ({
         setOpen={setOpen}
         onSubmit={onSubmit}
         teams={filteredTeams}
-        organizationId={organizationId}
         isAccessControlAllowed={isAccessControlAllowed}
-        isFormbricksCloud={isFormbricksCloud}
         isBulkInviteAllowed={isBulkInviteAllowed}
-        enterpriseLicenseRequestFormUrl={enterpriseLicenseRequestFormUrl}
       />
     ),
   };

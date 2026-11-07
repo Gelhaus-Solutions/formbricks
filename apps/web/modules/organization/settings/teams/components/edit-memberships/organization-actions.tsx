@@ -41,12 +41,10 @@ interface OrganizationActionsProps {
   readonly teams: TOrganizationTeam[];
   readonly isInviteDisabled: boolean;
   readonly isAccessControlAllowed: boolean;
-  readonly isFormbricksCloud: boolean;
   readonly isMultiOrgEnabled: boolean;
   readonly isUserManagementDisabledFromUi: boolean;
   readonly isTeamAdmin: boolean;
   readonly userAdminTeamIds?: string[];
-  readonly enterpriseLicenseRequestFormUrl: string;
   readonly isBulkInviteAllowed: boolean;
 }
 
@@ -58,12 +56,10 @@ export const OrganizationActions = ({
   isLeaveOrganizationDisabled,
   isInviteDisabled,
   isAccessControlAllowed,
-  isFormbricksCloud,
   isMultiOrgEnabled,
   isUserManagementDisabledFromUi,
   isTeamAdmin,
   userAdminTeamIds,
-  enterpriseLicenseRequestFormUrl,
   isBulkInviteAllowed,
 }: OrganizationActionsProps) => {
   const router = useRouter();
@@ -194,14 +190,11 @@ export const OrganizationActions = ({
         open={isInviteMemberModalOpen}
         setOpen={setIsInviteMemberModalOpen}
         onSubmit={handleAddMembers}
-        organizationId={organization.id}
         isAccessControlAllowed={isAccessControlAllowed}
-        isFormbricksCloud={isFormbricksCloud}
         teams={teams}
         isOwnerOrManager={isOwnerOrManager}
         isTeamAdmin={isTeamAdmin}
         userAdminTeamIds={userAdminTeamIds}
-        enterpriseLicenseRequestFormUrl={enterpriseLicenseRequestFormUrl}
         isBulkInviteAllowed={isBulkInviteAllowed}
       />
 

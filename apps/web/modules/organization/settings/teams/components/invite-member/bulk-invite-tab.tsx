@@ -8,13 +8,11 @@ import { useTranslation } from "react-i18next";
 import { TOrganizationRole } from "@formbricks/types/memberships";
 import { cn } from "@/lib/cn";
 import { ZInvitees } from "@/modules/organization/settings/teams/types/invites";
-import { organizationSettingsPath } from "@/modules/settings/lib/routes";
 import type { TOrganizationTeam } from "@/modules/teams/team-list/types/team";
 import { Alert, AlertDescription } from "@/modules/ui/components/alert";
 import { Button } from "@/modules/ui/components/button";
 import { CsvTable } from "@/modules/ui/components/csv-table";
 import { DialogFooter } from "@/modules/ui/components/dialog";
-import { ModalButton, UpgradePrompt } from "@/modules/ui/components/upgrade-prompt";
 
 interface BulkInviteTabProps {
   setOpen: (v: boolean) => void;
@@ -22,11 +20,8 @@ interface BulkInviteTabProps {
     data: { name: string; email: string; role: TOrganizationRole; teamIds: string[] }[]
   ) => Promise<boolean>;
   teams: TOrganizationTeam[];
-  organizationId: string;
   isAccessControlAllowed: boolean;
-  isFormbricksCloud: boolean;
   isBulkInviteAllowed: boolean;
-  enterpriseLicenseRequestFormUrl: string;
 }
 
 export type BulkCsvRow = Record<string, string | undefined>;
@@ -57,11 +52,8 @@ export const BulkInviteTab = ({
   setOpen,
   onSubmit,
   teams,
-  organizationId,
   isAccessControlAllowed,
-  isFormbricksCloud,
   isBulkInviteAllowed,
-  enterpriseLicenseRequestFormUrl,
 }: Readonly<BulkInviteTabProps>) => {
   const { t } = useTranslation();
   const [csvFile, setCSVFile] = useState<File>();
@@ -199,28 +191,9 @@ export const BulkInviteTab = ({
   const previewCount = previewRows.length;
   const extraRowCount = Math.max(previewCount - PREVIEW_ROW_LIMIT, 0);
 
+  // Bulk invite is a GForms feature that is always on; the tab hides itself if a flag ever turns it off.
   if (!isBulkInviteAllowed) {
-    const upgradeButtons: [ModalButton, ModalButton] = [
-      {
-        text: isFormbricksCloud ? t("common.upgrade_plan") : t("common.request_trial_license"),
-        href: isFormbricksCloud
-          ? organizationSettingsPath(organizationId, "billing")
-          : enterpriseLicenseRequestFormUrl,
-      },
-      {
-        text: t("common.learn_more"),
-        href: "https://formbricks.com/docs/self-hosting/license",
-      },
-    ];
-
-    return (
-      <UpgradePrompt
-        title={t("workspace.settings.teams.bulk_invite_scale_only_title")}
-        description={t("workspace.settings.teams.bulk_invite_scale_only_description")}
-        buttons={upgradeButtons}
-        feature="bulk-invite"
-      />
-    );
+    return null;
   }
 
   return (

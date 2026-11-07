@@ -148,7 +148,6 @@ export const CreateWithAIForm = ({
       <AIUnavailableAlert
         title={t("workspace.surveys.ai_create.ai_survey_creation")}
         reason={aiUnavailableReason}
-        feature="ai_survey_creation"
       />
     );
   }
