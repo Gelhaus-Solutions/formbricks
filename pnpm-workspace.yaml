@@ -13,7 +13,6 @@ allowBuilds:
   prisma: true
   protobufjs: true
   sharp: true
-  sqlite3: true
   unrs-resolver: true
   "@prisma/client": true
 
@@ -128,15 +127,11 @@ catalog:
 # The `load-bearing:` notes record the consumer that keeps the vulnerable version in the
 # tree, so the next cleanup can check that single upstream instead of re-deriving it.
 overrides:
-  # GHSA-q3jh-wrc6-jgq8, GHSA-8r9p-f939-6h3c (ENG-4090, ENG-4091): follow-redirects before 1.16.1 leaks
-  # credential headers across origins (array-form headers, sensitiveHeaders regex escaping); 1.16.1 is the
-  # lowest release closing both.
-  # load-bearing: axios and other HTTP clients resolve follow-redirects 1.16.0 transitively.
-  "follow-redirects": 1.16.1
   # ENG-1324 / GHSA-5375-pq7m-f5r2, ENG-1325 / GHSA-99f4-grh7-6pcq:
   # @grpc/grpc-js 1.14.5 also fixes unauthorized certificate acceptance and error-message disclosure
   # (CVE-2026-101916 / CVE-2026-101915), alongside the malformed-message crash fixes in 1.14.4.
-  # load-bearing: @boxyhq/metrics resolves 1.14.3.
+  # @boxyhq/metrics, the consumer this was pinned for, left with SSO; @authzed/authzed-node and the
+  # OpenTelemetry gRPC exporters now resolve it through the pin.
   "@grpc/grpc-js": 1.14.5
   # CVE-2026-104872 / GHSA-qqmp-wf37-98f9: database instrumentation unconditionally exports db.user.
   # Pin every affected instrumentation, including nested Sentry copies, to its first patched release.
@@ -183,35 +178,6 @@ overrides:
   # 7.6.5 on their own.
   # load-bearing: @opentelemetry/otlp-transformer pins 8.0.0 / 8.0.1.
   protobufjs@8: 8.6.6
-  # sqlite3 / node-gyp chain: tar advisory pins are safe here because sqlite3 is pulled in
-  # transitively by typeorm but the project uses postgres; sqlite3 is never built at runtime.
-  # Therefore node-gyp@8 / http-proxy-agent@4 compatibility is not a concern.
-  # ENG-1379 / GHSA-vpq2-c234-7xj6 (CVE-2026-3449): @tootallnate/once <2.0.1 leaves the promise
-  # permanently pending after an AbortSignal abort; http-proxy-agent@4 pins ^1, so an override is
-  # required. Pinned to the minimal patched version (2.0.1) to stay CJS-compatible with http-proxy-agent@4.
-  "@tootallnate/once": 2.0.1
-  # SAML and XML processing chains.
-  # ENG-2846 / GHSA-6gmq-8vp8-gcm6 (CVE-2026-83610): an EntityReference created via
-  # createEntityReference(name) with a name containing `; <tag/> &` breaks out of the `&name;` form when
-  # serialized with `requireWellFormed: true`, injecting attacker-controlled XML markup; patched in 0.9.12.
-  # load-bearing for @boxyhq/saml20, which resolves 0.9.8 without it and is still vulnerable to the original chain
-  # (GHSA-2v35-w6hq-6mfw + 4 more). xml-crypto and xml-encryption are pinned to the patched 0.8.15 by the scoped
-  # overrides below, so this one covers saml20's own parse and any other 0.9 consumer.
-  "@xmldom/xmldom": 0.9.12
-  # ENG-4045: xml-crypto stays on the 0.8 line it declares (`^0.8`, still so in 6.4.0). It calls
-  # `parseFromString(xml)` without a mimeType, which every 0.9 release throws on, so on 0.9 jackson can neither
-  # sign an AuthnRequest nor check a response's signature: SAML sign-in fails outright. xml-encryption makes the
-  # same call but is only ever handed a node by saml20; it is kept on its declared `^0.8` as well, as upstream
-  # saml20 1.22 ships it. 0.8.15 is the patched 0.8 release; `pnpm audit` reports no xmldom advisory against it.
-  # saml20 parses on 0.9.12 and hands its nodes to both, which works
-  # (modules/ee/auth/saml/api/sp-initiated-sign-in.test.ts). With `nodeLinker: hoisted` either version can land at
-  # the root, so any workspace that imports @xmldom/xmldom must declare it (apps/web does). Scoped to the current
-  # majors, so a new major that adopts 0.9 drops out of the pin on its own.
-  "xml-crypto@6>@xmldom/xmldom": 0.8.15
-  "xml-encryption@3>@xmldom/xmldom": 0.8.15
-  # 1.20.0 also fixes HTTP adapter DoS, redirect-control bypass and prototype-pollution gadgets.
-  # load-bearing: @boxyhq/saml-jackson pins 1.13.5.
-  axios: 1.20.0
   # GHSA-6qxp-vccf-f47h: an MCP server can select the authorization server receiving client credentials.
   # @posthog/mcp's optional v1 peer retained 1.26.0 in the old lockfile; keep any v1 resolution patched.
   "@modelcontextprotocol/sdk@1": 1.31.0
@@ -221,11 +187,7 @@ overrides:
   # GHSA-jggr-w7fw-pc2j: deeply nested inputs exhaust the stack while copying.
   # load-bearing: pino-pretty resolves 4.0.2.
   fast-copy: 4.1.0
-  lodash: 4.18.1 # GHSA-r5fr-rjxr-66jc + GHSA-f23m-r3pf-42rh: <=4.17.23 vulnerable, patched in 4.17.24. load-bearing: @boxyhq/saml-jackson and @microsoft/api-extractor resolve 4.17.23.
-  # ENG-3557 / GHSA-86w9-cpqp-85rv (CVE-2026-85393) covers <=1.4.0 and has no patched release yet; it is a
-  # PKCS#1 v1.5 signature-verification forgery, and Jackson only generates and self-signs its SP certificate
-  # with node-forge (saml/x509.js), never verifying with it. Raise this pin once a fix ships.
-  node-forge: 1.4.0 # load-bearing: @boxyhq/saml-jackson resolves 1.3.3, still vulnerable (GHSA-2328-f5f3-gj25 + GHSA-5m6q-g25r-mvwx)
+  lodash: 4.18.1 # GHSA-r5fr-rjxr-66jc + GHSA-f23m-r3pf-42rh: <=4.17.23 vulnerable, patched in 4.17.24. load-bearing: @microsoft/api-extractor resolves 4.17.23.
   # Webpack / linting / schema validation chains.
   minimatch@10: 10.2.5 # GHSA-7r86-cg39-jmmj + GHSA-23c5-xmqv-rm74: 10.0.0–10.2.2 vulnerable, patched in 10.2.3. load-bearing: @microsoft/api-extractor pins 10.2.1.
   # GHSA-r28c-9q8g-f849 and GHSA-fxqj-rqcc-2cmp: postcss path traversal and parser
@@ -264,10 +226,6 @@ overrides:
   # indefinitely when called with size 0 (DoS). Raises the 3.x pin from 3.3.17 to 3.3.18 (still <4).
   # load-bearing: postcss resolves 3.3.17.
   nanoid@3: 3.3.18
-  # GHSA-9ggv-8w38-r7pm: @boxyhq/saml-jackson still resolves typeorm 0.3.28; patched in 0.3.29.
-  # ENG-1990 / GHSA-2rp8-mm9q-fp49: typeorm <0.3.31 migration:generate template-literal code injection;
-  # patched in 0.3.31.
-  typeorm: 0.3.31
   # uuid: load-bearing security pins that are also MAJOR coercions on transitive consumers
   # (@azure/msal-node uuid v8 and @sentry/webpack-plugin uuid v9 -> v11). Natural versions are
   # vulnerable (GHSA-w5hq-g745-h8pq), so the pins stay; runtime verified in build+tests.
@@ -280,14 +238,6 @@ overrides:
   # Dependabot security batch (transitive-only; direct deps vite/ua-parser-js bumped in package.json).
   "@opentelemetry/core": 2.8.0 # ENG-1355 / GHSA-8988-4f7v-96qf (<2.8.0). load-bearing: the 0.208.0/0.211.0/0.212.0/0.217.0 exporter lines resolve 2.2.0–2.7.1.
   esbuild: 0.28.1 # ENG-1327 / GHSA-g7r4-m6w7-qqqr (>=0.27.3 <0.28.1). load-bearing: vite@7/tsx/storybook resolve 0.27.7.
-  # ENG-1947 / GHSA-23hp-3jrh-7fpw (CVE-2026-59873): node-tar <=7.5.18 has no hard
-  # upper bound on total decompressed bytes / entry count, so a small gzip bomb can
-  # exhaust disk and CPU (DoS). Patched in 7.5.19.
-  # GHSA-r292-9mhp-454m: node-tar <=7.5.20 has uncontrolled recursion in
-  # mapHas/filesFilter, allowing an uncatchable stack-overflow DoS via a crafted
-  # long-path tar entry during member selection; patched in 7.5.21.
-  # load-bearing: the sqlite3 / node-gyp@8 chain resolves the tar 6.x line (6.2.1).
-  tar: 7.5.21
   # ENG-1527-batch / GHSA-mh29-5h37-fv8m + GHSA-h67p-54hq-rp68: js-yaml <4.1.2 quadratic-complexity
   # DoS via merge keys / repeated aliases (dev-only, via @redocly/cli). No 4.1.2 published; 4.2.0 is the
   # lowest patched and stays <5. Scoped to the 4.x line so any 3.x consumer is untouched.
@@ -399,8 +349,8 @@ overrides:
   # protocol packet, so a malicious/compromised server can DoS a client via a decompression bomb;
   # patched in 3.23.1. Surfaced by `pnpm audit` (no Dependabot/Linear issue open for it yet); folded in
   # here since it is the same package and pin. Raises the floor to 3.23.1 to close both.
-  # load-bearing: prisma resolves 3.15.3 (dev-only Prisma CLI, mysql adapter) and better-auth /
-  # @boxyhq/saml-jackson / typeorm resolve 3.20.0 (runtime, optional mysql adapters).
+  # load-bearing: prisma resolves 3.15.3 (dev-only Prisma CLI, mysql adapter) and better-auth resolves
+  # 3.20.0 (runtime, optional mysql adapter).
   mysql2: 3.23.1
   # === Dependabot security batch (ENG-2821/ENG-2822, ENG-2823/ENG-2824, ENG-2839..ENG-2845) ===
   # ENG-2823 / GHSA-c83g-rgw3-j3cx (CVE-2026-73089): browserslist's query-result and AST caches grow
@@ -422,8 +372,8 @@ overrides:
   # the parse -> stringify round-trip throws an uncaught `TypeError`. Both patched in 6.16.0.
   # ENG-6831 / GHSA-6pq8-jhm2-2vcw: `stringify` with `arrayFormat: "comma"` throws on an element whose own
   # `toString` isn't callable; patched in 6.16.1.
-  # load-bearing: no direct dependency — express (via body-parser, runtime, pulled in by @posthog/mcp)
-  # and googleapis-common (runtime, @boxyhq/saml-jackson's admin API + googleapis) resolve 6.15.2.
+  # load-bearing: no direct dependency. express (via body-parser, runtime, pulled in by @posthog/mcp)
+  # and googleapis-common (runtime, googleapis) resolve 6.15.2.
   qs: 6.16.1
   # ENG-2821 / ENG-2822 / GHSA-g8qq-57p8-ggw5 (CVE-2026-84371): when SVG animation is allowed,
   # `attributeName="href"` gives the sibling `values` attribute SMIL URI-list semantics that
@@ -477,12 +427,10 @@ overrides:
   # reaches brace-expansion via minimatch. Pinned to the lowest maintenance release closing both
   # advisories on each line. GHSA-q2hr-2g5m-vwhr is a quadratic-time rewrite of `{a},b}` input (CPU
   # DoS) on every line; it raised the pins to 1.1.21, 2.1.7 and 5.0.12.
-  # load-bearing: @boxyhq/saml-jackson's typeorm>sqlite3>node-gyp chain (runtime) resolves the vulnerable
-  # 1.x line; the eslint plugin graph (dev) is on the same line.
+  # load-bearing: the eslint plugin graph (dev) resolves the vulnerable 1.x line.
   brace-expansion@1: 1.1.21
-  # load-bearing: @boxyhq/saml-jackson resolves the vulnerable 2.x line both directly (typeorm>glob) and
-  # via googleapis/@googleapis/admin (runtime, apps/web and packages/ai `dependencies`); @redocly/cli and
-  # vite-plugin-dts>@vue/language-core (dev) are on the same line.
+  # load-bearing: googleapis/@googleapis/admin (runtime, apps/web and packages/ai `dependencies`),
+  # @redocly/cli and vite-plugin-dts>@vue/language-core (dev) resolve the vulnerable 2.x line.
   brace-expansion@2: 2.1.7
   # load-bearing: @sentry/nextjs (runtime, apps/web `dependencies`, via @fastify/otel>@sentry/node) and
   # react-email (runtime, @formbricks/email `dependencies`) resolve the vulnerable 5.x line, alongside
