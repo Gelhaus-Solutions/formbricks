@@ -806,9 +806,6 @@ const parsedEnv = createEnv({
     SMTP_AUTHENTICATED: z.enum(["1", "0"]).optional(),
     SMTP_REJECT_UNAUTHORIZED_TLS: z.enum(["1", "0"]).optional(),
     SMTP_REQUIRE_TLS: z.enum(["1", "0"]).optional(),
-    STRIPE_SECRET_KEY: z.string().optional(),
-    STRIPE_WEBHOOK_SECRET: z.string().optional(),
-    STRIPE_PUBLISHABLE_KEY: z.string().optional(),
     PUBLIC_URL: z
       .url()
       .refine(
@@ -1017,9 +1014,6 @@ const parsedEnv = createEnv({
     SMTP_REJECT_UNAUTHORIZED_TLS: process.env.SMTP_REJECT_UNAUTHORIZED_TLS,
     SMTP_REQUIRE_TLS: process.env.SMTP_REQUIRE_TLS,
     SMTP_AUTHENTICATED: process.env.SMTP_AUTHENTICATED,
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
-    STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY,
     PUBLIC_URL: process.env.PUBLIC_URL,
     TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
     TURNSTILE_SITE_KEY: process.env.TURNSTILE_SITE_KEY,

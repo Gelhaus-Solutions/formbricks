@@ -215,7 +215,6 @@ vi.mock("@/lib/constants", async (importOriginal) => {
     OIDC_CLIENT_SECRET: "test-oidc-client-secret",
     OIDC_SIGNING_ALGORITHM: "test-oidc-signing-algorithm",
     WEBAPP_URL: "https://test-webapp-url.com",
-    STRIPE_API_VERSION: "2026-01-28.clover",
     IS_PRODUCTION: false,
     SENTRY_DSN: "mock-sentry-dsn",
     SENTRY_RELEASE: "mock-sentry-release",
