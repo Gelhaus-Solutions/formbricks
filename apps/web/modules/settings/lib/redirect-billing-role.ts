@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 import { can } from "@/lib/authorization";
 import { withAuthorizationSurface } from "@/lib/authorization/context";
-import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
+import { getBillingFallbackPath } from "@/lib/membership/navigation";
 import { getOrganizationAuth } from "@/modules/organization/lib/utils";
-import { getOrganizationBillingPath } from "@/modules/settings/lib/routes";
 
 // Org-scoped equivalent of redirectBillingRoleFromRestrictedSettings (the workspace-scoped guard).
 // Bounces a billing-role member away from a restricted org settings page to their billing/enterprise
@@ -37,6 +36,6 @@ export const redirectBillingRoleFromRestrictedOrgSettings = async (organizationI
   // keeping it out here means the drain scheduled by withAuthorizationSurface never has to survive
   // a throw from inside its own callback.
   if (!hasOrganizationReadAccess) {
-    redirect(getOrganizationBillingPath(organizationId, IS_FORMBRICKS_CLOUD));
+    redirect(getBillingFallbackPath());
   }
 };

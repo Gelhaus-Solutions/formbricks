@@ -10,18 +10,11 @@ import { deleteOrganizationRelationships } from "@/lib/authzed/organization-memb
 import { reconcileTeamWorkspaceRelationships } from "@/lib/authzed/team-workspace";
 import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { updateUser } from "@/lib/user/service";
-import { getWorkspaces } from "@/lib/workspace/service";
-import {
-  cleanupStripeCustomer,
-  ensureCloudStripeSetupForOrganization,
-} from "@/modules/ee/billing/lib/organization-billing";
 import { requestEmailAuditErasureRequired } from "@/modules/email/lib/email-audit-maintenance";
 import { deleteWorkspaceFilesBestEffort } from "@/modules/storage/service";
 import {
   createOrganization,
   deleteOrganization,
-  getMonthlyOrganizationResponseCount,
-  getMonthlyOrganizationWorkflowRunCount,
   getOrganization,
   getOrganizationsByUserId,
   select as organizationSelect,
@@ -60,9 +53,6 @@ vi.mock("@/lib/user/service", () => ({
   updateUser: vi.fn(),
 }));
 
-vi.mock("@/lib/workspace/service", () => ({
-  getWorkspaces: vi.fn(),
-}));
 vi.mock("@/lib/authorization/resource-list", () => ({ lookupAuthorizedOrganizationIds: vi.fn() }));
 
 vi.mock("@/lib/authzed/organization-membership", () => ({
@@ -76,11 +66,6 @@ vi.mock("@/lib/authzed/feedback-directory", () => ({
 }));
 vi.mock("@/lib/authzed/team-workspace", () => ({
   reconcileTeamWorkspaceRelationships: vi.fn(),
-}));
-
-vi.mock("@/modules/ee/billing/lib/organization-billing", () => ({
-  ensureCloudStripeSetupForOrganization: vi.fn().mockResolvedValue(undefined),
-  cleanupStripeCustomer: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/modules/hub/service", () => ({
@@ -99,7 +84,6 @@ vi.mock("@/modules/email/lib/email-audit-maintenance", () => ({
 
 describe("Organization Service", () => {
   beforeEach(() => {
-    vi.mocked(ensureCloudStripeSetupForOrganization).mockResolvedValue(undefined);
     vi.mocked(lookupAuthorizedOrganizationIds).mockResolvedValue(["org1"]);
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(prisma as never));
     vi.mocked(requestEmailAuditErasureRequired).mockResolvedValue(undefined);
@@ -264,8 +248,6 @@ describe("Organization Service", () => {
         },
         "Organization created"
       );
-      // Stripe setup is now handled by the caller after membership creation
-      expect(ensureCloudStripeSetupForOrganization).not.toHaveBeenCalled();
     });
 
     test("should throw DatabaseError on prisma error", async () => {
@@ -437,7 +419,7 @@ describe("Organization Service", () => {
       expect(prisma.organization.delete).not.toHaveBeenCalled();
     });
 
-    test("should call cleanupStripeCustomer when cloud and stripeCustomerId exists", async () => {
+    test("reconciles the deleted organization's AuthZed relationships", async () => {
       vi.mocked(prisma.organization.delete).mockResolvedValue({
         id: "org1",
         name: "Test Org",
@@ -456,9 +438,6 @@ describe("Organization Service", () => {
       expect(reconcileApiKeyRelationships).toHaveBeenCalledWith({
         apiKeyIds: ["api-key-1"],
       });
-      if (IS_FORMBRICKS_CLOUD) {
-        expect(cleanupStripeCustomer).toHaveBeenCalledWith("cus_123");
-      }
     });
 
     test("should purge Hub-owned data for each feedback directory", async () => {
@@ -564,91 +543,6 @@ describe("Organization Service", () => {
       await expect(deleteOrganization("org1")).resolves.toBeUndefined();
 
       expect(deleteWorkspaceFilesBestEffort).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("getMonthlyOrganizationWorkflowRunCount", () => {
-    const mockOrganization = {
-      id: "org_1",
-      name: "Test Org",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      billing: {
-        stripeCustomerId: "cus_1",
-        limits: { workspaces: 5, monthly: { responses: 5000, workflowRuns: 1000 } },
-        usageCycleAnchor: null,
-        stripe: null,
-      },
-      isAISmartToolsEnabled: false,
-      whitelabel: null,
-    };
-
-    test("counts non-dry workflow runs across the organization's workspaces in the billing cycle", async () => {
-      vi.mocked(prisma.organization.findUnique).mockResolvedValue(mockOrganization as never);
-      vi.mocked(getWorkspaces).mockResolvedValue([{ id: "ws_1" }, { id: "ws_2" }] as never);
-      vi.mocked(prisma.workflowRun.aggregate).mockResolvedValue({ _count: { id: 42 } } as never);
-
-      const result = await getMonthlyOrganizationWorkflowRunCount("cms634kob000001uzrelh0qeb");
-
-      expect(result).toBe(42);
-      const aggregateArgs = vi.mocked(prisma.workflowRun.aggregate).mock.calls[0][0];
-      expect(aggregateArgs.where?.AND).toEqual(
-        expect.arrayContaining([
-          { workspaceId: { in: ["ws_1", "ws_2"] } },
-          { isDryRun: false },
-          expect.objectContaining({ createdAt: expect.any(Object) }),
-        ])
-      );
-    });
-
-    test("throws ResourceNotFoundError when the organization does not exist", async () => {
-      vi.mocked(prisma.organization.findUnique).mockResolvedValue(null);
-
-      await expect(getMonthlyOrganizationWorkflowRunCount("cmmissingorg00000000000a")).rejects.toThrow(
-        ResourceNotFoundError
-      );
-    });
-
-    test("wraps a known Prisma error in DatabaseError", async () => {
-      vi.mocked(prisma.organization.findUnique).mockResolvedValue(mockOrganization as never);
-      vi.mocked(getWorkspaces).mockResolvedValue([{ id: "ws_1" }] as never);
-      vi.mocked(prisma.workflowRun.aggregate).mockRejectedValue(
-        new Prisma.PrismaClientKnownRequestError("db down", { code: "P2002", clientVersion: "1.0.0" })
-      );
-
-      await expect(getMonthlyOrganizationWorkflowRunCount("cms634kob000001uzrelh0qeb")).rejects.toThrow(
-        DatabaseError
-      );
-    });
-  });
-
-  describe("getMonthlyOrganizationResponseCount", () => {
-    test("counts the organization's responses in the billing cycle, scoped through its workspaces", async () => {
-      vi.mocked(prisma.organization.findUnique).mockResolvedValue({
-        id: "org_1",
-        name: "Test Org",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        billing: {
-          stripeCustomerId: null,
-          limits: { workspaces: 5, monthly: { responses: 5000 } },
-          usageCycleAnchor: null,
-          stripe: null,
-        },
-        isAISmartToolsEnabled: false,
-        whitelabel: null,
-      } as never);
-      vi.mocked(prisma.response.count).mockResolvedValue(17);
-
-      const result = await getMonthlyOrganizationResponseCount("cms634kob000001uzrelh0qeb");
-
-      expect(result).toBe(17);
-      expect(prisma.response.count).toHaveBeenCalledWith({
-        where: {
-          survey: { workspace: { organizationId: "cms634kob000001uzrelh0qeb" } },
-          createdAt: { gte: expect.any(Date), lt: expect.any(Date) },
-        },
-      });
     });
   });
 });

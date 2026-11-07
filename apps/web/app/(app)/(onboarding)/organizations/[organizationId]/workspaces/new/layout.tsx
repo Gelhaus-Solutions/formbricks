@@ -1,10 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { can } from "@/lib/authorization";
 import { withAuthorizationSurface } from "@/lib/authorization/context";
-import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { getOrganization } from "@/lib/organization/service";
 import { getSession } from "@/modules/auth/lib/session";
-import { invalidateOrganizationBillingCache } from "@/modules/ee/billing/lib/organization-billing";
 
 const OnboardingLayout = async (props: {
   readonly params: Promise<{ organizationId: string }>;
@@ -30,7 +28,7 @@ const OnboardingLayout = async (props: {
   // refuses them via `canUserAccessOrganization`, verified at runtime (it throws `AuthorizationError`
   // before this subtree completes). What the allowlist adds is that this layout no longer *depends*
   // on that parent — RSC renders a parent and its child concurrently, so a child that admits everyone
-  // and then invalidates the billing cache is relying on render interleaving to stay correct.
+  // and then renders onboarding is relying on render interleaving to stay correct.
   //
   // The roles whose treatment this line actually decides are `member` and `billing`, exactly as the
   // denylist intended. The difference is that the intent is now stated directly instead of inferred
@@ -46,11 +44,6 @@ const OnboardingLayout = async (props: {
   const organization = await getOrganization(params.organizationId);
   if (!organization) {
     return notFound();
-  }
-
-  if (IS_FORMBRICKS_CLOUD) {
-    // Refresh trial/plan state after users return from onboarding billing actions.
-    await invalidateOrganizationBillingCache(organization.id);
   }
 
   return <>{children}</>;

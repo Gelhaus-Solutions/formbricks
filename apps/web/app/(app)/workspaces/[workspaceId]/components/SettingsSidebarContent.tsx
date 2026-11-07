@@ -8,7 +8,6 @@ import {
   ChartColumnIcon,
   ChevronDownIcon,
   CodeXmlIcon,
-  CreditCardIcon,
   DatabaseIcon,
   FoldersIcon,
   GlobeIcon,
@@ -357,13 +356,6 @@ export const SettingsSidebarContent = ({
       href: organizationSettingsPath(organizationId, "domain"),
       icon: <GlobeIcon className={iconClassName} />,
       hidden: isFormbricksCloud,
-    },
-    {
-      id: "org-billing",
-      label: t("common.billing"),
-      href: organizationSettingsPath(organizationId, "billing"),
-      icon: <CreditCardIcon className={iconClassName} />,
-      hidden: !isFormbricksCloud,
     },
     {
       id: "org-usage",

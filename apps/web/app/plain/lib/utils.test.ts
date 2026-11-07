@@ -6,7 +6,6 @@ describe("isOnboardingPathname", () => {
     expect(isOnboardingPathname("/organizations/org1/workspaces/new/survey")).toBe(true);
     expect(isOnboardingPathname("/organizations/org1/workspaces/new/templates")).toBe(true);
     expect(isOnboardingPathname("/organizations/org1/workspaces/new/ai")).toBe(true);
-    expect(isOnboardingPathname("/organizations/org1/workspaces/new/plan")).toBe(true);
   });
 
   test("returns true for organization landing route", () => {

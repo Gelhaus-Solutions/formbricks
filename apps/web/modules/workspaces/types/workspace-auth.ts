@@ -43,5 +43,4 @@ export type TWorkspaceLayoutData = {
   membership: TMembership;
   isAccessControlAllowed: boolean;
   workspacePermission: TTeamPermission | null;
-  responseCount: number;
 };

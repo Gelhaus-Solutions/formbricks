@@ -45,7 +45,8 @@ export const WorkspaceLookSettingsPage = async (props: {
     planAllowed: isCustomCssPlanAllowed,
     // Head scripts exist only on self-hosted, and the check is a plain string match (ENG-3415).
     hasHeadScriptStyles: !IS_FORMBRICKS_CLOUD && hasStylesInHeadScripts(workspace.customHeadScripts),
-    billingHref: IS_FORMBRICKS_CLOUD ? `/organizations/${organization.id}/settings/billing` : null,
+    // GForms has no billing page to upgrade on (GFORMS-7).
+    billingHref: null,
   };
 
   return (

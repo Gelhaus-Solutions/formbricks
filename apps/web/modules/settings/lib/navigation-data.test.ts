@@ -8,7 +8,6 @@ const mocks = {
   getWorkspacesByUserId: vi.fn(),
   getMembershipByUserIdOrganizationId: vi.fn(),
   getOrganization: vi.fn(),
-  getMonthlyOrganizationResponseCount: vi.fn(),
   getUser: vi.fn(),
   getWorkspace: vi.fn(),
   getAccessControlPermission: vi.fn(),
@@ -36,7 +35,6 @@ vi.mock("@/lib/membership/service", () => ({
 }));
 vi.mock("@/lib/organization/service", () => ({
   getOrganization: (...a: unknown[]) => mocks.getOrganization(...a),
-  getMonthlyOrganizationResponseCount: (...a: unknown[]) => mocks.getMonthlyOrganizationResponseCount(...a),
 }));
 vi.mock("@/lib/user/service", () => ({ getUser: (...a: unknown[]) => mocks.getUser(...a) }));
 vi.mock("@/lib/workspace/service", () => ({ getWorkspace: (...a: unknown[]) => mocks.getWorkspace(...a) }));
@@ -53,7 +51,6 @@ const seedSuccess = () => {
   mocks.getOrganization.mockResolvedValue({ id: "org-1", name: "Org", billing: {} });
   mocks.getMembershipByUserIdOrganizationId.mockResolvedValue({ role: "owner" });
   mocks.getAccessControlPermission.mockResolvedValue(true);
-  mocks.getMonthlyOrganizationResponseCount.mockResolvedValue(42);
   mocks.getPublicDomain.mockReturnValue("https://app.formbricks.com");
   // No active-workspace cookie by default.
   mocks.cookieGet.mockReturnValue(undefined);
@@ -85,7 +82,6 @@ describe("getSettingsLayoutData", () => {
     expect(data?.currentWorkspace?.id).toBe("ws-1");
     expect(data?.backUrl).toBe("/workspaces/ws-1/surveys");
     expect(data?.isOwnerOrManager).toBe(true);
-    expect(data?.responseCount).toBe(42);
   });
 
   test("resolves layout data with no workspace (org/account-only)", async () => {

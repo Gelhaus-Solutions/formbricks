@@ -3,8 +3,6 @@
 import { RocketIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { TOrganization } from "@formbricks/types/organizations";
-import { TRIAL_BASE_RESPONSE_LIMIT, TrialBannerNew } from "@/modules/ee/billing/components/trial-banner-new";
 
 interface MainNavigationNoticesProps {
   isCollapsed: boolean;
@@ -12,21 +10,14 @@ interface MainNavigationNoticesProps {
   isFormbricksCloud: boolean;
   isDevelopment: boolean;
   latestVersion: string;
-  // Whole days left in the trial, or null when there is no trial to count down. Derived by the
-  // server layout rather than here — see the note on MainNavigation's own prop.
-  trialDaysRemaining: number | null;
-  organization: TOrganization;
-  responseCount: number;
 }
 
 /**
- * The two notice cards that sit above the sidebar's switchers: a self-hosted update prompt and the
- * cloud trial countdown.
+ * The notice card that sits above the sidebar's switchers: the self-hosted update prompt.
  *
- * Split out of MainNavigation rather than inlined: both are gated on four or five conditions, which
- * pushed that component's cognitive complexity past the limit Sonar enforces (ENG-3076). Each
- * notice renders nothing unless every condition holds, so the caller can render this
- * unconditionally.
+ * Split out of MainNavigation rather than inlined: it is gated on several conditions, which pushed
+ * that component's cognitive complexity past the limit Sonar enforces (ENG-3076). It renders nothing
+ * unless every condition holds, so the caller can render this unconditionally.
  */
 export const MainNavigationNotices = ({
   isCollapsed,
@@ -34,13 +25,10 @@ export const MainNavigationNotices = ({
   isFormbricksCloud,
   isDevelopment,
   latestVersion,
-  trialDaysRemaining,
-  organization,
-  responseCount,
 }: Readonly<MainNavigationNoticesProps>) => {
   const { t } = useTranslation();
 
-  // Collapsed, there is no room for either card, and both only ever address an owner/manager.
+  // Collapsed, there is no room for the card, and it only ever addresses an owner/manager.
   if (isCollapsed || !isOwnerOrManager) {
     return null;
   }
@@ -59,18 +47,6 @@ export const MainNavigationNotices = ({
             {t("common.new_version_available", { version: latestVersion })}
           </p>
         </Link>
-      )}
-
-      {/* Condition kept inline so `trialDaysRemaining` narrows to a number for the card. */}
-      {isFormbricksCloud && trialDaysRemaining !== null && (
-        <TrialBannerNew
-          trialDaysRemaining={trialDaysRemaining}
-          planName={organization.billing.stripe?.plan ?? "pro"}
-          responseCount={responseCount}
-          responseLimit={organization.billing.limits.monthly.responses}
-          baseResponseLimit={TRIAL_BASE_RESPONSE_LIMIT}
-          billingHref={`/organizations/${organization.id}/settings/billing`}
-        />
       )}
     </>
   );

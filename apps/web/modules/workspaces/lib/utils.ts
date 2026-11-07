@@ -7,11 +7,10 @@ import { ZId } from "@formbricks/types/common";
 import { AuthenticationError, DatabaseError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { can } from "@/lib/authorization";
 import { withAuthorizationSurface } from "@/lib/authorization/context";
-import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { getBillingFallbackPath } from "@/lib/membership/navigation";
 import { getMembershipByUserIdOrganizationId } from "@/lib/membership/service";
 import { getAccessFlags } from "@/lib/membership/utils";
-import { getMonthlyOrganizationResponseCount, getOrganization } from "@/lib/organization/service";
+import { getOrganization } from "@/lib/organization/service";
 import { getUser } from "@/lib/user/service";
 import { validateInputs } from "@/lib/utils/validate";
 import { canUserNavigateWorkspace } from "@/lib/workspace/auth";
@@ -74,7 +73,7 @@ const resolveWorkspaceAuth = async (workspaceId: string): Promise<TWorkspaceAuth
   // once and keeps this helper aligned with the central `workspace.read` contract, which also denies
   // billing. Individual pages that also guard billing inline remain correct (defense in depth).
   if (isBilling) {
-    redirect(getBillingFallbackPath(organization.id, IS_FORMBRICKS_CLOUD));
+    redirect(getBillingFallbackPath());
   }
 
   // Enforce workspace access here instead of delegating to the route layout, so
@@ -372,11 +371,6 @@ const resolveWorkspaceLayoutData = async (
     getWorkspacePermissionByUserId(userId, workspace.id),
   ]);
 
-  let responseCount = 0;
-  if (IS_FORMBRICKS_CLOUD) {
-    responseCount = await getMonthlyOrganizationResponseCount(organization.id);
-  }
-
   return {
     session,
     user,
@@ -391,6 +385,5 @@ const resolveWorkspaceLayoutData = async (
     membership,
     isAccessControlAllowed,
     workspacePermission,
-    responseCount,
   };
 };

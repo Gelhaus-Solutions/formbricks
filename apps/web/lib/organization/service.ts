@@ -22,12 +22,8 @@ import { runPostCommitProjection } from "@/lib/authzed/projection-boundary";
 import { reconcileTeamWorkspaceRelationships } from "@/lib/authzed/team-workspace";
 import { IS_FORMBRICKS_CLOUD, ITEMS_PER_PAGE } from "@/lib/constants";
 import { updateUser } from "@/lib/user/service";
-import { getBillingUsageCycleWindow } from "@/lib/utils/billing";
-import { getWorkspaces } from "@/lib/workspace/service";
-import { cleanupStripeCustomer } from "@/modules/ee/billing/lib/organization-billing";
 import { requestEmailAuditErasureRequired } from "@/modules/email/lib/email-audit-maintenance";
 import { deleteHubTenantData } from "@/modules/hub/service";
-import { countOrganizationResponses } from "@/modules/organization/usage/lib/response-count";
 import { deleteWorkspaceFilesBestEffort } from "@/modules/storage/service";
 import { validateInputs } from "../utils/validate";
 
@@ -298,11 +294,6 @@ export const deleteOrganization = async (organizationId: string) => {
           select: {
             id: true,
             name: true,
-            billing: {
-              select: {
-                stripeCustomerId: true,
-              },
-            },
             memberships: {
               select: {
                 userId: true,
@@ -366,11 +357,6 @@ export const deleteOrganization = async (organizationId: string) => {
       })
     );
 
-    const stripeCustomerId = deletedOrganization.billing?.stripeCustomerId;
-    if (IS_FORMBRICKS_CLOUD && stripeCustomerId) {
-      await cleanupStripeCustomer(stripeCustomerId);
-    }
-
     // Best-effort: purge Hub-owned data (feedback records, embeddings, webhooks) for each
     // directory tenant. Failures are logged inside the gateway and do not roll back the
     // local delete.
@@ -392,73 +378,6 @@ export const deleteOrganization = async (organizationId: string) => {
     throw error;
   }
 };
-
-export const getMonthlyOrganizationResponseCount = reactCache(
-  async (organizationId: string): Promise<number> => {
-    validateInputs([organizationId, ZId]);
-
-    try {
-      const organization = await getOrganization(organizationId);
-      if (!organization) {
-        throw new ResourceNotFoundError("Organization", organizationId);
-      }
-
-      const usageCycleWindow = getBillingUsageCycleWindow(organization.billing);
-
-      return await countOrganizationResponses(organizationId, {
-        gte: usageCycleWindow.start,
-        lt: usageCycleWindow.end,
-      });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new DatabaseError(error.message);
-      }
-
-      throw error;
-    }
-  }
-);
-
-export const getMonthlyOrganizationWorkflowRunCount = reactCache(
-  async (organizationId: string): Promise<number> => {
-    validateInputs([organizationId, ZId]);
-
-    try {
-      const organization = await getOrganization(organizationId);
-      if (!organization) {
-        throw new ResourceNotFoundError("Organization", organizationId);
-      }
-
-      const usageCycleWindow = getBillingUsageCycleWindow(organization.billing);
-
-      const workspaces = await getWorkspaces(organizationId);
-      const workspaceIds = workspaces.map((workspace) => workspace.id);
-
-      // Mirror the metered usage: count only non-dry runs in the current billing cycle, scoped to the
-      // organization's workspaces. Dry runs are excluded from billing, so they must not show as usage.
-      const workflowRunAggregations = await prisma.workflowRun.aggregate({
-        _count: {
-          id: true,
-        },
-        where: {
-          AND: [
-            { workspaceId: { in: workspaceIds } },
-            { isDryRun: false },
-            { createdAt: { gte: usageCycleWindow.start, lt: usageCycleWindow.end } },
-          ],
-        },
-      });
-
-      return workflowRunAggregations._count.id;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new DatabaseError(error.message);
-      }
-
-      throw error;
-    }
-  }
-);
 
 export const subscribeOrganizationMembersToSurveyResponses = async (
   surveyId: string,

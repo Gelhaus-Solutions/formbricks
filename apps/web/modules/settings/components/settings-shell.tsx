@@ -7,7 +7,6 @@ import {
 } from "@/lib/constants";
 import { SettingsNavigation } from "@/modules/settings/components/settings-navigation";
 import type { TSettingsLayoutData } from "@/modules/settings/lib/navigation-data";
-import { LimitsReachedBanner } from "@/modules/ui/components/limits-reached-banner";
 
 interface SettingsShellProps {
   data: TSettingsLayoutData;
@@ -30,10 +29,6 @@ export const SettingsShell = ({ data, children }: Readonly<SettingsShellProps>) 
 
   const shell = (
     <div className="flex h-screen min-h-screen flex-col overflow-hidden">
-      {data.isFormbricksCloud && (
-        <LimitsReachedBanner organization={organization} responseCount={data.responseCount} />
-      )}
-
       <div className="flex h-full">
         <SettingsNavigation
           user={data.user}

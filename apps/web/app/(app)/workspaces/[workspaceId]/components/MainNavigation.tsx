@@ -50,12 +50,7 @@ interface NavigationProps {
   isDevelopment: boolean;
   membershipRole?: TOrganizationRole;
   isAccessControlAllowed: boolean;
-  responseCount: number;
   isFormbricksSurveysConfigured: boolean;
-  // Whole days left in the trial, or null when there is no trial to count down. Computed by the
-  // server layout: deriving it here would mean reading `Date.now()` during render, which diverges
-  // between the server pass and hydration and then goes stale as the tab sits open (ENG-2366).
-  trialDaysRemaining: number | null;
 }
 
 /**
@@ -105,9 +100,7 @@ export const MainNavigation = ({
   isFormbricksCloud,
   isDevelopment,
   isAccessControlAllowed,
-  responseCount,
   isFormbricksSurveysConfigured,
-  trialDaysRemaining,
 }: Readonly<NavigationProps>) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -207,9 +200,7 @@ export const MainNavigation = ({
     }
   }, [isOrganizationDropdownOpen, loadOrganizations]);
 
-  const mainNavigationLink = isBilling
-    ? getBillingFallbackPath(organization.id, isFormbricksCloud)
-    : `/workspaces/${workspace.id}/surveys/`;
+  const mainNavigationLink = isBilling ? getBillingFallbackPath() : `/workspaces/${workspace.id}/surveys/`;
 
   const handleWorkspaceChange = (workspaceId: string) => {
     const targetPath =
@@ -380,9 +371,6 @@ export const MainNavigation = ({
                 isFormbricksCloud={isFormbricksCloud}
                 isDevelopment={isDevelopment}
                 latestVersion={latestVersion}
-                trialDaysRemaining={trialDaysRemaining}
-                organization={organization}
-                responseCount={responseCount}
               />
             )}
 

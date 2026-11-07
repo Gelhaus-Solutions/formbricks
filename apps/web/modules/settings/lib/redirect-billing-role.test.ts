@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { can } from "@/lib/authorization";
+import { getBillingFallbackPath } from "@/lib/membership/navigation";
 import { getOrganizationAuth } from "@/modules/organization/lib/utils";
 import { redirectBillingRoleFromRestrictedOrgSettings } from "./redirect-billing-role";
-import { getOrganizationBillingPath } from "./routes";
 
 vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
 vi.mock("@/modules/organization/lib/utils", () => ({ getOrganizationAuth: vi.fn() }));
@@ -37,7 +37,7 @@ describe("redirectBillingRoleFromRestrictedOrgSettings", () => {
     await redirectBillingRoleFromRestrictedOrgSettings(ORGANIZATION_ID);
 
     // `redirect` is globally mocked and does not throw (vitestSetup.ts), so assert on the call.
-    expect(redirect).toHaveBeenCalledExactlyOnceWith(getOrganizationBillingPath(ORGANIZATION_ID, false));
+    expect(redirect).toHaveBeenCalledExactlyOnceWith(getBillingFallbackPath());
   });
 
   test("propagates central authorization operational failures", async () => {

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { DEFAULT_LOCALE, IS_FORMBRICKS_CLOUD, SURVEYS_PER_PAGE } from "@/lib/constants";
+import { DEFAULT_LOCALE, SURVEYS_PER_PAGE } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
 import { resolveDefaultSurveyLanguage } from "@/lib/i18n/default-survey-language";
 import { getBillingFallbackPath } from "@/lib/membership/navigation";
@@ -35,7 +35,7 @@ export const SurveysPage = async ({ params: paramsProps }: SurveyTemplateProps) 
   const { session, isBilling, isReadOnly } = await getWorkspaceAuth(params.workspaceId);
 
   if (isBilling) {
-    return redirect(getBillingFallbackPath(workspace.organizationId, IS_FORMBRICKS_CLOUD));
+    return redirect(getBillingFallbackPath());
   }
 
   const currentWorkspaceChannel = workspace.config.channel ?? null;

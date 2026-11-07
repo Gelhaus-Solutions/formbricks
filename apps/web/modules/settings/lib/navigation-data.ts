@@ -8,7 +8,7 @@ import { getWorkspacesByUserId } from "@/app/(app)/workspaces/[workspaceId]/lib/
 import { IS_DEVELOPMENT, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { FORMBRICKS_ORGANIZATION_ID_COOKIE, FORMBRICKS_WORKSPACE_ID_COOKIE } from "@/lib/localStorage";
 import { getMembershipByUserIdOrganizationId } from "@/lib/membership/service";
-import { getMonthlyOrganizationResponseCount, getOrganization } from "@/lib/organization/service";
+import { getOrganization } from "@/lib/organization/service";
 import { getUser } from "@/lib/user/service";
 import { getWorkspace } from "@/lib/workspace/service";
 import { getSession } from "@/modules/auth/lib/session";
@@ -25,7 +25,6 @@ export interface TSettingsLayoutData {
   isAccessControlAllowed: boolean;
   isOwnerOrManager: boolean;
   isMultiOrgEnabled: boolean;
-  responseCount: number;
   isFormbricksCloud: boolean;
   isDevelopment: boolean;
   // The "current" workspace used to render the sidebar's Workspace section, back link, and the
@@ -111,8 +110,6 @@ export const getSettingsLayoutData = async (
     getWorkspacesByUserId(userId, organization.id),
   ]);
 
-  const responseCount = IS_FORMBRICKS_CLOUD ? await getMonthlyOrganizationResponseCount(organization.id) : 0;
-
   // Resolve the workspace to display in the shell. Prefer the last active workspace when it belongs
   // to the accessible list; otherwise fall back to the first accessible workspace so the shell
   // always has something to show.
@@ -132,7 +129,6 @@ export const getSettingsLayoutData = async (
     isAccessControlAllowed,
     isOwnerOrManager,
     isMultiOrgEnabled: isGFormsFeatureEnabled("multiOrg"),
-    responseCount,
     isFormbricksCloud: IS_FORMBRICKS_CLOUD,
     isDevelopment: IS_DEVELOPMENT,
     currentWorkspace,

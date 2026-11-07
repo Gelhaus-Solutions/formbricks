@@ -2,13 +2,7 @@ import { describe, expect, test } from "vitest";
 import { getBillingFallbackPath } from "./navigation";
 
 describe("getBillingFallbackPath", () => {
-  test("returns billing settings path for cloud", () => {
-    const path = getBillingFallbackPath("org_123", true);
-    expect(path).toBe("/organizations/org_123/settings/billing");
-  });
-
-  test("returns the account profile for self-hosted, which has no billing page", () => {
-    const path = getBillingFallbackPath("org_123", false);
-    expect(path).toBe("/account/settings/profile");
+  test("returns the account profile, since GForms has no billing page", () => {
+    expect(getBillingFallbackPath()).toBe("/account/settings/profile");
   });
 });
