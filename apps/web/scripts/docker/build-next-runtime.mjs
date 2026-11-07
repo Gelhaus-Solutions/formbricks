@@ -1,9 +1,19 @@
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { runtimeInventory, verifyNextAssets, verifyNextRuntime } from "./verify-next-runtime.mjs";
+
+// Clears the previous Next build but keeps .next/cache: in the image build it is a cache mount carrying
+// Turbopack's build cache between builds, and a mount point cannot be removed.
+export function clearNextBuild(web) {
+  const next = join(web, ".next");
+  if (!existsSync(next)) return;
+  for (const entry of readdirSync(next)) {
+    if (entry !== "cache") rmSync(join(next, entry), { recursive: true, force: true });
+  }
+}
 
 export function assembleNextRuntime(web, root, deploymentId, variant) {
   // Assemble within the SAME build step, before any independently cached COPY can mix two compilations.
@@ -34,7 +44,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   // eslint-disable-next-line turbo/no-undeclared-env-vars -- Artifact metadata is assembled outside the Turbo task graph.
   const variant = process.env.FORMBRICKS_BUILD_VARIANT || "local";
   const web = join(process.cwd(), "apps/web");
-  rmSync(join(web, ".next"), { recursive: true, force: true });
+  clearNextBuild(web);
   // Corepack installs this shim in the Docker installer's root-owned executable directory.
   const build = spawnSync("/usr/local/bin/pnpm", ["build", "--filter=@formbricks/web..."], {
     stdio: "inherit",

@@ -98,8 +98,11 @@ ARG FORMBRICKS_DEPLOYMENT_ID=""
 ARG FORMBRICKS_BUILD_VARIANT="local"
 
 # Build the project using our secret reader script
-# This mounts the secrets only during this build step without storing them in layers
-RUN --mount=type=secret,id=database_url \
+# This mounts the secrets only during this build step without storing them in layers. .next/cache is a cache
+# mount for Turbopack's build cache: the edge workflow carries it from one build to the next, so `next build`
+# recompiles only what changed; elsewhere it starts empty, as before.
+RUN --mount=type=cache,id=next-build-cache,target=/app/apps/web/.next/cache \
+    --mount=type=secret,id=database_url \
     --mount=type=secret,id=encryption_key \
     --mount=type=secret,id=redis_url \
     --mount=type=secret,id=hub_api_url \

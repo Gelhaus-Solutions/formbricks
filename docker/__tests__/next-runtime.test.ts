@@ -4,6 +4,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -13,7 +14,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, test } from "vitest";
-import { assembleNextRuntime } from "../../apps/web/scripts/docker/build-next-runtime.mjs";
+import { assembleNextRuntime, clearNextBuild } from "../../apps/web/scripts/docker/build-next-runtime.mjs";
 import { runtimeInventory, verifyNextRuntime } from "../../apps/web/scripts/docker/verify-next-runtime.mjs";
 
 const verifier = fileURLToPath(
@@ -215,5 +216,28 @@ describe("Next runtime artifact", () => {
     expect(result.status).toBe(1);
     expect(result.stderr.trim()).toBe("Next runtime verification failed");
     expect(result.stdout).toBe("");
+  });
+});
+
+describe("clearing the previous Next build", () => {
+  test("removes the old build but keeps the build cache the image build mounts", () => {
+    const web = mkdtempSync(join(tmpdir(), "next-clear-"));
+    directories.push(web);
+    for (const path of [".next/BUILD_ID", ".next/server/app/page.js", ".next/cache/turbopack/entry"]) {
+      mkdirSync(dirname(join(web, path)), { recursive: true });
+      writeFileSync(join(web, path), "kept only in the cache");
+    }
+
+    clearNextBuild(web);
+
+    expect(readdirSync(join(web, ".next"))).toEqual(["cache"]);
+    expect(readFileSync(join(web, ".next/cache/turbopack/entry"), "utf8")).toBe("kept only in the cache");
+  });
+
+  test("accepts a checkout that has never been built", () => {
+    const web = mkdtempSync(join(tmpdir(), "next-clear-"));
+    directories.push(web);
+
+    expect(() => clearNextBuild(web)).not.toThrow();
   });
 });
