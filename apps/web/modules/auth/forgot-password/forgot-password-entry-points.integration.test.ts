@@ -11,8 +11,8 @@ import { forgotPasswordAction } from "./actions";
  * doing anything that depends on the address.
  *
  * Better Auth's native `POST /api/auth/request-password-reset` used to be a second way in. It looked the
- * user up, wrote a token and waited on SMTP before answering — so its timing told password accounts from
- * everything else — and it skipped the forgot-password flow's per-account mail limit (ENG-3640). It is
+ * user up, wrote a token and waited on SMTP before answering, so its timing told password accounts from
+ * everything else, and it skipped the forgot-password flow's per-account mail limit (ENG-3640). It is
  * closed with `disabledPaths`, which only Better Auth's HTTP router reads; this suite proves both halves
  * against the real `auth` instance: the route is gone, and the in-process call every caller uses is not.
  */
@@ -32,7 +32,6 @@ vi.mock("next/headers", () => ({
 vi.mock("@/lib/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/constants")>()),
   PASSWORD_RESET_DISABLED: false,
-  EMAIL_AUTH_ENABLED: true,
 }));
 
 vi.mock("@/modules/audit-log/lib/handler", async (importOriginal) => {
@@ -64,7 +63,7 @@ describe("password-reset entry points (real Postgres + Better Auth)", () => {
 
   test("the in-process call the app uses still sends the reset mail", async () => {
     // The guard for `disabledPaths`: if it ever reached `auth.api` too, the forgot-password flow and the
-    // authenticated profile reset would both stop sending — silently, behind a generic success.
+    // authenticated profile reset would both stop sending: silently, behind a generic success.
     await auth.api.requestPasswordReset({
       body: { email: EMAIL, redirectTo: `${WEBAPP_URL}/auth/forgot-password/reset` },
     });

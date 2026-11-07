@@ -12,13 +12,13 @@ import { forgotPasswordAction } from "./actions";
  * → real Better Auth, with only the mailer captured.
  *
  * This has to be an integration test. The defect is two lookups disagreeing across a framework
- * boundary — our Prisma `findFirst` on a case-sensitive Postgres `text` column versus Better Auth's
- * internal `email.toLowerCase()` — and a mocked `getUserByEmail` returns whatever the test says it
+ * boundary (our Prisma `findFirst` on a case-sensitive Postgres `text` column versus Better Auth's
+ * internal `email.toLowerCase()`), and a mocked `getUserByEmail` returns whatever the test says it
  * does, which is how a unit suite watched this ship. The only thing that can fail on it is a real
  * database with a real row in it.
  *
  * The action is enumeration-safe by design (ENG-670): it answers `{ success: true }` whether or not it
- * found anybody. So the response is worthless as an assertion here — every test below asserts on
+ * found anybody. So the response is worthless as an assertion here: every test below asserts on
  * whether a reset mail was actually produced.
  */
 
@@ -34,16 +34,13 @@ vi.mock("next/headers", () => ({
 }));
 
 /**
- * Pin the two flags the action gates on instead of inheriting them from the loaded `.env`. Both
- * default to a value that makes this suite vacuous — `PASSWORD_RESET_DISABLED` short-circuits the
- * action before the lookup, and `EMAIL_AUTH_ENABLED=false` closes the second arm of
- * `canResetPassword` — so without this the tests pass or fail on whatever the developer's env
- * happens to say rather than on the code.
+ * Pin the flag the action gates on instead of inheriting it from the loaded `.env`. Its default makes this
+ * suite vacuous (`PASSWORD_RESET_DISABLED` short-circuits the action before the lookup), so without this
+ * the tests pass or fail on whatever the developer's env happens to say rather than on the code.
  */
 vi.mock("@/lib/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/constants")>()),
   PASSWORD_RESET_DISABLED: false,
-  EMAIL_AUTH_ENABLED: true,
 }));
 
 vi.mock("@/modules/audit-log/lib/handler", async (importOriginal) => {
@@ -94,7 +91,7 @@ describe("forgotPasswordAction with a differently-capitalised email (real Postgr
   });
 
   test("sends nothing for an address that belongs to no account", async () => {
-    // The silent-skip branch is correct behaviour and must survive the fix — normalizing the lookup
+    // The silent-skip branch is correct behaviour and must survive the fix: normalizing the lookup
     // must not turn "no such user" into a send, and the response must stay indistinguishable.
     const result = await forgotPasswordAction({ email: "Nobody@corporate-example.com" });
     await flushAfter();
@@ -107,7 +104,7 @@ describe("forgotPasswordAction with a differently-capitalised email (real Postgr
 describe("getUserByEmail canonicalizes at the query (real Postgres)", () => {
   /**
    * The guard for the next caller, asserted on the lookup rather than on any one action. ENG-1548 was
-   * this same defect fixed at the call sites it knew about, and `forgotPasswordAction` — added later —
+   * this same defect fixed at the call sites it knew about, and `forgotPasswordAction` (added later)
    * simply never got the `.toLowerCase()`. A test that only drives forgot-password would have watched
    * that happen again. This one fails the moment the normalization leaves the query, whoever calls it.
    */

@@ -2,40 +2,33 @@ import "server-only";
 import type { IdentityProvider } from "@formbricks/database/prisma";
 import { logger } from "@formbricks/logger";
 import { TooManyRequestsError } from "@formbricks/types/errors";
-import { EMAIL_AUTH_ENABLED, WEBAPP_URL } from "@/lib/constants";
+import { WEBAPP_URL } from "@/lib/constants";
 import { hasCredentialAccount } from "@/lib/user/password";
 import { queueAuditEventWithoutRequest } from "@/modules/audit-log/lib/handler";
 import { UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
 import type { TAuditRequestMetadata } from "@/modules/audit-log/types/request-metadata";
-import { sendSsoSignInHint } from "@/modules/auth/forgot-password/lib/sso-sign-in-hint";
 import { auth } from "@/modules/auth/lib/auth";
 import { getUserByEmail } from "@/modules/auth/lib/user";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 
 /**
- * Whether this user has a password to reset. Pure SSO users do not: they get a mail naming their identity
- * provider instead (ENG-3262).
+ * Whether this user has a password to reset. An account created through SSO before GForms removed it
+ * does not, and gets no mail at all: those accounts fail closed until GFORMS-14 rebuilds SSO. Sending
+ * them a reset would hand them a password their identity provider never vouched for.
  *
- * The second arm exists because SSO recovery is one-way (ENG-2557): completing it flips
- * `identityProvider` to the SSO provider and nothing ever flips it back, while the recovery also clears
- * the password it found. Gated on `identityProvider` alone, those users could never ask for a reset again
- * — locked to an IdP they might lose access to, with `auth.api.setPassword` being `serverOnly` and
- * unwired. The surviving credential `Account` row identifies them: recovery nulls the password, it does
- * not delete the row.
+ * The second arm exists because the old SSO recovery was one-way (ENG-2557): completing it flipped
+ * `identityProvider` to the SSO provider and nothing ever flips it back, while the recovery also cleared
+ * the password it found. Gated on `identityProvider` alone, those users could never ask for a reset
+ * again. The surviving credential `Account` row identifies them: recovery nulled the password, it did not
+ * delete the row. Gating on that row rather than on `emailVerified` grants nothing to a user who has only
+ * ever signed in via SSO.
  *
- * Kept as narrow as that problem, deliberately: gating on the credential row rather than on
- * `emailVerified` means this grants nothing to a user who has only ever signed in via SSO, and
- * `EMAIL_AUTH_ENABLED` switches the second arm off entirely on an SSO-only instance. Note that gate
- * covers only the second arm — an `identityProvider === "email"` user still receives reset mail on an
- * SSO-only instance, which is pre-existing behaviour left alone here. So the flag is about not *widening*
- * that surface, not about closing it.
- *
- * Neither is the enforcement boundary. Better Auth's `resetPassword` CREATES a credential row when none
- * exists, so whoever can request a reset can mint a password; what contains that is `/sign-in/email`,
- * which is gated on `EMAIL_AUTH_ENABLED`, so a minted password is unusable on an SSO-only instance. Since
- * ENG-3639 the native `POST /api/auth/request-password-reset` is closed (`disabledPaths` in auth.ts), so
- * this flow and the authenticated profile action are the only ways to request one.
+ * The reset link is what can mint a password: Better Auth's `resetPassword` CREATES a credential row
+ * when none exists. So who gets a link is the boundary: this function sends none to an account without a
+ * credential row, and since ENG-3639 the native `POST /api/auth/request-password-reset` is closed
+ * (`disabledPaths` in auth.ts), so this flow and the authenticated profile action are the only ways to
+ * request one.
  *
  * `null` when the lookup failed: we cannot say either way, so the caller sends nothing at all.
  */
@@ -46,10 +39,6 @@ const canResetPassword = async (user: {
   if (user.identityProvider === "email") {
     return true;
   }
-  if (!EMAIL_AUTH_ENABLED) {
-    return false;
-  }
-
   try {
     return await hasCredentialAccount(user.id);
   } catch (error) {
@@ -78,8 +67,8 @@ const consumeAccountMailBudget = async (userId: string): Promise<boolean> => {
 /**
  * Everything a forgot-password request does that depends on the address (ENG-3639).
  *
- * It runs after the response (`after()` in the action), so nothing here — whether the address exists,
- * whether it has a password, the token write, the SMTP round trip, a spent budget — can change what the
+ * It runs after the response (`after()` in the action), so nothing here (whether the address exists,
+ * whether it has a password, the token write, the SMTP round trip, a spent budget) can change what the
  * caller sees or how long they wait. OWASP: "Ensure that responses return in a consistent amount of time
  * to prevent an attacker enumerating which accounts exist."
  *
@@ -102,19 +91,14 @@ export const processPasswordResetRequest = async ({
       return;
     }
 
-    const resettable = await canResetPassword(user);
-    if (resettable === null) {
+    // `null` (the lookup failed) and `false` (no password, an account from the SSO era) both send
+    // nothing, so neither is charged to the account's mail budget.
+    if ((await canResetPassword(user)) !== true) {
       return;
     }
 
     if (!(await consumeAccountMailBudget(user.id))) {
       logger.warn({ userId: user.id }, "Forgot-password mail skipped: per-account limit reached");
-      return;
-    }
-
-    if (!resettable) {
-      // No password to reset, e.g. Azure AD only: tell them how they do sign in (ENG-3262).
-      await sendSsoSignInHint(user);
       return;
     }
 
@@ -124,7 +108,7 @@ export const processPasswordResetRequest = async ({
     });
 
     // Recorded only once the request went through, so the trail never claims a reset that was not
-    // requested. The actor stays unknown — this flow is unauthenticated by design — and the target is
+    // requested. The actor stays unknown (this flow is unauthenticated by design) and the target is
     // the account the reset was requested for.
     await queueAuditEventWithoutRequest({
       action: "passwordReset",

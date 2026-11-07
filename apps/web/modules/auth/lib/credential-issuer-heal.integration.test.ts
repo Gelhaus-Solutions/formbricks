@@ -29,7 +29,6 @@ vi.mock("next/headers", () => ({
 vi.mock("@/lib/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/constants")>()),
   PASSWORD_RESET_DISABLED: false,
-  EMAIL_AUTH_ENABLED: true,
 }));
 
 vi.mock("@/modules/audit-log/lib/handler", async (importOriginal) => {
