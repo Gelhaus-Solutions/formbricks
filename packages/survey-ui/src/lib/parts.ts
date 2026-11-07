@@ -45,8 +45,6 @@ export const FB_PART = {
   error: "error",
   /** The bordered box around the consent checkbox. */
   consent: "consent",
-  /** The "Powered by Formbricks" link. */
-  branding: "branding",
   /** The progress bar track. */
   progress: "progress",
 } as const;

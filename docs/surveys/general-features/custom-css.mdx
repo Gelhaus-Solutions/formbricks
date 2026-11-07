@@ -7,9 +7,8 @@ icon: "code"
 Custom CSS lets you style surveys beyond what the theme editor offers: a pill-shaped Next button, your own focus ring, a shaded consent box. You write ordinary CSS against a small set of stable hooks, and Formbricks applies it to link surveys, website & app surveys and surveys in mobile apps.
 
 <Note>
-  **Plans.** On Formbricks Cloud, Custom CSS is part of the **Scale** plan. Self-hosted instances get it on
-  every plan, without a license. If a Cloud organization leaves the Scale plan, its saved CSS keeps
-  applying, but it can only be cleared, not changed.
+  Custom CSS is part of GForms for every organization, with no [license](/self-hosting/advanced/license) key or
+  plan needed.
 </Note>
 
 <Tip>
@@ -130,7 +129,6 @@ Target survey parts through their `data-fb-part` attribute. These names are a su
 | `[data-fb-part="button-close"]` | The close button of a website or app survey | |
 | `[data-fb-part="error"]` | A validation message | Exists only while a message is shown. |
 | `[data-fb-part="consent"]` | The box around the consent checkbox | |
-| `[data-fb-part="branding"]` | The "Powered by Formbricks" link | |
 | `[data-fb-part="progress"]` | The progress bar track | Color the fill with `--fb-progress-indicator-bg-color`. |
 
 The file upload area and Cal.com booking embeds have no part hooks of their own; style them through the [variables](#variables). Their headline, description, error and buttons are hooked like everywhere else.
@@ -336,7 +334,6 @@ Qualtrics stylesheets do not work unchanged. Their selectors (`.QuestionText`, `
 | `#PreviousButton` | `[data-fb-part="button-back"]` |
 | `.ValidationError` | `[data-fb-part="error"]` |
 | `.ProgressBar` | `[data-fb-part="progress"]` |
-| `#Plug` | `[data-fb-part="branding"]` |
 
 Before, written for Qualtrics:
 
