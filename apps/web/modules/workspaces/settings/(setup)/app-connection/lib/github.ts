@@ -2,7 +2,9 @@ import { createCacheKey } from "@formbricks/cache";
 import { logger } from "@formbricks/logger";
 import { cache } from "@/lib/cache";
 
-const LATEST_RELEASE_URL = "https://api.github.com/repos/formbricks/formbricks/releases/latest";
+// GForms' own releases (D7), not Formbricks': GForms tracks upstream versions, so a Formbricks tag would
+// advertise a release GForms has not merged yet.
+const LATEST_RELEASE_URL = "https://api.github.com/repos/Gelhaus-Solutions/formbricks/releases/latest";
 const FETCH_TIMEOUT_MS = 5 * 1000;
 // Cache successful lookups for one hour so we don't hit GitHub on every navigation load.
 const SUCCESS_TTL_MS = 60 * 60 * 1000;
@@ -22,7 +24,7 @@ const fetchLatestRelease = async (): Promise<{ tagName: string | null; failed: b
     });
 
     if (!res.ok) {
-      logger.warn({ status: res.status }, "Failed to fetch latest stable Formbricks release from GitHub");
+      logger.warn({ status: res.status }, "Failed to fetch latest stable GForms release from GitHub");
       return { tagName: null, failed: true };
     }
 
@@ -31,13 +33,13 @@ const fetchLatestRelease = async (): Promise<{ tagName: string | null; failed: b
 
     return { tagName, failed: false };
   } catch (error) {
-    logger.warn(error, "Failed to fetch latest stable Formbricks release from GitHub");
+    logger.warn(error, "Failed to fetch latest stable GForms release from GitHub");
     return { tagName: null, failed: true };
   }
 };
 
 /**
- * Fetches the latest stable Formbricks release tag from GitHub.
+ * Fetches the latest stable GForms release tag from GitHub.
  *
  * This runs entirely server-side, so it degrades gracefully instead of throwing:
  * when GitHub is rate-limited, unreachable, or returns an unexpected body, it
@@ -49,7 +51,7 @@ const fetchLatestRelease = async (): Promise<{ tagName: string | null; failed: b
  * failures for a few minutes so the badge reappears soon after GitHub recovers.
  */
 export const getLatestStableFbRelease = async (): Promise<string | null> => {
-  const cacheKey = createCacheKey.custom("github", "latest_release");
+  const cacheKey = createCacheKey.custom("github", "latest_gforms_release");
 
   try {
     const cached = await cache.get<CachedRelease>(cacheKey);
@@ -57,7 +59,7 @@ export const getLatestStableFbRelease = async (): Promise<string | null> => {
       return cached.data.tagName;
     }
   } catch (error) {
-    logger.warn({ error }, "Failed to read cached Formbricks release from Redis");
+    logger.warn({ error }, "Failed to read cached GForms release from Redis");
   }
 
   const { tagName, failed } = await fetchLatestRelease();
@@ -65,7 +67,7 @@ export const getLatestStableFbRelease = async (): Promise<string | null> => {
   try {
     await cache.set(cacheKey, { tagName } satisfies CachedRelease, failed ? FAILURE_TTL_MS : SUCCESS_TTL_MS);
   } catch (error) {
-    logger.warn({ error }, "Failed to cache Formbricks release in Redis");
+    logger.warn({ error }, "Failed to cache GForms release in Redis");
   }
 
   return tagName;
