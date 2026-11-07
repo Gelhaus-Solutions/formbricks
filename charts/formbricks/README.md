@@ -234,14 +234,14 @@ authzed:
 `adminPasswordKey` whenever that Secret is configured explicitly. **Both are enforced when the chart renders**,
 so a missing one fails `helm template`/`upgrade` with a named value rather than producing a Job. That is the
 point of the guards: without them the first would silently fall back to the bundled admin password and the
-second would look up the subchart's key name inside your own Secret — neither of which surfaces until the Pod
+second would look up the subchart's key name inside your own Secret; neither of which surfaces until the Pod
 is created in the cluster.
 
 `CREATEROLE` and `CREATEDB` cover the normal case, in which this administrator also creates the `spicedb` role.
 `CREATE DATABASE ... OWNER spicedb` additionally requires being able to `SET ROLE` to that owner, so the Job
 grants itself the `spicedb` role first; from PostgreSQL 16 that is only possible for a role it holds
 `ADMIN OPTION` on, which creating the role confers. A `spicedb` role that already exists and was created by
-someone else is therefore the one case the Job cannot adopt on PostgreSQL 16+ — grant it explicitly
+someone else is therefore the one case the Job cannot adopt on PostgreSQL 16+: grant it explicitly
 (`GRANT spicedb TO fbadmin WITH ADMIN OPTION`) or run the bootstrap once as a superuser. PostgreSQL 15 and
 older are unaffected.
 
@@ -536,7 +536,7 @@ Set `llm.autoConfigureApp=false` to deploy the bundled runtime without injecting
 
 If you manage your own LLM runtime, keep `llm.enabled=false` and point the web app at your OpenAI-compatible `/v1` endpoint through `deployment.env`.
 
-Only set these variables when you use `AI_PROVIDER=openai-compatible`; Google Vertex, AWS Bedrock, and Azure continue to use their own provider-specific variables.
+Only set these variables when you use `AI_PROVIDER=openai-compatible`; Google Vertex, AWS Bedrock, Azure and Anthropic continue to use their own provider-specific variables.
 
 ```yaml
 deployment:
@@ -619,8 +619,8 @@ matching ownership for its configured UID.
 
 `deployment.containerSecurityContext` applies to the web container. It defaults to a read-only root filesystem,
 `runAsNonRoot`, `runAsUser: 1001` (the image's `nextjs` user), no privilege escalation, and all capabilities
-dropped. With a read-only root, the chart mounts `emptyDir` volumes on `/tmp`, the Next.js cache, and — when
-`migration.enabled=false` — the Prisma migration staging directory. A path you mount yourself through
+dropped. With a read-only root, the chart mounts `emptyDir` volumes on `/tmp`, the Next.js cache, and (when
+`migration.enabled=false`) the Prisma migration staging directory. A path you mount yourself through
 `deployment.extraVolumeMounts` replaces the chart's mount.
 
 The migration Job uses `deployment.securityContext` at the Pod level and retains a writable root filesystem.

@@ -1,16 +1,16 @@
 ---
 title: "AI Features"
-description: "Connect an LLM to your instance and enable AI-powered helpers like survey translation and AI chart creation."
+description: "Connect an LLM to your instance and enable the AI helpers: survey creation from a description, Qualtrics import and example responses."
 icon: "sparkles"
 sidebarTitle: "AI Features"
 ---
 
-A single organization toggle unlocks AI-assisted survey translation and AI chart creation across the app.
-Formbricks runs fine without AI — nothing is enabled until you connect a model.
+A single organization toggle unlocks the AI helpers across the app: creating a survey from a description,
+importing a Qualtrics survey, and generating example responses for a survey. Formbricks runs fine without AI:
+nothing is enabled until you connect a model.
 
 <Note>
-  AI features are part of the [Enterprise Edition](/self-hosting/advanced/license). See [AI
-  Features](/platform/features/ai-features) for what the toggle unlocks and how your data is handled.
+  See [AI Features](/platform/features/ai-features) for what the toggle unlocks and how your data is handled.
 </Note>
 
 Wiring up an LLM takes two steps:
@@ -28,19 +28,20 @@ Wiring up an LLM takes two steps:
 
 ## Choosing a provider
 
-`AI_PROVIDER` accepts four values. Set only the variables for the provider you use — the rest can be omitted.
+`AI_PROVIDER` accepts five values. Set only the variables for the provider you use; the rest can be omitted.
 
 | `AI_PROVIDER`       | Runs on                                            |
 | ------------------- | -------------------------------------------------- |
-| `openai-compatible` | Any OpenAI-compatible `/v1` endpoint — Qwen/vLLM and friends. The self-hosted path. |
+| `openai-compatible` | Any OpenAI-compatible `/v1` endpoint (Qwen/vLLM and friends). The self-hosted path. |
 | `google`            | Google Cloud, for Gemini models.                   |
 | `azure`             | Azure OpenAI / Foundry.                            |
 | `aws`               | Amazon Bedrock.                                    |
+| `anthropic`         | The Anthropic API, for Claude models.              |
 
 ## OpenAI-compatible (self-hosted)
 
 The supported self-hosted path is Qwen served by vLLM behind an OpenAI-compatible `/v1` endpoint. Docker Compose
-and the Helm chart can both deploy that runtime for you — both paths are disabled by default and require
+and the Helm chart can both deploy that runtime for you. Both paths are disabled by default and require
 GPU-capable hosts.
 
 ### Docker Compose
@@ -78,7 +79,7 @@ provider manually.
 
 ### Your own endpoint
 
-To use an endpoint you already run, do not enable the bundled runtime — keep the `qwen` Compose profile off, or
+To use an endpoint you already run, do not enable the bundled runtime: keep the `qwen` Compose profile off, or
 `llm.enabled=false` in Helm. Point `AI_OPENAI_COMPATIBLE_BASE_URL` at your endpoint and add
 `AI_OPENAI_COMPATIBLE_API_KEY` if it requires one.
 
@@ -87,7 +88,7 @@ to this provider that you must set, and it has to be a valid HTTP(S) URL.
 
 <Warning>
   Use an `https://` endpoint whenever you set `AI_OPENAI_COMPATIBLE_API_KEY`. Formbricks accepts a plain `http://`
-  URL, so nothing stops you sending that key — and every prompt — in cleartext. Plain HTTP is only appropriate for
+  URL, so nothing stops you sending that key (and every prompt) in cleartext. Plain HTTP is only appropriate for
   an endpoint that takes no credentials and is unreachable from outside your network, such as the bundled
   `http://vllm:8000/v1` on the internal Compose network.
 </Warning>
@@ -98,7 +99,7 @@ Some gateways in front of a model do not accept a static API key. They issue sho
 OAuth2 client-credentials flow instead: Formbricks exchanges a client ID and secret for a token at the gateway's
 token endpoint, and sends that token with every model request. Set `AI_OPENAI_COMPATIBLE_AUTH_MODE` and Formbricks
 fetches the token for you, refreshes it shortly before it expires, and requests a new one if the gateway rejects
-it — you never paste a token.
+it. You never paste a token.
 
 ```bash
 AI_PROVIDER=openai-compatible
@@ -153,8 +154,7 @@ Invalid values prevent the app from starting.
 
 | Operation | Default | With `AI_TIMEOUT_MULTIPLIER=3` |
 | --- | --- | --- |
-| AI chart creation | 30 seconds | 90 seconds |
-| Survey generation, translation, example responses, and each QSF AI call | 45 seconds | 135 seconds |
+| Survey generation, example responses, and each QSF AI call | 45 seconds | 135 seconds |
 | Complete QSF import | 120 seconds | 360 seconds |
 
 The call budget includes retries. QSF attempts share their call's budget and are also limited by the remaining
@@ -188,7 +188,7 @@ retain their separate ten-second timeout.
     For Kubernetes, apply your Helm values with your usual upgrade command and let the app pods restart.
   </Step>
   <Step title="Verify a slow operation">
-    Generate a survey or translate one against your model and confirm it finishes. Pressing **Stop** during
+    Generate a survey against your model and confirm it finishes. Pressing **Stop** during
     survey generation still cancels the model request immediately. To restore the default limits, set the
     multiplier to `1` and apply the environment change again.
   </Step>
@@ -211,8 +211,8 @@ AI_GOOGLE_CLOUD_LOCATION=global
 ```
 
 Formbricks passes `AI_GOOGLE_CLOUD_LOCATION` through as given and enforces no list of its own: `us` and `eu`
-are sent to their multi-region endpoints, and every other value — `global` and regional locations such as
-`europe-west3` — uses the SDK default endpoint. Which locations actually serve your model depends on Google's
+are sent to their multi-region endpoints, and every other value (`global` and regional locations such as
+`europe-west3`) uses the SDK default endpoint. Which locations actually serve your model depends on Google's
 availability for that model and your serving mode, so check the
 [model page](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/3-5-flash) before picking
 one for data-residency reasons. `global` is the safe default.
@@ -220,9 +220,9 @@ one for data-residency reasons. `global` is the safe default.
 Credentials are optional. If the container already has Application Default Credentials, leave both credential
 variables unset. Otherwise pick one:
 
-- `AI_GOOGLE_CLOUD_APPLICATION_CREDENTIALS` — mount the service account key file into the container and set this
+- `AI_GOOGLE_CLOUD_APPLICATION_CREDENTIALS`: mount the service account key file into the container and set this
   to its path, for example `/run/secrets/google-cloud.json`.
-- `AI_GOOGLE_CLOUD_CREDENTIALS_JSON` — the entire contents of that key file, as a single-line JSON string.
+- `AI_GOOGLE_CLOUD_CREDENTIALS_JSON`: the entire contents of that key file, as a single-line JSON string.
   Formbricks parses this value, so paste the whole file: a truncated or hand-edited value fails as invalid JSON.
 
 <Note>
@@ -241,7 +241,7 @@ AI_AZURE_RESOURCE_NAME=your-resource
 
 `AI_MODEL` is the deployment name, not the base model name. `AI_AZURE_API_VERSION` defaults to `v1`.
 
-Provide either `AI_AZURE_RESOURCE_NAME` or `AI_AZURE_BASE_URL` — the base URL wins when both are set. If you set
+Provide either `AI_AZURE_RESOURCE_NAME` or `AI_AZURE_BASE_URL`; the base URL wins when both are set. If you set
 the base URL, end it at `/openai` and do not append `/v1`: the Azure SDK adds the version segment itself, so
 `https://your-resource.openai.azure.com/openai/v1` produces requests against `/openai/v1/v1/…` and fails.
 
@@ -262,16 +262,29 @@ AI_AWS_SECRET_ACCESS_KEY=your-secret-access-key
 AI_AWS_SESSION_TOKEN=your-session-token
 ```
 
+## Anthropic
+
+```bash
+AI_PROVIDER=anthropic
+AI_MODEL=claude-opus-5-5
+AI_ANTHROPIC_API_KEY=your-api-key
+```
+
+`AI_MODEL` takes an Anthropic model ID such as `claude-opus-5-5`, `claude-sonnet-5-5` or `claude-haiku-5-5`. Use
+Claude 4.5 or newer: the AI helpers ask Claude for structured output, which older models do not support. Requests
+always go to `https://api.anthropic.com`. To run Claude in your own cloud account instead, use
+[AWS Bedrock](#aws-bedrock).
+
 ## External providers on Kubernetes
 
-Keep `llm.enabled=false` when you use Google Cloud, Azure, AWS Bedrock, or your own OpenAI-compatible runtime.
+Keep `llm.enabled=false` when you use Google Cloud, Azure, AWS Bedrock, Anthropic, or your own OpenAI-compatible runtime.
 Configure those providers with `deployment.env` in your Helm values or with environment variables in your
 deployment platform.
 
 ## Verifying the setup
 
 Restart your containers after changing any of these variables, then open **Settings → Organization → General**.
-While the instance is not configured, the AI toggle stays disabled and the page says so — the setting cannot be
+While the instance is not configured, the AI toggle stays disabled and the page says so: the setting cannot be
 turned on from the UI until the environment variables are in place.
 
 <Warning>
@@ -280,8 +293,7 @@ turned on from the UI until the environment variables are in place.
   check and fail on the first real request.
 </Warning>
 
-So finish by exercising the model once — translate a survey into a second language, or ask the AI chart builder
-for a chart. If that request fails while the toggle is on, the credentials or the endpoint are wrong, not the
+So finish by exercising the model once: create a survey with AI from the survey list. If that request fails while the toggle is on, the credentials or the endpoint are wrong, not the
 configuration shape.
 
 If the toggle stays disabled after a restart, check the app logs:
