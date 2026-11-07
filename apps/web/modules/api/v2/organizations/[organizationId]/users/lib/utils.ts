@@ -49,7 +49,7 @@ export const getUsersQuery = (organizationId: string, params?: TGetUsersFilter) 
  * Resolves the organization role of the user who created the API key.
  *
  * Org-scoped API keys carry only read/write/manage access flags, not a role, so role-based
- * authorization has to be anchored to the acting user — the key's creator. Returns null when the
+ * authorization has to be anchored to the acting user: the key's creator. Returns null when the
  * creator can't be resolved (a legacy key with no `createdBy`, a deleted creator, or a creator who
  * is no longer a member of the organization) so callers fail safe.
  */
@@ -97,12 +97,10 @@ export const getMembershipRoleByEmail = async (
 };
 
 /**
- * Mirrors the role clamp enforced on the settings/session path
- * (modules/ee/role-management/actions.ts): an owner may assign any role, a manager may only assign
- * the member role and may not change the role of an existing owner (no demoting owners). Anyone
- * else — including an unresolved creator — may not assign a role at all. This prevents privilege
- * escalation (e.g. a manager promoting a user to owner) through the management API, matching the
- * guard that the UI already applies.
+ * The role clamp of the management API: an owner may assign any role, a manager may only assign the
+ * member role and may not change the role of an existing owner (no demoting owners). Anyone else,
+ * including an unresolved creator, may not assign a role at all. This prevents privilege escalation
+ * (e.g. a manager promoting a user to owner) through the management API.
  */
 export const canAssignOrganizationRole = (
   assignerRole: TOrganizationRole | null,
@@ -132,7 +130,7 @@ export const canModifyOrganizationMember = (
 /**
  * Whether the acting user (the API key creator) clears the org's user-management floor. The v2 API
  * anchors this to the key creator's role so the `USER_MANAGEMENT_MINIMUM_ROLE` policy the
- * settings/session path enforces (via `getUserManagementAccess`) is applied consistently here — an
+ * settings/session path enforces (via `getUserManagementAccess`) is applied consistently here: an
  * install that restricts user management to owners only, or disables it, isn't silently bypassed by
  * a manager-created key. An unresolved creator (null) never clears the floor.
  */

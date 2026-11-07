@@ -157,7 +157,7 @@ export const createUser = async (
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       // `email` is the only user-facing unique constraint on this create, so map any P2002 to a
-      // conflict rather than gating on the (adapter-dependent) field list — this can never 500.
+      // conflict rather than gating on the (adapter-dependent) field list; this can never 500.
       return err({
         type: "conflict",
         details: [{ field: "email", issue: "A user with this email already exists" }],
@@ -276,10 +276,10 @@ export const updateUser = async (
       (membership) => membership.organizationId === organizationId
     )?.role;
 
-    // Mirrors the last-owner guard in modules/ee/role-management/actions.ts: without it, this
-    // route can demote an organization's only owner with no UI path back into it. Gated on
-    // existingUser.isActive because getOrganizationOwnerCount only counts active owners — demoting
-    // an already-inactive owner doesn't change that count, so guarding it would block a no-op change.
+    // The last-owner guard: without it, this route can demote an organization's only owner with no UI
+    // path back into it. Gated on existingUser.isActive because getOrganizationOwnerCount only counts
+    // active owners; demoting an already-inactive owner doesn't change that count, so guarding it would
+    // block a no-op change.
     const isDemotingOwner =
       currentRole === OrganizationRole.owner &&
       existingUser.isActive &&

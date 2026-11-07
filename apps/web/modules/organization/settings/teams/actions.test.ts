@@ -99,11 +99,11 @@ vi.mock("@/modules/features/lib/flags", () => ({
   getIsMultiOrgEnabled: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/role-management/lib/permission", () => ({
+vi.mock("@/modules/role-management/lib/permission", () => ({
   checkRoleManagementPermission: mocks.checkRoleManagementPermission,
 }));
 
-vi.mock("@/modules/ee/teams/lib/roles", () => ({
+vi.mock("@/modules/teams/lib/roles", () => ({
   getTeamsWhereUserIsAdmin: mocks.getTeamsWhereUserIsAdmin,
 }));
 

@@ -48,7 +48,7 @@ vi.mock("@/modules/features/lib/flags", () => ({
   getRemoveBrandingPermission: mocks.getRemoveBrandingPermission,
 }));
 
-vi.mock("@/modules/ee/teams/team-list/lib/team", () => ({
+vi.mock("@/modules/teams/team-list/lib/team", () => ({
   getTeamsByOrganizationId: mocks.getTeamsByOrganizationId,
 }));
 

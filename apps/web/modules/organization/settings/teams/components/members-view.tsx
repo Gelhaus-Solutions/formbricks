@@ -4,13 +4,13 @@ import { TOrganization } from "@formbricks/types/organizations";
 import { SettingsCard } from "@/app/(app)/workspaces/[workspaceId]/settings/components/SettingsCard";
 import { ENTERPRISE_LICENSE_REQUEST_FORM_URL, INVITE_DISABLED, IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { getTranslate } from "@/lingodotdev/server";
-import { getTeamsWhereUserIsAdmin } from "@/modules/ee/teams/lib/roles";
-import { getTeamsByOrganizationId } from "@/modules/ee/teams/team-list/lib/team";
-import { TOrganizationTeam } from "@/modules/ee/teams/team-list/types/team";
 import { getBulkInvitePermission, getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { EditMemberships } from "@/modules/organization/settings/teams/components/edit-memberships";
 import { OrganizationActions } from "@/modules/organization/settings/teams/components/edit-memberships/organization-actions";
 import { getMembershipsByUserId } from "@/modules/organization/settings/teams/lib/membership";
+import { getTeamsWhereUserIsAdmin } from "@/modules/teams/lib/roles";
+import { getTeamsByOrganizationId } from "@/modules/teams/team-list/lib/team";
+import { TOrganizationTeam } from "@/modules/teams/team-list/types/team";
 
 interface MembersViewProps {
   readonly membershipRole?: TOrganizationRole;
