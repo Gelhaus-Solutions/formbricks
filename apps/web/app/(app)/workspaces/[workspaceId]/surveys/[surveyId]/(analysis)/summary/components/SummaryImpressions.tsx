@@ -1,11 +1,9 @@
 "use client";
 
 import { AlertCircleIcon, InfoIcon } from "lucide-react";
-import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { TDisplayWithContact } from "@formbricks/types/displays";
 import { TUserLocale } from "@formbricks/types/user";
-import { useWorkspace } from "@/app/(app)/workspaces/[workspaceId]/context/workspace-context";
 import { timeSince } from "@/lib/time";
 import { Button } from "@/modules/ui/components/button";
 
@@ -34,7 +32,6 @@ export const SummaryImpressions = ({
   onRetry,
 }: SummaryImpressionsProps) => {
   const { t } = useTranslation();
-  const { workspace } = useWorkspace();
 
   const renderContent = () => {
     if (displaysError) {
@@ -76,11 +73,9 @@ export const SummaryImpressions = ({
               className="grid grid-cols-4 items-center border-b border-slate-100 py-2 text-xs text-slate-800 last:border-transparent md:text-sm">
               <div className="col-span-2 pl-4 md:pl-6">
                 {display.contact ? (
-                  <Link
-                    className="ph-no-capture break-all text-slate-600 hover:underline"
-                    href={`/workspaces/${workspace?.id}/contacts/${display.contact.id}`}>
+                  <span className="ph-no-capture break-all text-slate-600">
                     {getDisplayContactIdentifier(display)}
-                  </Link>
+                  </span>
                 ) : (
                   <span className="break-all text-slate-600">{t("common.anonymous")}</span>
                 )}

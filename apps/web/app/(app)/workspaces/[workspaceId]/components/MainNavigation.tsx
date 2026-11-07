@@ -8,7 +8,6 @@ import {
   MessageCircle,
   PlusIcon,
   SettingsIcon,
-  UserIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
@@ -158,16 +157,6 @@ export const MainNavigation = ({
             icon: MessageCircle,
             isActive: pathname?.includes("/surveys"),
             isHidden: false,
-            disabled: isMembershipPending || isBilling,
-          },
-          {
-            href: `/workspaces/${workspace.id}/contacts`,
-            name: t("common.contacts"),
-            icon: UserIcon,
-            isActive:
-              pathname?.includes("/contacts") ||
-              pathname?.includes("/segments") ||
-              pathname?.includes("/attributes"),
             disabled: isMembershipPending || isBilling,
           },
         ],

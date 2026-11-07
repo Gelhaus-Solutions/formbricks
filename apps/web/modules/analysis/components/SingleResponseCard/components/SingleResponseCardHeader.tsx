@@ -60,23 +60,12 @@ export const SingleResponseCardHeader = ({
           {pageType === "response" && (
             <>
               {response.contact?.id ? (
-                user ? (
-                  <Link
-                    className="flex items-center gap-x-2"
-                    href={`${workspaceBasePath}/contacts/${response.contact.id}`}>
-                    <PersonAvatar personId={response.contact.id} />
-                    <h3 className="ph-no-capture ml-4 pb-1 font-semibold text-slate-600 hover:underline">
-                      {displayIdentifier}
-                    </h3>
-                  </Link>
-                ) : (
-                  <div className="flex items-center gap-x-2">
-                    <PersonAvatar personId={response.contact.id} />
-                    <h3 className="ph-no-capture ml-4 pb-1 font-semibold text-slate-600">
-                      {displayIdentifier}
-                    </h3>
-                  </div>
-                )
+                <div className="flex items-center gap-x-2">
+                  <PersonAvatar personId={response.contact.id} />
+                  <h3 className="ph-no-capture ml-4 pb-1 font-semibold text-slate-600">
+                    {displayIdentifier}
+                  </h3>
+                </div>
               ) : (
                 <div className="flex items-center">
                   <PersonAvatar personId="anonymous" />

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TSurvey, TSurveyElementSummaryOpenText } from "@formbricks/types/surveys/types";
@@ -75,17 +74,14 @@ export const OpenTextSummary = ({
                   }}>
                   <TableCell className="w-1/5">
                     {response.contact ? (
-                      <Link
-                        className="ph-no-capture group flex items-center"
-                        href={`/workspaces/${survey.workspaceId}/contacts/${response.contact.id}`}
-                        onClick={(e) => e.stopPropagation()}>
+                      <div className="ph-no-capture group flex items-center">
                         <div className="hidden md:flex">
                           <PersonAvatar personId={response.contact.id} />
                         </div>
-                        <p className="ph-no-capture break-all text-slate-600 group-hover:underline md:ml-2">
+                        <p className="ph-no-capture break-all text-slate-600 md:ml-2">
                           {getContactIdentifier(response.contact, response.contactAttributes)}
                         </p>
-                      </Link>
+                      </div>
                     ) : (
                       <div className="group flex items-center">
                         <div className="hidden md:flex">

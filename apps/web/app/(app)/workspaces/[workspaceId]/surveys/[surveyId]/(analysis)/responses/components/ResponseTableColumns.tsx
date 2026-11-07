@@ -2,8 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { TFunction } from "i18next";
-import { CircleHelpIcon, EyeOffIcon, MailIcon, TagIcon } from "lucide-react";
-import Link from "next/link";
+import { EyeOffIcon, MailIcon, TagIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { labelEmbeddedFields } from "@formbricks/types/embedded-data-label";
 import {
@@ -31,7 +30,6 @@ import { Badge } from "@/modules/ui/components/badge";
 import { getSelectionColumn } from "@/modules/ui/components/data-table";
 import { IdBadge } from "@/modules/ui/components/id-badge";
 import { ResponseBadges } from "@/modules/ui/components/response-badges";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/modules/ui/components/tooltip";
 import { cn } from "@/modules/ui/lib/utils";
 import { isEmptyCellContent, isEmptyResponseValue } from "../lib/empty-cell";
 import {
@@ -44,7 +42,7 @@ import {
 } from "../lib/utils";
 
 /** What a cell with no value shows, as in every other table. */
-const EMPTY_CELL = <span className="text-slate-400">—</span>;
+const EMPTY_CELL = <span className="text-slate-400">-</span>;
 
 /** A column whose cell shows a dash instead of rendering nothing. */
 const withEmptyDash = (column: ColumnDef<TResponseTableData>): ColumnDef<TResponseTableData> => {
@@ -298,7 +296,7 @@ const getElementColumnsData = (
  * One column per reserved catalog entry a human would read as data (ENG-2540).
  *
  * Driven by `RESERVED_COLUMN_ENTRIES` rather than a local `METADATA_FIELDS` array, so a catalog
- * addition — ENG-1858's session context, next — becomes a column with no change here. The values are
+ * addition (ENG-1858's session context, next) becomes a column with no change here. The values are
  * precomputed onto the row (`reservedValues`), so a cell is a lookup rather than a switch that has to
  * know where each field is stored.
  */
@@ -358,28 +356,7 @@ export const generateResponseTableColumns = (
   const personColumn: ColumnDef<TResponseTableData> = {
     accessorKey: "personId",
     meta: { label: t("common.person") },
-    header: () => (
-      <div className="flex items-center gap-x-1.5">
-        {t("common.person")}
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger>
-              <CircleHelpIcon className="size-3 text-slate-500" strokeWidth={1.5} />
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="space-x-1 font-normal">
-              <span>{t("workspace.surveys.responses.how_to_identify_users")}</span>
-              <Link
-                className="underline underline-offset-2 hover:text-slate-900"
-                href="https://formbricks.com/docs/app-surveys/user-identification"
-                target="_blank"
-                rel="noopener noreferrer">
-                {t("common.app_survey")}
-              </Link>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-    ),
+    header: () => <div className="flex items-center gap-x-1.5">{t("common.person")}</div>,
     size: 275,
     cell: ({ row }) => {
       const personId = row.original.person
@@ -456,7 +433,7 @@ export const generateResponseTableColumns = (
   };
 
   // ENG-1837: both column groups are built from the survey's Embedded Data definitions. The accessor
-  // keys stay the storage keys — they address `row.original.variables` / `responseData`, which are
+  // keys stay the storage keys: they address `row.original.variables` / `responseData`, which are
   // written from the response, not the definitions.
   const variableColumns: ColumnDef<TResponseTableData>[] = getComputedEmbeddedFields(survey).map(
     ({ field, link }) => {
@@ -481,7 +458,7 @@ export const generateResponseTableColumns = (
     }
   );
 
-  // ENG-3233: two ingested fields may share a name, and a truncated header makes that worse — the
+  // ENG-3233: two ingested fields may share a name, and a truncated header makes that worse: the
   // later one carries its storage key so the columns stay tellable apart.
   const hiddenFieldColumns: ColumnDef<TResponseTableData>[] = labelEmbeddedFields(
     getIngestedEmbeddedFields(survey)

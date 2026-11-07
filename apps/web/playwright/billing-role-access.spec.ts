@@ -3,8 +3,8 @@ import { prisma } from "@formbricks/database";
 import type { UsersFixture } from "./fixtures/users";
 import { test } from "./lib/fixtures";
 
-// ENG-1763 regression: a billing-role member must not reach workspace product data (contacts PII,
-// survey summaries/responses) by direct navigation. getWorkspaceAuth is the single choke
+// ENG-1763 regression: a billing-role member must not reach workspace product data (survey
+// summaries/responses) by direct navigation. getWorkspaceAuth is the single choke
 // point every product page flows through, so it bounces billing users to their billing home instead
 // (the organization billing page on Cloud, their own profile on self-hosted). The owner test guards against a naive "redirect everyone" fix regressing product
 // access for legitimate roles.
@@ -38,10 +38,9 @@ const setupOrgWithBillingMember = async (users: UsersFixture) => {
     owner,
     billingUser,
     workspaceId: owner.workspaceId,
-    contactsUrl: `${workspaceBase}/contacts`,
+    summaryUrl: `${workspaceBase}/surveys/${survey.id}/summary`,
     // Every workspace product surface flows through getWorkspaceAuth, so all of them must redirect.
     productUrls: [
-      `${workspaceBase}/contacts`,
       `${workspaceBase}/surveys/${survey.id}/summary`,
       `${workspaceBase}/surveys/${survey.id}/responses`,
     ],
@@ -65,13 +64,12 @@ test.describe("Billing-role workspace access (ENG-1763)", () => {
   });
 
   test("keeps product-page access for a non-billing owner", async ({ page, users }) => {
-    const { owner, workspaceId, contactsUrl } = await setupOrgWithBillingMember(users);
+    const { owner, workspaceId, summaryUrl } = await setupOrgWithBillingMember(users);
 
     await owner.login();
-    await page.goto(contactsUrl, { waitUntil: "domcontentloaded" });
+    await page.goto(summaryUrl, { waitUntil: "domcontentloaded" });
 
-    // Owner stays on the product route (the page may render an upgrade prompt when the enterprise
-    // feature is unlicensed, but crucially it is not bounced to the billing home).
-    await expect(page).toHaveURL(new RegExp(`/workspaces/${workspaceId}/contacts`));
+    // Owner stays on the product route: crucially, it is not bounced to the billing home.
+    await expect(page).toHaveURL(new RegExp(`/workspaces/${workspaceId}/surveys/[^/]+/summary`));
   });
 });

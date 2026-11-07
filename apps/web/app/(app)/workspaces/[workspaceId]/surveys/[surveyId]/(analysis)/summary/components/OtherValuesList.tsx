@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TSurveyElementSummaryMultipleChoice, TSurveyType } from "@formbricks/types/surveys/types";
-import { useWorkspace } from "@/app/(app)/workspaces/[workspaceId]/context/workspace-context";
 import { getContactIdentifier } from "@/lib/utils/contact";
 import { PersonAvatar } from "@/modules/ui/components/avatars";
 import { Button } from "@/modules/ui/components/button";
@@ -19,7 +17,6 @@ interface OtherValuesListProps {
 /** The free-text answers respondents typed into an "Other" option, ten at a time. */
 export const OtherValuesList = ({ others, surveyType }: Readonly<OtherValuesListProps>) => {
   const { t } = useTranslation();
-  const { workspace } = useWorkspace();
   const [visibleOtherResponses, setVisibleOtherResponses] = useState(10);
 
   const handleLoadMore = (e: React.MouseEvent) => {
@@ -45,13 +42,7 @@ export const OtherValuesList = ({ others, surveyType }: Readonly<OtherValuesList
               </div>
             )}
             {surveyType === "app" && otherValue.contact && (
-              <Link
-                href={
-                  otherValue.contact.id
-                    ? `/workspaces/${workspace?.id}/contacts/${otherValue.contact.id}`
-                    : { pathname: null }
-                }
-                className="m-2 grid h-16 grid-cols-2 items-center rounded-lg text-sm hover:bg-slate-100">
+              <div className="m-2 grid h-16 grid-cols-2 items-center rounded-lg text-sm">
                 <div className="ph-no-capture col-span-1 pl-4 font-medium text-slate-900">
                   <span>{otherValue.value}</span>
                 </div>
@@ -59,7 +50,7 @@ export const OtherValuesList = ({ others, surveyType }: Readonly<OtherValuesList
                   {otherValue.contact.id && <PersonAvatar personId={otherValue.contact.id} />}
                   <span>{getContactIdentifier(otherValue.contact, otherValue.contactAttributes)}</span>
                 </div>
-              </Link>
+              </div>
             )}
           </div>
         ))}

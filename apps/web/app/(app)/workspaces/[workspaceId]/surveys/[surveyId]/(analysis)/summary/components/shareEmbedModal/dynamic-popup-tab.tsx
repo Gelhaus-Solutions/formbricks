@@ -29,10 +29,6 @@ export const DynamicPopupTab = ({ surveyId }: DynamicPopupTabProps) => {
       <DocumentationLinks
         links={[
           {
-            title: t("workspace.surveys.share.dynamic_popup.attribute_based_targeting"),
-            href: "https://formbricks.com/docs/surveys/website-app-surveys/advanced-targeting",
-          },
-          {
             title: t("workspace.surveys.share.dynamic_popup.code_no_code_triggers"),
             href: "https://formbricks.com/docs/surveys/website-app-surveys/actions",
           },
