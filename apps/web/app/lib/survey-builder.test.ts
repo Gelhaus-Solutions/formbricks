@@ -47,8 +47,9 @@ describe("Survey Builder", () => {
         subheader: { default: "templates.default_ending_card_subheader" },
       });
       expect(endingCard.id).toBeDefined();
-      expect(endingCard).toHaveProperty("buttonLabel");
-      expect(endingCard).toHaveProperty("buttonLink");
+      // No default button (GFORMS-8): the creator adds one with a link of their own.
+      expect(endingCard).not.toHaveProperty("buttonLabel");
+      expect(endingCard).not.toHaveProperty("buttonLink");
     });
 
     test("hiddenFieldsDefault has expected structure", () => {

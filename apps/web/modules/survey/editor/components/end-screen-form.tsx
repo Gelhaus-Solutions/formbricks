@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { TSurvey, TSurveyEndScreenCard, TSurveyRedirectUrlCard } from "@formbricks/types/surveys/types";
 import { TUserLocale } from "@formbricks/types/user";
 import { createI18nString, extractLanguageCodes, getLocalizedValue } from "@/lib/i18n/utils";
-import { DEFAULT_ENDING_CARD_BUTTON_LINK } from "@/lib/survey/default-ending-card";
 import { headlineToRecall, recallToHeadline } from "@/lib/utils/recall";
 import { ElementFormInput } from "@/modules/survey/components/element-form-input";
 import { RecallWrapper } from "@/modules/survey/components/element-form-input/components/recall-wrapper";
@@ -143,12 +142,10 @@ export const EndScreenForm = ({
               if (showEndingCardCTA) {
                 updateSurvey({ buttonLabel: undefined, buttonLink: undefined });
               } else {
+                // No default target (operator, 2026-11-07): the creator names the button and its link.
                 updateSurvey({
-                  buttonLabel: createI18nString(
-                    t("workspace.surveys.edit.create_your_own_survey"),
-                    surveyLanguageCodes
-                  ),
-                  buttonLink: DEFAULT_ENDING_CARD_BUTTON_LINK,
+                  buttonLabel: createI18nString("", surveyLanguageCodes),
+                  buttonLink: "",
                 });
               }
               setshowEndingCardCTA(!showEndingCardCTA);
@@ -218,7 +215,7 @@ export const EndScreenForm = ({
                           id="buttonLink"
                           name="buttonLink"
                           className={`relative text-black caret-black ${!isExternalUrlsAllowed ? "cursor-not-allowed opacity-50" : ""}`}
-                          placeholder="https://formbricks.com"
+                          placeholder="https://example.com"
                           value={
                             recallToHeadline(
                               {
