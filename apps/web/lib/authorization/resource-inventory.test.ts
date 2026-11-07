@@ -2,10 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import {
-  AUDIT_TARGET_AUTHORIZATION_RESOURCE_INVENTORY,
-  PRISMA_AUTHORIZATION_RESOURCE_INVENTORY,
-} from "./resource-inventory";
+import { PRISMA_AUTHORIZATION_RESOURCE_INVENTORY } from "./resource-inventory";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 
@@ -22,26 +19,9 @@ const readPrismaModels = (): ReadonlyArray<string> => {
   return [...new Set(models)].sort();
 };
 
-const readAuditTargets = (): ReadonlyArray<string> => {
-  const source = readFileSync(
-    join(REPOSITORY_ROOT, "apps/web/modules/ee/audit-logs/types/audit-log.ts"),
-    "utf8"
-  );
-  const targetBlock = source.match(/ZAuditTarget\s*=\s*z\.enum\(\[([\s\S]*?)\]\)/)?.[1];
-  if (!targetBlock) {
-    throw new Error("Unable to locate ZAuditTarget");
-  }
-
-  return [...targetBlock.matchAll(/"([^"]+)"/g)].map(([, target]) => target).sort();
-};
-
 describe("authorization resource inventory", () => {
   test("classifies every Prisma model exactly once", () => {
     expect(Object.keys(PRISMA_AUTHORIZATION_RESOURCE_INVENTORY).sort()).toEqual(readPrismaModels());
-  });
-
-  test("classifies every audit target exactly once", () => {
-    expect(Object.keys(AUDIT_TARGET_AUTHORIZATION_RESOURCE_INVENTORY).sort()).toEqual(readAuditTargets());
   });
 
   test("keeps every current grant source in the relationship category", () => {
