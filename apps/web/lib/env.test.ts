@@ -615,6 +615,28 @@ describe("env", () => {
     await expect(import("./env")).rejects.toThrow("AI_AZURE_BASE_URL");
   });
 
+  test("fails to load when the Anthropic provider has no API key", async () => {
+    setTestEnv({
+      AI_PROVIDER: "anthropic",
+      AI_MODEL: "claude-opus-5-5",
+    });
+
+    await expect(import("./env")).rejects.toThrow("AI_ANTHROPIC_API_KEY");
+  });
+
+  test("loads the Anthropic provider with its API key", async () => {
+    setTestEnv({
+      AI_PROVIDER: "anthropic",
+      AI_MODEL: "claude-opus-5-5",
+      AI_ANTHROPIC_API_KEY: "test-anthropic-key",
+    });
+
+    const { env } = await import("./env");
+
+    expect(env.AI_PROVIDER).toBe("anthropic");
+    expect(env.AI_ANTHROPIC_API_KEY).toBe("test-anthropic-key");
+  });
+
   test("loads OpenAI-compatible AI configuration with the base URL and model", async () => {
     setTestEnv({
       AI_PROVIDER: "openai-compatible",
@@ -989,7 +1011,7 @@ describe("env", () => {
       "treats a blank secret as unset rather than as a secret of length zero (%j)",
       async (blank) => {
         // A blank value is falsy, and Better Auth replaces a falsy secret with its own hardcoded
-        // default — so it must normalize to undefined and fall through, not reach `betterAuth()`.
+        // default, so it must normalize to undefined and fall through, not reach `betterAuth()`.
         setTestEnv({ BETTER_AUTH_SECRET: blank, NEXTAUTH_SECRET });
         const { env } = await import("./env");
 
@@ -1024,7 +1046,7 @@ describe("env", () => {
       expect(env.BETTER_AUTH_SECRET).toBe(secret);
     });
 
-    test("parses a short secret — the floor is a runtime gate, not a schema rule", async () => {
+    test("parses a short secret: the floor is a runtime gate, not a schema rule", async () => {
       // Kept out of the schema so `next build` and CLI imports still work with no secrets in scope.
       setTestEnv({ BETTER_AUTH_SECRET: "short-secret" });
       const { env } = await import("./env");

@@ -1,3 +1,4 @@
+import { anthropicProviderAdapter } from "./providers/anthropic";
 import { awsProviderAdapter } from "./providers/aws";
 import { azureProviderAdapter } from "./providers/azure";
 import { googleProviderAdapter } from "./providers/google";
@@ -20,6 +21,7 @@ const AI_PROVIDER_REGISTRY: Record<ActiveAIProvider, AIProviderAdapter> = {
   google: googleProviderAdapter,
   azure: azureProviderAdapter,
   "openai-compatible": openaiCompatibleProviderAdapter,
+  anthropic: anthropicProviderAdapter,
 };
 
 export const getAIProviderAdapter = (provider: ActiveAIProvider): AIProviderAdapter =>

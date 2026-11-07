@@ -21,6 +21,11 @@ const compatible: AIEnvironment = {
   AI_OPENAI_COMPATIBLE_API_KEY: "test-key",
   AI_OPENAI_COMPATIBLE_SUPPORTS_STRUCTURED_OUTPUTS: "1",
 };
+const anthropic: AIEnvironment = {
+  AI_PROVIDER: "anthropic",
+  AI_MODEL: "claude-opus-5-5",
+  AI_ANTHROPIC_API_KEY: "test-anthropic-key",
+};
 const schema = jsonSchema<{ label: string }>({
   type: "object",
   properties: { label: { type: "string" } },
@@ -52,6 +57,40 @@ const compatibleResponse = (text: string, streaming: boolean) => ({
   ],
   usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
 });
+
+const anthropicMessage = (text: string) => ({
+  id: "msg_test",
+  type: "message",
+  role: "assistant",
+  model: "claude-opus-5-5",
+  content: [{ type: "text", text }],
+  stop_reason: "end_turn",
+  stop_sequence: null,
+  usage: { input_tokens: 10, output_tokens: 5 },
+});
+const anthropicStream = (text: string) =>
+  [
+    {
+      type: "message_start",
+      message: {
+        ...anthropicMessage(""),
+        content: [],
+        stop_reason: null,
+        usage: { input_tokens: 10, output_tokens: 1 },
+      },
+    },
+    { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },
+    { type: "content_block_delta", index: 0, delta: { type: "text_delta", text } },
+    { type: "content_block_stop", index: 0 },
+    {
+      type: "message_delta",
+      delta: { stop_reason: "end_turn", stop_sequence: null },
+      usage: { output_tokens: 5 },
+    },
+    { type: "message_stop" },
+  ]
+    .map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+    .join("");
 
 describe("provider HTTP contracts", () => {
   const requests: Request[] = [];
@@ -155,6 +194,44 @@ describe("provider HTTP contracts", () => {
       }
     }
   );
+
+  // @ai-sdk/anthropic only knows Claude models up to the 4 generation. For a newer id it would send a
+  // forced `json` tool and the caller's temperature, both a 400 on Claude Opus 5.5 (providers/anthropic.ts).
+  test("anthropic asks Claude for native structured output, without sampling parameters or forced tools", async () => {
+    fetchMock.mockImplementation(async (input, init) => {
+      const request = new Request(input, init);
+      requests.push(request);
+      const body = (await request.clone().json()) as { stream?: boolean };
+      return body.stream === true
+        ? new Response(anthropicStream(output), { headers: { "content-type": "text/event-stream" } })
+        : Response.json(anthropicMessage(output));
+    });
+    const options = { prompt: "Label this cluster", temperature: 0.2, maxOutputTokens: 1200, maxRetries: 0 };
+
+    expect((await generateText(options, anthropic)).text).toBe(output);
+    expect((await generateObject({ ...options, schema }, anthropic)).object).toEqual({ label: "Product" });
+    await expect(streamObject({ ...options, schema }, anthropic).completion).resolves.toEqual({
+      label: "Product",
+    });
+    expect(requests).toHaveLength(3);
+
+    for (const [index, request] of requests.entries()) {
+      expect(request.url).toBe("https://api.anthropic.com/v1/messages");
+      expect(request.headers.get("x-api-key")).toBe("test-anthropic-key");
+      const body = (await request.json()) as Record<string, unknown>;
+      expect(body).toMatchObject({ model: "claude-opus-5-5", max_tokens: 1200 });
+      expect(body).not.toHaveProperty("temperature");
+      expect(body).not.toHaveProperty("tool_choice");
+      expect(body).not.toHaveProperty("tools");
+      if (index === 0) {
+        expect(body).not.toHaveProperty("output_config");
+      } else {
+        expect(body).toMatchObject({
+          output_config: { format: { type: "json_schema", schema: { required: ["label"] } } },
+        });
+      }
+    }
+  });
 
   test("OAuth model requests use the model dispatcher while token requests stay isolated", async () => {
     const tokenUrl = "https://idp.example.test/oauth/token";

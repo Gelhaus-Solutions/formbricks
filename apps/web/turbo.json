@@ -28,6 +28,7 @@
         "!integration/**"
       ],
       "passThroughEnv": [
+        "AI_ANTHROPIC_API_KEY",
         "AI_AWS_ACCESS_KEY_ID",
         "AI_AWS_REGION",
         "AI_AWS_SECRET_ACCESS_KEY",
@@ -88,7 +89,6 @@
         "DATABASE_URL",
         "DEBUG",
         "DEBUG_SHOW_RESET_LINK",
-        "EMAIL_AUTH_DISABLED",
         "EMAIL_RATE_LIMIT_MULTIPLIER",
         "EMAIL_SEND_AUDIT_BUCKET",
         "EMAIL_SEND_AUDIT_ENABLED",

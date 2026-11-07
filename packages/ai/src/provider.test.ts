@@ -406,6 +406,24 @@ describe("packages/ai provider helpers", () => {
     });
   });
 
+  test("treats an Anthropic instance as not configured until it has an API key", () => {
+    expect(getAiConfigurationStatus({ AI_PROVIDER: "anthropic", AI_MODEL: "claude-opus-5-5" })).toMatchObject(
+      {
+        provider: "anthropic",
+        isConfigured: false,
+        missingFields: ["AI_ANTHROPIC_API_KEY"],
+        errorCode: "providerNotConfigured",
+      }
+    );
+    expect(
+      isAiConfigured({
+        AI_PROVIDER: "anthropic",
+        AI_MODEL: "claude-opus-5-5",
+        AI_ANTHROPIC_API_KEY: "test-key",
+      })
+    ).toBe(true);
+  });
+
   test("reports a fully configured OpenAI-compatible instance with the base URL and model", () => {
     expect(
       getAiConfigurationStatus({

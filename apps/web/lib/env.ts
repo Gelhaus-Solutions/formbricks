@@ -103,6 +103,7 @@ const ZAIConfigurationEnv = z.object({
   AI_AZURE_API_KEY: z.string().optional(),
   AI_AZURE_BASE_URL: z.url().optional(),
   AI_AZURE_RESOURCE_NAME: z.string().optional(),
+  AI_ANTHROPIC_API_KEY: z.string().optional(),
   AI_OPENAI_COMPATIBLE_BASE_URL: ZOpenAICompatibleBaseUrl.optional(),
   AI_OPENAI_COMPATIBLE_API_KEY: z.string().optional(),
   AI_OPENAI_COMPATIBLE_PROVIDER_NAME: z.string().optional(),
@@ -206,6 +207,12 @@ const validateAzureAIConfiguration = (values: TAIConfigurationEnv, ctx: z.Refine
       "AI_AZURE_BASE_URL",
       "AI_AZURE_BASE_URL or AI_AZURE_RESOURCE_NAME is required when AI_PROVIDER=azure"
     );
+  }
+};
+
+const validateAnthropicAIConfiguration = (values: TAIConfigurationEnv, ctx: z.RefinementCtx): void => {
+  if (!values.AI_ANTHROPIC_API_KEY) {
+    addEnvIssue(ctx, "AI_ANTHROPIC_API_KEY", "AI_ANTHROPIC_API_KEY is required when AI_PROVIDER=anthropic");
   }
 };
 
@@ -356,6 +363,7 @@ const validateActiveAIProviderConfiguration = (values: TAIConfigurationEnv, ctx:
     google: validateGoogleAIConfiguration,
     azure: validateAzureAIConfiguration,
     "openai-compatible": validateOpenAICompatibleAIConfiguration,
+    anthropic: validateAnthropicAIConfiguration,
   };
 
   providerValidators[values.AI_PROVIDER](values, ctx);
@@ -650,7 +658,6 @@ const parsedEnv = createEnv({
     BULLMQ_EXTERNAL_WORKER_ENABLED: z.enum(["1", "0"]).optional(),
     BULLMQ_WORKER_ENABLED: z.enum(["1", "0"]).optional(),
     E2E_TESTING: z.enum(["1", "0"]).optional(),
-    EMAIL_AUTH_DISABLED: z.enum(["1", "0"]).optional(),
     // Scales the per-organization, per-sender and per-deployment email caps
     // (modules/email/lib/email-rate-limits.ts), for deployments that legitimately send more than the defaults
     // allow. Per-recipient caps are not scaled. Blank counts as unset, so a templated empty value does not stop
@@ -685,6 +692,7 @@ const parsedEnv = createEnv({
     AI_AZURE_API_KEY: z.string().optional(),
     AI_AZURE_API_VERSION: z.string().optional(),
     AI_AZURE_RESOURCE_NAME: z.string().optional(),
+    AI_ANTHROPIC_API_KEY: z.string().optional(),
     AI_OPENAI_COMPATIBLE_BASE_URL: ZOpenAICompatibleBaseUrl.optional(),
     AI_OPENAI_COMPATIBLE_API_KEY: z.string().optional(),
     AI_OPENAI_COMPATIBLE_PROVIDER_NAME: z.string().optional(),
@@ -900,7 +908,6 @@ const parsedEnv = createEnv({
     BULLMQ_WORKER_COUNT: process.env.BULLMQ_WORKER_COUNT,
     BULLMQ_WORKER_ENABLED: process.env.BULLMQ_WORKER_ENABLED,
     E2E_TESTING: process.env.E2E_TESTING,
-    EMAIL_AUTH_DISABLED: process.env.EMAIL_AUTH_DISABLED,
     EMAIL_RATE_LIMIT_MULTIPLIER: process.env.EMAIL_RATE_LIMIT_MULTIPLIER,
     EMAIL_VERIFICATION_DISABLED: process.env.EMAIL_VERIFICATION_DISABLED,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
@@ -926,6 +933,7 @@ const parsedEnv = createEnv({
     AI_AZURE_API_KEY: process.env.AI_AZURE_API_KEY,
     AI_AZURE_API_VERSION: process.env.AI_AZURE_API_VERSION,
     AI_AZURE_RESOURCE_NAME: process.env.AI_AZURE_RESOURCE_NAME,
+    AI_ANTHROPIC_API_KEY: process.env.AI_ANTHROPIC_API_KEY,
     AI_OPENAI_COMPATIBLE_BASE_URL: process.env.AI_OPENAI_COMPATIBLE_BASE_URL,
     AI_OPENAI_COMPATIBLE_API_KEY: process.env.AI_OPENAI_COMPATIBLE_API_KEY,
     AI_OPENAI_COMPATIBLE_PROVIDER_NAME: process.env.AI_OPENAI_COMPATIBLE_PROVIDER_NAME,
