@@ -80,6 +80,8 @@ export const SMTP_REJECT_UNAUTHORIZED_TLS = env.SMTP_REJECT_UNAUTHORIZED_TLS !==
 export const SMTP_REQUIRE_TLS = env.SMTP_REQUIRE_TLS === "1";
 export const MAIL_FROM = env.MAIL_FROM;
 export const MAIL_FROM_NAME = env.MAIL_FROM_NAME;
+/** The sender when `MAIL_FROM` is unset: no-reply at this instance's own host, not another product's domain. */
+export const DEFAULT_MAIL_FROM = `noreply@${URL.parse(WEBAPP_URL)?.hostname || "localhost"}`;
 
 /**
  * Auth secret and base URL, resolved once for the whole app.

@@ -5,6 +5,7 @@ import { logger } from "@formbricks/logger";
 import { InvalidInputError } from "@formbricks/types/errors";
 import {
   DEBUG,
+  DEFAULT_MAIL_FROM,
   EMAIL_SEND_AUDIT_ENABLED,
   IS_SMTP_CONFIGURED,
   MAIL_FROM,
@@ -103,7 +104,7 @@ const submitEmailToSmtp = async (
     debug: DEBUG && !EMAIL_SEND_AUDIT_ENABLED,
   };
   const transporter = createTransport(transportOptions);
-  const defaultFrom = `${MAIL_FROM_NAME ?? "Formbricks"} <${MAIL_FROM ?? "noreply@formbricks.com"}>`;
+  const defaultFrom = `${MAIL_FROM_NAME ?? "GForms"} <${MAIL_FROM ?? DEFAULT_MAIL_FROM}>`;
   return transporter.sendMail({
     ...emailData,
     from: emailData.from ?? defaultFrom,

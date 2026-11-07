@@ -4,6 +4,7 @@ import { isStorageAvailable } from "@formbricks/storage";
 import { type TSurvey } from "@formbricks/types/surveys/types";
 import {
   DEFAULT_LOCALE,
+  DEFAULT_MAIL_FROM,
   IS_FORMBRICKS_CLOUD,
   MAIL_FROM,
   SURVEY_BG_COLORS,
@@ -153,7 +154,7 @@ export const SurveyEditorPage = async (props: {
       isCxMode={isCxMode}
       surveySchedulingConfig={SURVEY_SCHEDULING_CONFIG}
       locale={locale ?? DEFAULT_LOCALE}
-      mailFrom={MAIL_FROM ?? "hola@formbricks.com"}
+      mailFrom={MAIL_FROM ?? DEFAULT_MAIL_FROM}
       isSurveyFollowUpsAllowed={isSurveyFollowUpsAllowed}
       isWorkflowsAllowed={isWorkflowsAllowed}
       userEmail={userEmail}
