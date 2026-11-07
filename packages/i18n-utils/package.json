@@ -64,14 +64,12 @@
     "scan-translations": "tsx src/scan-translations.ts"
   },
   "dependencies": {
-    "glob": "catalog:",
-    "object-hash": "3.0.0"
+    "glob": "catalog:"
   },
   "devDependencies": {
     "@formbricks/config-eslint": "workspace:*",
     "@formbricks/config-typescript": "workspace:*",
     "@types/node": "catalog:",
-    "@types/object-hash": "3.0.6",
     "rimraf": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",

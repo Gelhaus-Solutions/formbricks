@@ -49,9 +49,9 @@ const JS_ASSET_CORS_HEADERS = [
 ];
 
 // NOTE: every `process.env.*` read in this file shapes the build output and MUST be listed in the
-// `build.env` array of apps/web/turbo.json — the web build's own task config since ENG-1682, not the
-// root turbo.json — so Turborepo hashes it into the cache key. Adding a read here without updating
-// that file serves stale cached builds — from the local Turbo cache and the CI build-output cache
+// `build.env` array of apps/web/turbo.json (the web build's own task config since ENG-1682, not the
+// root turbo.json), so Turborepo hashes it into the cache key. Adding a read here without updating
+// that file serves stale cached builds, from the local Turbo cache and the CI build-output cache
 // alike. Enforced by lib/turbo-build-env.test.ts. Read env vars directly (`process.env.<NAME>` or
 // `process.env["<NAME>"]`), not via destructuring, so that guardrail can detect them.
 /** @type {import('next').NextConfig} */
@@ -89,16 +89,10 @@ const nextConfig = {
     "pino-pretty",
     "pino-opentelemetry-transport",
     "posthog-node",
-    "typeorm",
   ],
-  // Jackson is configured exclusively with PostgreSQL (modules/ee/auth/saml/lib/jackson.ts).
-  // TypeORM's lazy SQL Server driver traces unused mssql/tedious code and vulnerable sprintf-js.
-  outputFileTracingExcludes: {
-    "/*": ["../../**/node_modules/{mssql,tedious,sprintf-js}/**/*"],
-  },
   outputFileTracingIncludes: {
     "/api/auth/**/*": ["../../node_modules/jose/**/*"],
-    // pino loads transport code in worker threads via dynamic require() — the file tracer
+    // pino loads transport code in worker threads via dynamic require(); the file tracer
     // only traces static imports and misses these runtime-loaded files.
     // Include the full pino package (worker.js needs transport-stream.js, etc.)
     // and its transport targets with their dependencies.
@@ -252,7 +246,7 @@ const nextConfig = {
       },
       {
         // Public client API (JS SDK, surveys): any origin, deliberately without
-        // Access-Control-Allow-Credentials — these routes read no session, and browsers
+        // Access-Control-Allow-Credentials: these routes read no session, and browsers
         // reject credentials paired with a wildcard origin anyway (ENG-2784).
         source: "/api/(v1|v2)/client/:path*",
         headers: [
@@ -550,7 +544,7 @@ const sentryOptions = {
 
   sourcemaps: {
     // The SDK documents this as defaulting to true, but it only applies that default on the
-    // same path that turns `productionBrowserSourceMaps` on for you — and line 57 already
+    // same path that turns `productionBrowserSourceMaps` on for you, and line 57 already
     // sets that explicitly, so the SDK bails out first. Without this the generated .map
     // files stay in the image and are served publicly.
     deleteSourcemapsAfterUpload: true,
@@ -558,7 +552,7 @@ const sentryOptions = {
     // Only an official release build uploads. A local or self-hosted build carries 0.0.0, and
     // its token either has no access to this org (so the upload fails) or does (so a laptop
     // would create a git-SHA release in our production project). "disable-upload" skips the
-    // upload while still injecting Debug IDs — `true` would skip those too, which would leave
+    // upload while still injecting Debug IDs: `true` would skip those too, which would leave
     // the image unsymbolicatable and defeat the point of the read-secrets.sh change. The
     // string is honoured by the underlying bundler plugin; @sentry/nextjs types the field as
     // boolean, so re-verify this if the SDK is upgraded.

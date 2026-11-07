@@ -79,8 +79,8 @@ if (process.argv.includes("--dependencies")) {
     if (minimum) assert.ok(atLeast(version, minimum), `${path} has vulnerable ${name}@${version}`);
   }
 
-  // SQL Server is never selected by Formbricks' PostgreSQL-only Jackson configuration.
-  // Fail the image build if tracing starts shipping its vulnerable dependency chain again.
+  // The SQL Server driver chain came in with TypeORM through the SAML bridge, which left with SSO.
+  // Fail the image build if anything starts shipping that vulnerable chain again.
   for (const name of ["mssql", "tedious", "sprintf-js"]) {
     assert.throws(
       () => require.resolve(name),
@@ -88,12 +88,5 @@ if (process.argv.includes("--dependencies")) {
       `${name} must stay outside the runner`
     );
   }
-
-  const { DataSource } = require("typeorm");
-  const dataSource = new DataSource({
-    type: "postgres",
-    url: "postgresql://smoke:smoke@127.0.0.1:5432/smoke",
-  });
-  assert.equal(dataSource.options.type, "postgres");
-  console.log("SAML PostgreSQL driver loads without SQL Server dependencies");
+  console.log("Runtime dependencies carry no SQL Server driver chain");
 }
