@@ -102,7 +102,7 @@ export function registerFeedbackRecordTools(server: McpServer): void {
     {
       title: "List feedback datasets",
       description:
-        "List the feedback datasets assigned to a Formbricks workspace. Use the returned id as datasetId for the other feedback-record tools.",
+        "List the feedback datasets assigned to a GForms workspace. Use the returned id as datasetId for the other feedback-record tools.",
       inputSchema: ZMcpListFeedbackDatasetsInput,
       annotations: {
         readOnlyHint: true,

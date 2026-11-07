@@ -92,7 +92,7 @@ describe("generateTotpKeyUri", () => {
   test("builds an otpauth URI an authenticator app can enrol from", () => {
     const uri = generateTotpKeyUri("user@example.com", LEGACY_SECRET);
     expect(uri).toBe(
-      "otpauth://totp/Formbricks:user%40example.com?secret=AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT&issuer=Formbricks"
+      "otpauth://totp/GForms:user%40example.com?secret=AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT&issuer=GForms"
     );
   });
 });

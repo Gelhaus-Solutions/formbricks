@@ -107,7 +107,7 @@ export function registerSurveyTools(server: McpServer): void {
     "list_surveys",
     {
       title: "List surveys",
-      description: "List surveys in a Formbricks workspace using the v3 Surveys API contract.",
+      description: "List surveys in a GForms workspace using the v3 Surveys API contract.",
       inputSchema: ZMcpListSurveysInput,
       annotations: {
         readOnlyHint: true,
@@ -137,7 +137,7 @@ export function registerSurveyTools(server: McpServer): void {
     {
       title: "Get survey",
       description:
-        "Get one Formbricks survey using the v3 Surveys API contract, including its custom CSS source (`customCss`).",
+        "Get one GForms survey using the v3 Surveys API contract, including its custom CSS source (`customCss`).",
       inputSchema: ZMcpGetSurveyInput,
       annotations: {
         readOnlyHint: true,
@@ -168,7 +168,7 @@ export function registerSurveyTools(server: McpServer): void {
     {
       title: "Create survey",
       description:
-        "Create a Formbricks link survey using the v3 Surveys API contract. Optional `customCss` source is processed by the server; removed constructs come back as top-level `warnings`.",
+        "Create a GForms link survey using the v3 Surveys API contract. Optional `customCss` source is processed by the server; removed constructs come back as top-level `warnings`.",
       inputSchema: ZMcpCreateSurveyInput,
       audit: { action: "created", targetType: "survey" },
       annotations: {
@@ -369,7 +369,7 @@ export function registerSurveyTools(server: McpServer): void {
     "delete_survey",
     {
       title: "Delete survey",
-      description: "Delete a Formbricks survey using the v3 Surveys API contract.",
+      description: "Delete a GForms survey using the v3 Surveys API contract.",
       inputSchema: ZMcpDeleteSurveyInput,
       audit: { action: "deleted", targetType: "survey", targetIdArg: "surveyId" },
       annotations: {

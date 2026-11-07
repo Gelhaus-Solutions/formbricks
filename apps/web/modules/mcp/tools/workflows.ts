@@ -135,7 +135,7 @@ export function registerWorkflowTools(server: McpServer): void {
     "list_workflows",
     {
       title: "List workflows",
-      description: "List workflows in a Formbricks workspace using the v3 Workflows API contract.",
+      description: "List workflows in a GForms workspace using the v3 Workflows API contract.",
       inputSchema: ZMcpListWorkflowsInput,
       annotations: {
         readOnlyHint: true,
@@ -163,7 +163,7 @@ export function registerWorkflowTools(server: McpServer): void {
     "get_workflow",
     {
       title: "Get workflow",
-      description: "Get one Formbricks workflow using the v3 Workflows API contract.",
+      description: "Get one GForms workflow using the v3 Workflows API contract.",
       inputSchema: ZMcpGetWorkflowInput,
       annotations: {
         readOnlyHint: true,
@@ -189,7 +189,7 @@ export function registerWorkflowTools(server: McpServer): void {
     {
       title: "List workflow runs",
       description:
-        "List workflow runs for a Formbricks workspace (newest first) using the v3 Workflows API contract.",
+        "List workflow runs for a GForms workspace (newest first) using the v3 Workflows API contract.",
       inputSchema: ZMcpListWorkflowRunsInput,
       annotations: {
         readOnlyHint: true,
@@ -218,7 +218,7 @@ export function registerWorkflowTools(server: McpServer): void {
     {
       title: "Get workflow run",
       description:
-        "Get one Formbricks workflow run with its ordered step logs using the v3 Workflows API contract.",
+        "Get one GForms workflow run with its ordered step logs using the v3 Workflows API contract.",
       inputSchema: ZMcpGetWorkflowRunInput,
       annotations: {
         readOnlyHint: true,
@@ -244,7 +244,7 @@ export function registerWorkflowTools(server: McpServer): void {
     {
       title: "Test workflow (dry-run)",
       description: [
-        "Dry-run a Formbricks workflow using the v3 Workflows API contract:",
+        "Dry-run a GForms workflow using the v3 Workflows API contract:",
         "validate its live definition would execute, resolve the trigger's survey + ending cards, and confirm every literal send_email recipient is an organization member.",
         "No run is persisted and no side effects occur; the response reports { ok, problems }.",
       ].join(" "),
@@ -278,7 +278,7 @@ export function registerWorkflowTools(server: McpServer): void {
     "create_workflow",
     {
       title: "Create workflow",
-      description: "Create a Formbricks workflow (always as a draft) using the v3 Workflows API contract.",
+      description: "Create a GForms workflow (always as a draft) using the v3 Workflows API contract.",
       inputSchema: ZMcpCreateWorkflowInput,
       audit: { action: "created", targetType: "workflow" },
       annotations: {
@@ -301,7 +301,7 @@ export function registerWorkflowTools(server: McpServer): void {
     {
       title: "Patch workflow",
       description: [
-        "Update a Formbricks workflow using the v3 Workflows API patch contract.",
+        "Update a GForms workflow using the v3 Workflows API patch contract.",
         "Provided top-level fields replace that whole subtree; definition edits are only accepted while draft or disabled.",
       ].join(" "),
       inputSchema: ZMcpPatchWorkflowInput,
@@ -330,7 +330,7 @@ export function registerWorkflowTools(server: McpServer): void {
     {
       title: "Duplicate workflow",
       description:
-        "Duplicate a Formbricks workflow as a new draft (empty run + version history) using the v3 Workflows API contract.",
+        "Duplicate a GForms workflow as a new draft (empty run + version history) using the v3 Workflows API contract.",
       inputSchema: ZMcpDuplicateWorkflowInput,
       audit: { action: "created", targetType: "workflow" },
       annotations: {
@@ -356,7 +356,7 @@ export function registerWorkflowTools(server: McpServer): void {
     "delete_workflow",
     {
       title: "Delete workflow",
-      description: "Delete a Formbricks workflow using the v3 Workflows API contract.",
+      description: "Delete a GForms workflow using the v3 Workflows API contract.",
       inputSchema: ZMcpWorkflowIdInput,
       audit: { action: "deleted", targetType: "workflow", targetIdArg: "workflowId" },
       annotations: {
@@ -379,7 +379,7 @@ export function registerWorkflowTools(server: McpServer): void {
     {
       title: "Enable workflow",
       description: [
-        "Enable a Formbricks workflow using the v3 Workflows API contract:",
+        "Enable a GForms workflow using the v3 Workflows API contract:",
         "validate executability, snapshot an immutable version, and make it live.",
         "Once live it runs on matching survey responses and can send emails.",
       ].join(" "),
@@ -405,8 +405,7 @@ export function registerWorkflowTools(server: McpServer): void {
     "disable_workflow",
     {
       title: "Disable workflow",
-      description:
-        "Disable a live Formbricks workflow (stops future runs) using the v3 Workflows API contract.",
+      description: "Disable a live GForms workflow (stops future runs) using the v3 Workflows API contract.",
       inputSchema: ZMcpWorkflowIdInput,
       audit: { action: "updated", targetType: "workflow", targetIdArg: "workflowId" },
       annotations: {
@@ -428,7 +427,7 @@ export function registerWorkflowTools(server: McpServer): void {
     "archive_workflow",
     {
       title: "Archive workflow",
-      description: "Archive a Formbricks workflow using the v3 Workflows API contract.",
+      description: "Archive a GForms workflow using the v3 Workflows API contract.",
       inputSchema: ZMcpWorkflowIdInput,
       audit: { action: "updated", targetType: "workflow", targetIdArg: "workflowId" },
       annotations: {
@@ -451,7 +450,7 @@ export function registerWorkflowTools(server: McpServer): void {
     "unarchive_workflow",
     {
       title: "Unarchive workflow",
-      description: "Unarchive a Formbricks workflow (back to draft) using the v3 Workflows API contract.",
+      description: "Unarchive a GForms workflow (back to draft) using the v3 Workflows API contract.",
       inputSchema: ZMcpWorkflowIdInput,
       audit: { action: "updated", targetType: "workflow", targetIdArg: "workflowId" },
       annotations: {

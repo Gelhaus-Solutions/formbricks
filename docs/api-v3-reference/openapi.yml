@@ -4,7 +4,7 @@
 # Zod schemas for the adopted tags are generated from this file: `pnpm api:v3:schemas` (`pnpm api:v3:sync` runs both steps).
 openapi: 3.1.1
 info:
-  title: Formbricks API v3
+  title: GForms API v3
   description: |
     **Surveys**: **GET /api/v3/surveys**, **POST /api/v3/surveys**, **POST /api/v3/surveys/generate**, **POST /api/v3/surveys/validate**, **GET /api/v3/surveys/{surveyId}**, **PATCH /api/v3/surveys/{surveyId}**, **PATCH /api/v3/surveys/{surveyId}/blocks**, **PUT /api/v3/surveys/{surveyId}/blocks/order**, and **DELETE /api/v3/surveys/{surveyId}**.
 

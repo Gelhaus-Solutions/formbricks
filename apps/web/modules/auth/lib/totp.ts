@@ -48,7 +48,7 @@ export const generateTotpSecret = (): string => {
  * otplib 12 wrote into the URI explicitly, so existing apps enrol the same way.
  */
 export const generateTotpKeyUri = (label: string, secret: string): string =>
-  generateURI({ issuer: "Formbricks", label, secret });
+  generateURI({ issuer: "GForms", label, secret });
 
 /**
  * Checks the validity of a TOTP token using a base32-encoded secret.

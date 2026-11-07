@@ -90,7 +90,7 @@ export const getUserLocale = async (userId: string): Promise<TUserLocale> => {
  * analytics / Sentry / logger wiring are all live in better-auth-observability.ts.
  */
 export const auth = betterAuth({
-  appName: "Formbricks",
+  appName: "GForms",
   // Resolved in lib/constants.ts, which documents the BETTER_AUTH_* / NEXTAUTH_* alias. Passing it
   // explicitly is what keeps BA's cookie signing on the same secret the forward-auth proxy verifies with
   // (session-cookie.ts) and lib/jwt.ts signs app JWTs with; a divergence between any two of them is an
@@ -462,7 +462,7 @@ export const auth = betterAuth({
     // User.twoFactorSecret|backupCodes into the twoFactor table, and move the login-time TOTP/
     // backup challenge out of the credentials authorize into Better Auth's flow.
     twoFactor({
-      issuer: "Formbricks",
+      issuer: "GForms",
       skipVerificationOnEnable: false, // require a valid TOTP before 2FA is enabled
       totpOptions: { digits: 6, period: 30 },
       backupCodeOptions: { amount: 10, length: 10, storeBackupCodes: "encrypted" },

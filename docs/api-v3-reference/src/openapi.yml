@@ -6,7 +6,7 @@
 # Survey implementation: apps/web/app/api/v3/surveys/. Workflow contract: Scope 1 for ENG-1101.
 openapi: 3.1.1
 info:
-  title: Formbricks API v3
+  title: GForms API v3
   description: >
     **Surveys**: **GET /api/v3/surveys**, **POST /api/v3/surveys**, **POST
     /api/v3/surveys/generate**, **POST /api/v3/surveys/validate**, **GET

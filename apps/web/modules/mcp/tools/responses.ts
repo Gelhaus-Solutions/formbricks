@@ -150,7 +150,7 @@ export function registerResponseTools(server: McpServer): void {
     {
       title: "List responses",
       description: [
-        "List survey responses in a Formbricks workspace, newest first.",
+        "List survey responses in a GForms workspace, newest first.",
         "Scope is always a workspace; narrow with surveyId or contactId.",
         FEEDBACK_RECORD_BOUNDARY,
       ].join(" "),
