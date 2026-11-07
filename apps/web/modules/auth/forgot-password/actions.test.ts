@@ -20,7 +20,7 @@ vi.mock("@/lib/constants", () => ({
   },
 }));
 
-// Passthrough so the handler runs directly, matching modules/ee/billing/actions.test.ts. Importing the
+// Passthrough so the handler runs directly. Importing the
 // real handler would drag the audit-log graph (and its POSTHOG_KEY constant read) into this suite.
 vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((action: string, target: string, fn: unknown) => {

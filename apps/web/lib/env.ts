@@ -669,8 +669,8 @@ const parsedEnv = createEnv({
     EMAIL_VERIFICATION_DISABLED: z.enum(["1", "0"]).optional(),
     ENCRYPTION_KEY: z.string(),
     ENTERPRISE_LICENSE_KEY: z.string().optional(),
-    // Development only: a local licence server for QA. Ignored unless NODE_ENV is "development" and the
-    // host is loopback (`resolveLicenseServerUrl` in modules/ee/license-check/lib/license-server-url.ts).
+    // Read by nothing since the licence check left with the Enterprise folder (GFORMS-34); it goes with
+    // the remaining licence settings in the environment variable cleanup.
     ENTERPRISE_LICENSE_SERVER_URL: z.url().optional(),
     ENVIRONMENT: z.enum(["production", "staging"]).prefault("production"),
     GITHUB_ID: z.string().optional(),

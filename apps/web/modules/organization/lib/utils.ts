@@ -16,12 +16,11 @@ import { TOrganizationAuth } from "../types/organization-auth";
  * Usage:
  *   const { session, organization, ... } = await getOrganizationAuth(params.organizationId);
  *
- * Deliberately gates on membership only (`organization.read`), never on a product permission —
+ * Deliberately gates on membership only (`organization.read`), never on a product permission,
  * unlike `getWorkspaceAuth`, which redirects the billing role away from product data. The
- * asymmetry is required, not an oversight: `modules/ee/billing/page.tsx` is the billing role's
- * own page, so a billing exclusion here would lock that role out of the one surface it exists to
- * reach. Callers that need to exclude billing do so themselves, via
- * `redirectBillingRoleFromRestrictedOrgSettings`.
+ * asymmetry kept the billing role able to reach Formbricks' billing page, which GForms no longer has
+ * (GFORMS-7); a billing member now lands on their profile. Callers that need to exclude billing do so
+ * themselves, via `redirectBillingRoleFromRestrictedOrgSettings`.
  *
  * The role flags below stay for rendering (isReadOnly, isDeleteDisabled, membershipRole) — retained
  * by design, see lib/authorization/README.md. What ENG-2409 moved is the *gate*, not the flags.

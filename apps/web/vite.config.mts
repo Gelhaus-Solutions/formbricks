@@ -127,8 +127,6 @@ export default defineConfig({
         "modules/ui/components/icons/**", // Icon components (nested)
 
         // Feature-specific modules
-        "app/**/billing-confirmation/**", // Billing confirmation pages
-        "modules/ee/billing/**", // Enterprise billing features
         "modules/survey/multi-language-surveys/**", // Multi-language survey features
         "modules/email/**", // Email functionality
         "modules/integrations/**", // Integration modules

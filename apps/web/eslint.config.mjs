@@ -69,6 +69,15 @@ const PROCESS_ENV_EXEMPT_FILES = [
   "**/__mocks__/**",
 ];
 
+// GForms deleted Formbricks' Enterprise folder (decision D1) and rebuilds its features clean-room. An
+// upstream merge that brings back an import of it fails lint here instead of reintroducing Enterprise
+// code (GFORMS-3).
+const ENTERPRISE_IMPORT_RESTRICTION = {
+  group: ["@/modules/ee", "@/modules/ee/*"],
+  message:
+    "apps/web/modules/ee is Formbricks' Enterprise code, which GForms does not ship (decision D1). Rebuild the feature clean-room outside it.",
+};
+
 const config = [
   // carried over from the legacy .eslintignore / ignorePatterns
   {
@@ -167,7 +176,18 @@ const config = [
               message: "Test-only entry point; import the generated schemas from @formbricks/api-v3-schemas.",
             },
           ],
+          patterns: [ENTERPRISE_IMPORT_RESTRICTION],
         },
+      ],
+    },
+  },
+  {
+    // The files the block above leaves out keep the shared restriction and get the Enterprise one too.
+    files: ["**/*.test.{ts,tsx}", "**/__mocks__/**", "integration/**", "scripts/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { paths: [nextCacheRestriction], patterns: [ENTERPRISE_IMPORT_RESTRICTION] },
       ],
     },
   },
