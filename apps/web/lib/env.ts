@@ -1017,7 +1017,7 @@ export const assertAuthzedRuntimeConfiguration = (): void => {
       addEnvIssue(
         ctx,
         "AUTHZED_ENABLED",
-        "Formbricks v6 requires AUTHZED_ENABLED=true; configure SpiceDB before starting the server. See https://formbricks.com/docs/self-hosting/configuration/authzed-operations"
+        "Formbricks v6 requires AUTHZED_ENABLED=true; configure SpiceDB before starting the server. See docs/self-hosting/configuration/authzed-operations.mdx in the GForms repository"
       );
     }
     // Report missing credentials even when enablement was omitted.
@@ -1030,7 +1030,7 @@ export const assertAuthzedRuntimeConfiguration = (): void => {
       addEnvIssue(
         ctx,
         "AUTHZED_CONSISTENCY",
-        `Formbricks v6 requires AUTHZED_CONSISTENCY=fully_consistent, but it ${current}. Set AUTHZED_CONSISTENCY=fully_consistent in your .env or deployment environment and restart. See https://formbricks.com/docs/self-hosting/configuration/authzed-operations`
+        `Formbricks v6 requires AUTHZED_CONSISTENCY=fully_consistent, but it ${current}. Set AUTHZED_CONSISTENCY=fully_consistent in your .env or deployment environment and restart. See docs/self-hosting/configuration/authzed-operations.mdx in the GForms repository`
       );
     }
   }).safeParse(env);
