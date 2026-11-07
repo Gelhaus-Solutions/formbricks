@@ -1,12 +1,9 @@
 name: E2E Tests
 
 on:
+  # A secret declared here must also be named in pr.yml's e2e-test job: the caller does not
+  # `inherit`, so an unnamed optional secret arrives empty and a required one fails the call.
   workflow_call:
-    secrets:
-      ENTERPRISE_LICENSE_KEY:
-        required: true
-      # A secret added here must also be named in pr.yml's e2e-test job: the caller does not
-      # `inherit`, so an unnamed optional secret arrives empty and a required one fails the call.
   workflow_dispatch:
 
 permissions:
@@ -95,9 +92,8 @@ jobs:
         run: pnpm dev:setup
         shell: bash
 
-      - name: Fill ENTERPRISE_LICENSE_KEY and E2E_TESTING in .env
+      - name: Point .env at the CI services and set E2E_TESTING
         run: |
-          sed -i "s/ENTERPRISE_LICENSE_KEY=.*/ENTERPRISE_LICENSE_KEY=${{ secrets.ENTERPRISE_LICENSE_KEY }}/" .env
           sed -i "s|REDIS_URL=.*|REDIS_URL=redis://localhost:6379|" .env
           sed -i "s|AUTHZED_CONSISTENCY=.*|AUTHZED_CONSISTENCY=fully_consistent|" .env
           echo "" >> .env
@@ -353,15 +349,6 @@ jobs:
           cd packages/cache && pnpm vitest run src/cache-integration.test.ts
         shell: bash
 
-      - name: Check for Enterprise License
-        run: |
-          LICENSE_KEY=$(grep '^ENTERPRISE_LICENSE_KEY=' .env | cut -d'=' -f2-)
-          if [ -z "$LICENSE_KEY" ]; then
-            echo "::error::ENTERPRISE_LICENSE_KEY in .env is empty. Please check your secret configuration."
-            exit 1
-          fi
-          echo "License key length: ${#LICENSE_KEY}"
-
       - name: Disable rate limiting for E2E tests
         run: |
           echo "RATE_LIMITING_DISABLED=1" >> .env
@@ -370,7 +357,7 @@ jobs:
 
       - name: Run App
         run: |
-          echo "Starting app with enterprise license..."
+          echo "Starting app..."
           NODE_ENV=test pnpm start --filter=@formbricks/web | tee app.log 2>&1 &
           sleep 10  # Optional: gives some buffer for the app to start
           for attempt in {1..10}; do

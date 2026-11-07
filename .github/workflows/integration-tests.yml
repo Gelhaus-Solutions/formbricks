@@ -115,9 +115,7 @@ jobs:
         run: pnpm dev:setup
         shell: bash
 
-      # The harness exercises enterprise-gated flows (e.g. SSO provisioning) by calling the functions
-      # directly, so it doesn't need a real ENTERPRISE_LICENSE_KEY (verified: the suite is green with it
-      # empty). Only point the DB + Redis at the CI services.
+      # Only point the DB + Redis at the CI services.
       - name: Point .env at the CI services + test database
         if: steps.harness.outputs.present == 'true'
         run: |

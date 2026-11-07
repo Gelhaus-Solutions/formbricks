@@ -11,14 +11,6 @@ name: API v3 Contract Tests
 
 on:
   workflow_call:
-    secrets:
-      ENTERPRISE_LICENSE_KEY:
-        # Optional: without it every entitlement-gated operation answers its documented 403 instead of
-        # a real payload — the run stays honest, just shallower, which is also the fork-PR path since
-        # secrets are never available there. With it, `contacts` resolves; `workflows` does not yet,
-        # because the CI key's feature set does not grant it (ENG-2553). The probe after boot reports
-        # which of the two you got.
-        required: false
   workflow_dispatch:
 
 permissions:
@@ -110,24 +102,14 @@ jobs:
       - name: Point .env at the CI services
         if: steps.harness.outputs.present == 'true'
         shell: bash
-        # The license reaches the script through `env`, never interpolated into the command: a `${{ }}`
-        # secret pasted into a `sed` expression both breaks on its own metacharacters and is the pattern
-        # GitHub's hardening guidance tells you not to write.
-        env:
-          ENTERPRISE_LICENSE_KEY: ${{ secrets.ENTERPRISE_LICENSE_KEY }}
         run: |
           sed -i "s|REDIS_URL=.*|REDIS_URL=redis://localhost:6379|" .env
-          sed -i "/^ENTERPRISE_LICENSE_KEY=/d" .env
-          printf 'ENTERPRISE_LICENSE_KEY=%s\n' "${ENTERPRISE_LICENSE_KEY}" >> .env
           # A burst of cases would otherwise trip the limiter and turn most operations into
           # documented-but-uninteresting 429s.
           echo "RATE_LIMITING_DISABLED=1" >> .env
           sed -i "s|AUTHZED_CONSISTENCY=.*|AUTHZED_CONSISTENCY=fully_consistent|" .env
-          # Not about running Playwright: this is the flag that stops the app sending an instanceId
-          # alongside the shared licence key (license.ts — "Skip instance ID during E2E tests to avoid
-          # license key conflicts"). Without it the licence server answers 403 "bound to another
-          # instance", every entitlement falls back to DEFAULT_FEATURES, and the 13 workflow
-          # operations plus contacts are only ever checked against their documented 403.
+          # The same build e2e.yml tests: E2E_TESTING keeps the loopback sources in the CSP
+          # (apps/web/next.config.mjs) for an instance served from localhost.
           echo "E2E_TESTING=1" >> .env
 
       - name: Build App
@@ -246,22 +228,23 @@ jobs:
             exit 1
           fi
 
-          # Entitlement-gated operations answer a documented 403 when the licence does not grant the
-          # feature, so the suite stays green while testing half the contract shallowly. Probe one of
-          # them and say so out loud, rather than leaving that to whoever reads the warnings.
+          # Operations behind a GForms feature flag (apps/web/modules/features/lib/flags.ts) answer a
+          # documented 403 while the flag is off, so the suite stays green while testing them
+          # shallowly. Probe one of them and say so out loud, rather than leaving that to whoever reads
+          # the warnings.
           workflows_status=$(curl -o /tmp/preflight-workflows.json -s -w "%{http_code}" \
             -H "x-api-key: fbk_${SEED_API_KEY}" \
             "http://localhost:3000/api/v3/workflows?workspaceId=${workspace_id}&limit=1")
           if [ "${workflows_status}" -eq 200 ]; then
-            echo "::notice::Workflows entitlement active — the 13 workflow operations run against real data."
+            echo "::notice::Workflows feature on: the 13 workflow operations run against real data."
           elif [ "${workflows_status}" -eq 403 ]; then
-            echo "::warning::Workflows entitlement inactive (GET /api/v3/workflows → ${workflows_status}). The 13 workflow operations are only checked against their documented 403."
+            echo "::warning::Workflows feature off (GET /api/v3/workflows answered ${workflows_status}). The 13 workflow operations are only checked against their documented 403."
             cat /tmp/preflight-workflows.json
           else
-            # Anything else is a setup failure, not an entitlement answer. Treating it as "inactive"
-            # would let a 401 or 404 pass as a warning and the run go green having never exercised the
-            # workflow fixtures at all — the shallow-green outcome this whole job exists to prevent.
-            echo "::error::Workflow entitlement probe returned ${workflows_status}, expected 200 or 403."
+            # Anything else is a setup failure, not a feature answer. Treating it as "off" would let a
+            # 401 or 404 pass as a warning and the run go green having never exercised the workflow
+            # fixtures at all: the shallow-green outcome this whole job exists to prevent.
+            echo "::error::Workflow feature probe returned ${workflows_status}, expected 200 or 403."
             cat /tmp/preflight-workflows.json
             exit 1
           fi
@@ -363,7 +346,7 @@ jobs:
           if-no-files-found: ignore
           path: schemathesis-report/
 
-      # Failure only. A green run's log has nothing to say that the entitlement probe above does not,
+      # Failure only. A green run's log has nothing to say that the feature probe above does not,
       # and an application log is the wrong thing to ship as an artifact on every green PR.
       - name: Upload app logs
         if: failure() && steps.harness.outputs.present == 'true'
