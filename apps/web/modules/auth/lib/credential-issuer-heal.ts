@@ -7,7 +7,7 @@ import type { AuthHookContext } from "@/modules/auth/lib/auth-hook-context";
  * The `Account.issuer` a 1.7.0 pod expects on a credential row. Better Auth 1.7.3+ dropped the column from its
  * model (and the `createLocalAccountIssuer` export), so this is the literal the ENG-2343 backfill wrote.
  */
-const LOCAL_CREDENTIAL_ISSUER = "local:credential";
+export const LOCAL_CREDENTIAL_ISSUER = "local:credential";
 
 /** Sign-in and the reset-link request: the two doors a user with a NULL-issuer credential row is stuck at. */
 const HEALED_PATHS = new Set(["/sign-in/email", "/request-password-reset"]);

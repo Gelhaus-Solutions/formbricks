@@ -2,15 +2,14 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@formbricks/database";
 import { resetDb } from "@/integration/reset-db";
 import { auth } from "@/modules/auth/lib/auth";
-import { runWithSsoRequestContext } from "@/modules/ee/sso/lib/sso-request-context";
 import { sendVerificationLinkEmail } from "@/modules/email";
 
 /**
  * ENG-3988: there is exactly one way to create a credential account, and it is `createUserAction`.
  *
  * Better Auth's native `POST /api/auth/sign-up/email` used to be a second way in. On Cloud it skipped
- * everything the action enforces — Turnstile, `ZUserEmail`/`ZUserPassword`, the app-level IP limit, org
- * provisioning and the audit entry — and still created the account. It is closed with `disabledPaths`,
+ * everything the action enforces (Turnstile, `ZUserEmail`/`ZUserPassword`, the app-level IP limit, org
+ * provisioning and the audit entry) and still created the account. It is closed with `disabledPaths`,
  * which only Better Auth's HTTP router reads; this suite proves both halves against the real `auth`
  * instance: the route is gone, and the in-process call the action makes is not.
  *
@@ -32,14 +31,12 @@ const EMAIL = "scripted@corporate-example.com";
 
 /** The request from the report: no Turnstile token, a password `ZUserPassword` would refuse. */
 const rawSignUp = (path: string, email: string): Promise<Response> =>
-  runWithSsoRequestContext(() =>
-    auth.handler(
-      new Request(`${ORIGIN}${path}`, {
-        method: "POST",
-        headers: { "content-type": "application/json", origin: ORIGIN },
-        body: JSON.stringify({ email, password: "password", name: "Scripted" }),
-      })
-    )
+  auth.handler(
+    new Request(`${ORIGIN}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: ORIGIN },
+      body: JSON.stringify({ email, password: "password", name: "Scripted" }),
+    })
   );
 
 beforeEach(async () => {

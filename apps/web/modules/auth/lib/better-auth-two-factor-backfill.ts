@@ -6,13 +6,13 @@ import type { AuthHookContext } from "@/modules/auth/lib/auth-hook-context";
 import { buildReencodedTwoFactorData } from "@/modules/auth/lib/cutover/reencode-two-factor";
 
 /**
- * ENG-1824 self-heal. The custom 2FA enable flow (`modules/ee/two-factor-auth`) historically wrote the
+ * ENG-1824 self-heal. The custom 2FA enable flow (the removed Enterprise two-factor module) historically wrote the
  * secret only to the legacy `User.twoFactorSecret` column, but login verifies via Better Auth's
  * `twoFactor` plugin, which reads the `TwoFactor` table. Users who enabled 2FA before the enable-path
  * bridge landed have the legacy columns but no `TwoFactor` row, so login throws "TOTP not enabled".
  *
  * This lazily re-encodes their existing secret + backup codes into the `TwoFactor` table on their next
- * successful password sign-in — no data migration, no re-enrollment — so the `/two-factor/verify-*`
+ * successful password sign-in (no data migration, no re-enrollment), so the `/two-factor/verify-*`
  * step that follows finds a row and succeeds. Idempotent (`TwoFactor.userId` is `@@unique`).
  *
  * Runs as a `hooks.after` on `/sign-in/email` and ONLY when that sign-in succeeded (password verified):
@@ -37,7 +37,7 @@ export const twoFactorBackfillAfterHandler = async (ctx: AuthHookContext): Promi
   // a persistent failure surfaces as the pre-existing "TOTP not enabled" rather than a 500.
   try {
     // One indexed lookup on each successful password sign-in (a small, deliberate cost for this
-    // temporary heal shim — it can be removed together with the legacy `User.twoFactor*` columns once
+    // temporary heal shim: it can be removed together with the legacy `User.twoFactor*` columns once
     // all enrollments are migrated). Case-insensitive so we match the same account the sign-in did,
     // whatever the stored email case; emails are unique, so this resolves to exactly one user.
     const user = await prisma.user.findFirst({

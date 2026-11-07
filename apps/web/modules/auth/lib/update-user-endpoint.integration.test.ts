@@ -2,21 +2,20 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { prisma } from "@formbricks/database";
 import { resetDb } from "@/integration/reset-db";
 import { auth } from "@/modules/auth/lib/auth";
-import { runWithSsoRequestContext } from "@/modules/ee/sso/lib/sso-request-context";
 
 /**
  * ENG-3189 at the FRAMEWORK boundary: Better Auth's native `POST /update-user` against a real
  * Postgres, with no `updateUserAction` in the way.
  *
- * That endpoint is where the bug lived, so it is the boundary the regression test drives. The SSO name
- * lock is enforced in `updateUserAction`, and the profile form renders the input disabled — but
+ * That endpoint is where the bug lived, so it is the boundary the regression test drives. Profile writes
+ * belong to `updateUserAction`, which audits and rate-limits them, but
  * `app/api/auth/[...all]/route.ts` mounts `auth.handler` raw, so Better Auth served `/update-user`
  * beside our own surface and an authenticated `fetch` from the browser console wrote the name anyway
  * (200, unaudited), or threw an unhandled 500 on `image`, which `User` has no column for.
  *
  * Driven through `auth.handler` with a real `Request` rather than `auth.api.updateUser`: the fix is
  * `disabledPaths`, which Better Auth applies in the HTTP router alone (`api/index.mjs`), so only this
- * layer can show it — and the status code an attacker receives is the assertion that matters.
+ * layer can show it, and the status code an attacker receives is the assertion that matters.
  */
 const UPDATE_USER_URL = "http://localhost:3000/api/auth/update-user";
 const ORIGIN = "http://localhost:3000";
@@ -26,7 +25,7 @@ const PASSWORD = "Correct-Horse1";
 const IDP_NAME = "Ada Lovelace";
 
 /**
- * An SSO user who is signed in — the state the report was filed from.
+ * An SSO user who is signed in: the state the report was filed from.
  *
  * Built by signing up with credentials and then flipping `identityProvider`, because an SSO sign-up
  * needs a live IdP. The session is what the endpoint authenticates against and it survives the flip,
@@ -53,14 +52,12 @@ const signedInSsoUser = async (): Promise<string> => {
 
 /** The authenticated POST from the bug report, verbatim in shape. */
 const rawUpdateUser = (cookieHeader: string, body: Record<string, unknown>): Promise<Response> =>
-  runWithSsoRequestContext(() =>
-    auth.handler(
-      new Request(UPDATE_USER_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json", origin: ORIGIN, cookie: cookieHeader },
-        body: JSON.stringify(body),
-      })
-    )
+  auth.handler(
+    new Request(UPDATE_USER_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: ORIGIN, cookie: cookieHeader },
+      body: JSON.stringify(body),
+    })
   );
 
 const storedName = async (): Promise<string | null> =>
@@ -86,7 +83,7 @@ describe("raw Better Auth /update-user (real Postgres)", () => {
 
     const response = await rawUpdateUser(cookieHeader, { image: "https://example.com/x.png" });
 
-    // Before the fix: 500 with an empty body — the write reached Prisma for a column `User` lacks.
+    // Before the fix: 500 with an empty body: the write reached Prisma for a column `User` lacks.
     expect(response.status).toBe(404);
   });
 

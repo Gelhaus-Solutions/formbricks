@@ -10,9 +10,8 @@ import {
 // guard in front of them, and the guard answers before any of these is reached. If a route lost its
 // wrapper, the oversized request below would land in one of these mocks (or a real dependency that is not
 // built for it) and the assertions on `handlerCalls` and the 413 would fail.
-const { handlerCalls, jacksonMock, prepareDcrRequestMock } = vi.hoisted(() => ({
+const { handlerCalls, prepareDcrRequestMock } = vi.hoisted(() => ({
   handlerCalls: vi.fn(),
-  jacksonMock: vi.fn(),
   prepareDcrRequestMock: vi.fn(async (request: Request) => request),
 }));
 
@@ -26,14 +25,8 @@ vi.mock("@/modules/auth/lib/auth", () => ({
   },
 }));
 vi.mock("@/modules/auth/lib/mcp-dcr-application-type", () => ({ prepareDcrRequest: prepareDcrRequestMock }));
-vi.mock("@/modules/ee/auth/saml/lib/jackson", () => ({ default: jacksonMock }));
 vi.mock("@/modules/auth/lib/session", () => ({ getSession: vi.fn() }));
 vi.mock("@/modules/auth/lib/session-revocation", () => ({ revokeSessionByToken: vi.fn() }));
-vi.mock("@/modules/ee/sso/lib/sso-recovery", () => ({
-  SsoRecoveryError: class extends Error {},
-  completeSsoRecovery: vi.fn(),
-  getSsoRecoveryFailureRedirectUrl: vi.fn(() => "http://localhost/auth/login"),
-}));
 
 type RouteModule = Record<string, unknown>;
 
@@ -67,14 +60,7 @@ describe("/api/auth route surface", () => {
   });
 
   test("finds the routes it is meant to guard", () => {
-    expect(routeFiles).toEqual([
-      "./[...all]/route.ts",
-      "./saml/authorize/route.ts",
-      "./saml/callback/route.ts",
-      "./saml/token/route.ts",
-      "./saml/userinfo/route.ts",
-      "./sso/recovery/complete/route.ts",
-    ]);
+    expect(routeFiles).toEqual(["./[...all]/route.ts"]);
   });
 
   describe.each(routeFiles)("%s", (file) => {
@@ -107,42 +93,9 @@ describe("/api/auth route surface", () => {
         expect(response.status).toBe(413);
       }
       expect(handlerCalls).not.toHaveBeenCalled();
-      expect(jacksonMock).not.toHaveBeenCalled();
       expect(prepareDcrRequestMock).not.toHaveBeenCalled();
     }
   );
-
-  describe("the SAML callback, at the same boundary", () => {
-    const callback = (bytes: number) =>
-      new Request("http://localhost/api/auth/saml/callback", {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new Uint8Array(bytes),
-      });
-
-    test("a body of exactly the limit reaches the handler", async () => {
-      const { POST } = await loadRoute("./saml/callback/route.ts");
-
-      const response = await (POST as (request: Request) => Promise<Response>)(
-        callback(AUTH_REQUEST_BODY_LIMIT_BYTES)
-      );
-
-      // Not 413: the request reached the handler, which answers 403 because the licence mock has no SAML.
-      expect(response.status).toBe(403);
-      expect(jacksonMock).toHaveBeenCalledTimes(1);
-    });
-
-    test("one byte more is refused before jackson sees it", async () => {
-      const { POST } = await loadRoute("./saml/callback/route.ts");
-
-      const response = await (POST as (request: Request) => Promise<Response>)(
-        callback(AUTH_REQUEST_BODY_LIMIT_BYTES + 1)
-      );
-
-      expect(response.status).toBe(413);
-      expect(jacksonMock).not.toHaveBeenCalled();
-    });
-  });
 
   describe("the catch-all, at the boundary", () => {
     const register = (body: Uint8Array<ArrayBuffer>) =>

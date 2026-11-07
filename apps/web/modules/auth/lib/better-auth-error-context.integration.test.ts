@@ -6,11 +6,11 @@ import { auth } from "@/modules/auth/lib/auth";
 import { createAuthPathLabeller } from "@/modules/auth/lib/better-auth-path-label";
 
 /**
- * ENG-2259 / FORMBRICKS-183 — the endpoint label must survive the real Better Auth request.
+ * ENG-2259 / FORMBRICKS-183: the endpoint label must survive the real Better Auth request.
  *
  * This has to be an integration test. The question is whether the AsyncLocalStorage store opened by
  * the route is still readable by the time better-call's router catches an unexpected throw and calls
- * our logger — a chain that lives entirely inside `auth.handler`. A unit test with a mocked handler
+ * our logger, a chain that lives entirely inside `auth.handler`. A unit test with a mocked handler
  * asserts its own arrangement; only the real router can answer it.
  *
  * Kept in its own file rather than folded into better-auth-observability.integration.test.ts so the
@@ -26,14 +26,14 @@ vi.mock("@/lib/constants", async (importActual) => ({
 
 vi.mock("@sentry/nextjs", () => ({ captureException: vi.fn() }));
 
-// Fault injection: `ssoLicenseGateBeforeHandler` is the first thing hooks.before awaits and it runs on
-// every request, so throwing here produces a genuine non-APIError inside the router on whatever path
-// we drive — the same shape as the production fault (a TypeError from an awaited async auth path).
-// Spread the real module so ssoDatabaseHooks and the rest of auth.ts's wiring stay intact.
+// Fault injection: `requireDeletionConfirmationBeforeHandler` is the first thing hooks.before awaits and
+// it runs on every request, so throwing here produces a genuine non-APIError inside the router on
+// whatever path we drive: the same shape as the production fault (a TypeError from an awaited async auth
+// path). Spread the real module so the deletion config and the rest of auth.ts's wiring stay intact.
 const FAULT_MESSAGE = "Cannot read properties of null (reading 'id')";
-vi.mock("@/modules/ee/sso/lib/better-auth-hooks", async (importActual) => ({
-  ...(await importActual<typeof import("@/modules/ee/sso/lib/better-auth-hooks")>()),
-  ssoLicenseGateBeforeHandler: vi.fn(async () => {
+vi.mock("@/modules/account/lib/better-auth-account-deletion", async (importActual) => ({
+  ...(await importActual<typeof import("@/modules/account/lib/better-auth-account-deletion")>()),
+  requireDeletionConfirmationBeforeHandler: vi.fn(async () => {
     throw new TypeError(FAULT_MESSAGE);
   }),
 }));
@@ -46,7 +46,7 @@ const capturedFault = () => {
   return { error: call[0], context: call[1] as { tags?: Record<string, unknown> } | undefined };
 };
 
-describe("Better Auth internal fault — Sentry capture carries the endpoint (real router)", () => {
+describe("Better Auth internal fault: Sentry capture carries the endpoint (real router)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -60,7 +60,7 @@ describe("Better Auth internal fault — Sentry capture carries the endpoint (re
       })
     );
 
-    // The fault is internal, so Better Auth answers 500 — and before ENG-2259 that was all we knew.
+    // The fault is internal, so Better Auth answers 500, and before ENG-2259 that was all we knew.
     expect(response.status).toBe(500);
 
     const { context } = capturedFault();
@@ -84,17 +84,18 @@ describe("Better Auth internal fault — Sentry capture carries the endpoint (re
     );
 
     const { context } = capturedFault();
-    // The endpoint is still named — only the secret in its path is dropped.
+    // The endpoint is still named; only the secret in its path is dropped.
     expect(context?.tags).toMatchObject({ "auth.path": "/reset-password/*", "http.method": "GET" });
     // Belt and braces: nothing anywhere in the captured payload, tags or extra.
     expect(JSON.stringify(context)).not.toContain(token);
     expect(JSON.stringify(context)).not.toContain(callbackSecret);
   });
 
-  test("a handled APIError is still not captured — the ENG-2037 gate is unchanged", async () => {
-    const { ssoLicenseGateBeforeHandler } = await import("@/modules/ee/sso/lib/better-auth-hooks");
-    vi.mocked(ssoLicenseGateBeforeHandler).mockImplementationOnce(async () => {
-      throw new APIError("FORBIDDEN", { message: "SSO is not enabled for this instance." });
+  test("a handled APIError is still not captured: the ENG-2037 gate is unchanged", async () => {
+    const { requireDeletionConfirmationBeforeHandler } =
+      await import("@/modules/account/lib/better-auth-account-deletion");
+    vi.mocked(requireDeletionConfirmationBeforeHandler).mockImplementationOnce(async () => {
+      throw new APIError("FORBIDDEN", { message: "Confirm the deletion first." });
     });
 
     const response = await POST(
@@ -112,8 +113,8 @@ describe("Better Auth internal fault — Sentry capture carries the endpoint (re
 
 /**
  * The labeller's unit tests prove the rules against a hand-written fixture, which cannot notice the
- * registry changing underneath them: a Better Auth upgrade that adds a parameterized endpoint — or
- * moves a parameter to the first segment — leaves every one of them green. These bind the same rules
+ * registry changing underneath them: a Better Auth upgrade that adds a parameterized endpoint (or
+ * moves a parameter to the first segment) leaves every one of them green. These bind the same rules
  * to the REAL registry, so the upgrade breaks a test instead of leaking quietly.
  */
 describe("the label vocabulary matches the real Better Auth registry", () => {
@@ -125,7 +126,7 @@ describe("the label vocabulary matches the real Better Auth registry", () => {
 
   test("the vocabulary is actually populated, and names a real endpoint in full", () => {
     // Guards the degenerate failure: if `auth` ever became lazy, the module-scope build in route.ts
-    // would read an empty registry and label every request "unknown" — degraded, not leaky, but
+    // would read an empty registry and label every request "unknown": degraded, not leaky, but
     // silently useless.
     expect(declaredPaths.length).toBeGreaterThan(50);
     expect(label("http://localhost/api/auth/sign-in/email")).toBe("/sign-in/email");

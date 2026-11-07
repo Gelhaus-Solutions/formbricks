@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@formbricks/database";
 import { resetDb } from "@/integration/reset-db";
 import { auth } from "@/modules/auth/lib/auth";
-import { runWithSsoRequestContext } from "@/modules/ee/sso/lib/sso-request-context";
 
 /**
  * ENG-2293 at the FRAMEWORK boundary: Better Auth's native `/sign-up/email` against a real Postgres, with
@@ -23,7 +22,7 @@ import { runWithSsoRequestContext } from "@/modules/ee/sso/lib/sso-request-conte
  * A CLOSED self-hosted instance. `SIGNUP_ENABLED` is derived
  * (`IS_FORMBRICKS_CLOUD || IS_DEVELOPMENT || E2E_TESTING`) and so is already false under vitest, but
  * pin it: this suite is meaningless if an env change quietly opens sign-up, and a passing test would
- * then prove nothing. Multi-org is forced off for the same reason — with it on, public sign-up counts
+ * then prove nothing. Multi-org is forced off for the same reason: with it on, public sign-up counts
  * as open and every assertion below would invert.
  */
 vi.mock("@/lib/constants", async (importOriginal) => ({
@@ -42,16 +41,14 @@ const INTRUDER = "intruder@corporate-example.com";
 
 const SIGNUP_URL = "http://localhost:3000/api/auth/sign-up/email";
 
-/** An unauthenticated POST to the mounted route — the request ENG-2293 was reported against. */
+/** An unauthenticated POST to the mounted route: the request ENG-2293 was reported against. */
 const rawSignUp = (email: string): Promise<Response> =>
-  runWithSsoRequestContext(() =>
-    auth.handler(
-      new Request(SIGNUP_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json", origin: "http://localhost:3000" },
-        body: JSON.stringify({ email, password: PASSWORD, name: "Someone" }),
-      })
-    )
+  auth.handler(
+    new Request(SIGNUP_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "http://localhost:3000" },
+      body: JSON.stringify({ email, password: PASSWORD, name: "Someone" }),
+    })
   );
 
 /**
@@ -119,7 +116,7 @@ describe("native Better Auth sign-up on a closed instance (real Postgres)", () =
    * The reason the gate runs in `hooks.before` and not only in `databaseHooks.user.create.before`.
    *
    * Better Auth looks the address up before it creates anything, and answers an address that already
-   * has an account with a synthetic 200 without writing a row — so no create hook ever runs for it
+   * has an account with a synthetic 200 without writing a row, so no create hook ever runs for it
    * (see signup-duplicate-email.integration.test.ts, which pins that contract). A gate placed in the
    * create hook is therefore reachable only for addresses that do NOT exist, and Better Auth turns a
    * 403 from that hook into the same synthetic 200, so the rejection would be a fake success. The gate
@@ -130,7 +127,7 @@ describe("native Better Auth sign-up on a closed instance (real Postgres)", () =
     await inProcessSignUp(ADMIN);
     expect(await userCount(ADMIN)).toBe(1);
 
-    const registered = await inProcessSignUp(ADMIN); // exists — would be a synthetic 200
+    const registered = await inProcessSignUp(ADMIN); // exists, would be a synthetic 200
     const unregistered = await inProcessSignUp(INTRUDER); // does not exist
 
     expect(registered.status).toBe(403);
