@@ -10,7 +10,7 @@ import {
   type TQuotaEvaluationContext,
   evaluateResponseQuotas,
   loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+} from "@/modules/quotas/lib/evaluation-service";
 
 type TQuotaEvaluationResponseInput = {
   surveyId: string;
@@ -77,7 +77,7 @@ export const createResponseWithQuotaEvaluation = async <TInput extends TQuotaEva
   ingestFlags?: readonly TIngestFlag[],
   // Callers that persist a response as part of a larger all-or-nothing write pass their own
   // transaction so the response and their surrounding rows share one commit. Prisma has no nested
-  // interactive transactions, so opening a second one here would commit independently — the caller's
+  // interactive transactions, so opening a second one here would commit independently; the caller's
   // rollback would then leave the response behind. Omitted by the request paths, which own a single
   // response each and get their own transaction below. The quota and response contexts come with it
   // because both must be read before that transaction opened.

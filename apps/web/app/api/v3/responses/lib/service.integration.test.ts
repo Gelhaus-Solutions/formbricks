@@ -10,7 +10,7 @@ import { deleteScopedResponse, deleteScopedResponses, getResponseWorkspaceId } f
  * The unit tests assert the shape of the `where` clause handed to Prisma. That is not the same as
  * proving Prisma honours it: `delete` classically required a unique filter, and the extra
  * `survey: { workspaceId }` is a *non-unique* filter riding alongside the id. If the client were to
- * ignore it — or a future version were to stop supporting it — the scoping would silently become a
+ * ignore it (or a future version were to stop supporting it), the scoping would silently become a
  * no-op, every unit test would still pass, and `DELETE /api/v3/responses/{id}` would delete any
  * response in the instance for any caller who could name it.
  *
@@ -41,7 +41,7 @@ describe("deleteScopedResponse tenancy, against real Postgres", () => {
     const mine = await makeWorkspaceWithResponse("Mine");
     const theirs = await makeWorkspaceWithResponse("Theirs");
 
-    // The caller is authorized for their own workspace and names someone else's response — the exact
+    // The caller is authorized for their own workspace and names someone else's response: the exact
     // shape of a cross-tenant delete attempt.
     await expect(
       deleteScopedResponse(theirs.responseId, { workspaceId: mine.workspaceId })
@@ -66,7 +66,7 @@ describe("deleteScopedResponse tenancy, against real Postgres", () => {
 
   /**
    * The two failures a caller must not be able to tell apart. Both raise the same error class here, and
-   * the operations layer renders both as the same 403 body — but the divergence would start at this
+   * the operations layer renders both as the same 403 body, but the divergence would start at this
    * layer, so it is pinned at this layer too.
    */
   test("a foreign response and a nonexistent one fail identically", async () => {
@@ -97,7 +97,7 @@ describe("deleteScopedResponse tenancy, against real Postgres", () => {
  * The quota effect, measured rather than mocked.
  *
  * A unit test that spies on `reduceQuotaLimits` can only observe *whether* it was called, never which
- * direction the capacity moved — which is exactly how an earlier version of this service shipped a
+ * direction the capacity moved, which is exactly how an earlier version of this service shipped a
  * decrement that cancelled the slot the cascade had just freed. These assertions read `SurveyQuota` and
  * the live `ResponseQuotaLink` rows after the delete, so they fail if that decrement ever comes back.
  */
@@ -134,7 +134,7 @@ describe("deleteScopedResponse quota effects, against real Postgres", () => {
     const screenedInCount = await prisma.responseQuotaLink.count({
       where: { quotaId, status: "screenedIn" },
     });
-    // The repo's only fullness predicate, from `modules/ee/quotas/lib/utils.ts`.
+    // A quota is full when its screened-in links reach its limit.
     return { limit: quota.limit, screenedInCount, isFull: screenedInCount >= quota.limit };
   };
 
@@ -146,7 +146,7 @@ describe("deleteScopedResponse quota effects, against real Postgres", () => {
     await deleteScopedResponse(responseIds[0], { workspaceId });
 
     // The cascade drops the link, which is what frees the slot. `limit` is the customer's configured
-    // target and must survive untouched — decrementing it here would leave `isFull` true and the
+    // target and must survive untouched: decrementing it here would leave `isFull` true and the
     // capacity permanently gone.
     expect(await readQuotaState(quotaId)).toStrictEqual({ limit: 3, screenedInCount: 2, isFull: false });
   });
@@ -236,7 +236,7 @@ describe("deleteScopedResponses, against real Postgres", () => {
 
   /**
    * The whole reason the operation scope-filters instead of rejecting. A batch mixing a foreign id in
-   * must delete the caller's own and leave the other alone — not refuse, which would leak that the id
+   * must delete the caller's own and leave the other alone, not refuse, which would leak that the id
    * exists, and not delete it, which is the cross-tenant bug.
    */
   test("ignores another workspace's ids instead of refusing or deleting them", async () => {
@@ -276,7 +276,7 @@ describe("deleteScopedResponses, against real Postgres", () => {
   });
 
   /**
-   * What this pins is that displays are removed rather than orphaned — the batch reads `displayId`
+   * What this pins is that displays are removed rather than orphaned: the batch reads `displayId`
    * off rows that are about to vanish, so missing that step leaves a dangling display behind and
    * nothing else notices.
    *
@@ -347,7 +347,7 @@ describe("deleteScopedResponses, against real Postgres", () => {
   /**
    * Same decision as the single delete: the cascade on `ResponseQuotaLink` frees the slot, and
    * decrementing `SurveyQuota.limit` on top of it would cancel that and shrink a customer-configured
-   * setting. A batch makes the ratchet worse — 100 deletes would be 100 decrements.
+   * setting. A batch makes the ratchet worse: 100 deletes would be 100 decrements.
    */
   test("never shrinks a quota's configured limit", async () => {
     const mine = await makeWorkspace("Mine");

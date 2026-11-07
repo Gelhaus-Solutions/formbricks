@@ -71,7 +71,7 @@ vi.mock("@/modules/deletion-cleanup/lib/enqueue", () => ({
   enqueueResponseOutcomeCleanups: mockEnqueueOutcomeCleanups,
 }));
 vi.mock("@/modules/deletion-cleanup/lib/drain", () => ({ drainDeletionCleanups: mockDrainCleanups }));
-vi.mock("@/modules/ee/quotas/lib/evaluation-service", () => ({
+vi.mock("@/modules/quotas/lib/evaluation-service", () => ({
   evaluateResponseQuotas: mockEvaluateQuotas,
   loadQuotaEvaluationContext: mockLoadQuotaContext,
 }));
@@ -101,8 +101,8 @@ const knownRequestError = (message: string, code: string, meta?: Record<string, 
  * A P2002 in the shape THIS repo actually produces.
  *
  * Prisma 7 + `@prisma/adapter-pg` leaves `meta.target` absent and puts the columns at
- * `meta.driverAdapterError.cause.constraint.fields`, still quoted exactly as Postgres emitted them
- * — the adapter scrapes them out of the error DETAIL and never unquotes. A handler written against
+ * `meta.driverAdapterError.cause.constraint.fields`, still quoted exactly as Postgres emitted them:
+ * the adapter scrapes them out of the error DETAIL and never unquotes. A handler written against
  * `meta.target` matches nothing here, which is a 500 on every real race.
  */
 const adapterUniqueError = (...fields: string[]) =>
@@ -119,7 +119,7 @@ const survey = {
   workspaceId: "clws000000000000000000001",
 } as unknown as TV3WriteSurveyRow;
 
-/** A read-back row in the exact shape `v3WriteReadbackSelect` produces — join rows and all. */
+/** A read-back row in the exact shape `v3WriteReadbackSelect` produces, join rows and all. */
 const readbackRow = (over: Record<string, unknown> = {}): TV3WriteReadbackRow =>
   ({
     id: "clrs000000000000000000001",
@@ -154,7 +154,7 @@ const readbackRow = (over: Record<string, unknown> = {}): TV3WriteReadbackRow =>
 
 /**
  * A transaction client stub, so the callback the service passes to `$transaction` actually runs.
- * Mocking `$transaction` to resolve or reject skips the body entirely — which is where the scoped
+ * Mocking `$transaction` to resolve or reject skips the body entirely, which is where the scoped
  * `where` clauses, the tag join shape and the reference checks all live.
  */
 const txStub = (over: Record<string, unknown> = {}) => ({
@@ -205,7 +205,7 @@ beforeEach(() => {
 describe("unique-constraint races", () => {
   /**
    * `POST` and `PATCH` document no 409, so a race lost to a concurrent write has to land on the same
-   * 422 the pre-check would have produced — otherwise losing the race is distinguishable from losing
+   * 422 the pre-check would have produced; otherwise losing the race is distinguishable from losing
    * the check, and the endpoint answers a status its own contract does not list.
    */
   test("a singleUseId collision becomes the same 422 issue the pre-check raises", async () => {
@@ -234,7 +234,7 @@ describe("unique-constraint races", () => {
   });
 
   /**
-   * The index name is internal, and the Postgres DETAIL behind it carries the offending VALUES —
+   * The index name is internal, and the Postgres DETAIL behind it carries the offending VALUES:
    * `Key ("surveyId", "singleUseId")=(…, …) already exists`, i.e. the single-use token itself.
    * Neither may reach the body, which is why only the structured column list is read.
    */
@@ -290,7 +290,7 @@ describe("unique-constraint races", () => {
 
   /**
    * The scoped `where` carries `survey: { workspaceId }`, so P2025 means the row is gone or was never
-   * this caller's — the same fact a pre-flight rejection establishes, and it has to answer the same
+   * this caller's: the same fact a pre-flight rejection establishes, and it has to answer the same
    * 403. `mapV3ThrownError` does not map raw Prisma errors, so without this translation the caller
    * got a 500 instead of the 403 the scoped update's own comment promises.
    */
@@ -327,7 +327,7 @@ describe("unique-constraint races", () => {
     ).rejects.toThrow("fk violated");
   });
 
-  /** Duplicates in a patch are redundant, not an error — the join table's PK says otherwise. */
+  /** Duplicates in a patch are redundant, not an error: the join table's PK says otherwise. */
   test("a repeated tag id is deduplicated before the join rows are written", async () => {
     const tx = runTx(txStub({ tag: { findMany: vi.fn().mockResolvedValue([{ id: "cltg1" }]) } }));
 
@@ -348,7 +348,7 @@ describe("unique-constraint races", () => {
 describe("dispatchV3ResponsePipeline", () => {
   /**
    * The row is already committed. A 500 here tells a caller its write failed when it did not, and the
-   * retry that follows creates a second response — a missed webhook is recoverable, a duplicated
+   * retry that follows creates a second response; a missed webhook is recoverable, a duplicated
    * submission is not. `sendToPipeline` rethrows, so this has to be caught somewhere.
    */
   test("a queueing failure does not fail the request", async () => {
@@ -401,7 +401,7 @@ describe("toV3PipelineResponse", () => {
   /**
    * The guard for the defect a live create exposed. `enqueueResponsePipeline` parses its payload
    * against `ZResponse` in-request, and the stored row's `tags` are join rows while `contact` carries
-   * an attribute row. Handing the raw row over throws inside `sendToPipeline` — and because dispatch
+   * an attribute row. Handing the raw row over throws inside `sendToPipeline`, and because dispatch
    * is deliberately non-fatal, the create still answered 201 while no webhook, integration,
    * follow-up or Hub ingestion ran, with nothing in the reply to say so.
    */
@@ -439,7 +439,7 @@ describe("toV3PipelineResponse", () => {
   });
 });
 
-describe("createScopedResponse — what actually reaches Prisma", () => {
+describe("createScopedResponse: what actually reaches Prisma", () => {
   test("tags are written as join rows in the same transaction", async () => {
     const tx = runTx(txStub({ tag: { findMany: vi.fn().mockResolvedValue([{ id: "cltg1" }]) } }));
 
@@ -456,7 +456,7 @@ describe("createScopedResponse — what actually reaches Prisma", () => {
    * refuse a foreign reference with a 422, so these assertions are about the second layer: the write
    * itself re-states the tenant predicate, so a reference that stops matching between check and write
    * cannot attach, and the guarantee survives someone moving or dropping the checks. Verified against
-   * a real database separately — a foreign scope raises P2025 and leaves no row.
+   * a real database separately: a foreign scope raises P2025 and leaves no row.
    *
    * `display` is scoped by survey and by `response: null`, not by workspace: Display carries no
    * `workspaceId`, and workspace-only scoping loses the cross-survey check ENG-825 was about and the
@@ -576,7 +576,7 @@ describe("createScopedResponse — what actually reaches Prisma", () => {
 
   /**
    * The select's shape was guarded; passing it on was not. Dropping the `response:` argument from
-   * both call sites left the suite green, because `response` is optional on the evaluator — and with
+   * both call sites left the suite green, because `response` is optional on the evaluator, and with
    * it absent every `reserved` operand resolves unset, which is the exact failure the wide select
    * exists to prevent. Assert the row arrives, not just that it was selected.
    */
@@ -605,7 +605,7 @@ describe("createScopedResponse — what actually reaches Prisma", () => {
    * The columns are the behaviour here, not an implementation detail: `reserved` operands resolve
    * through accessors that read `meta.*`, `ttc` and the timestamps off this row, and each one is
    * wrapped in a `try`/`catch` answering `undefined`. Selected down to four columns the write does
-   * not fail — every reserved operand just reads as unset, so a quota on `country` or `browser`
+   * not fail: every reserved operand just reads as unset, so a quota on `country` or `browser`
    * silently counts nothing on the v3 path while it still counts on v1 and v2.
    */
   test("the written row is selected with the columns reserved quota operands read", async () => {
@@ -621,7 +621,7 @@ describe("createScopedResponse — what actually reaches Prisma", () => {
   });
 });
 
-describe("updateScopedResponse — replaced Signature images (ENG-6810)", () => {
+describe("updateScopedResponse: replaced Signature images (ENG-6810)", () => {
   const oldImage = "/storage/ws/private/surveys/svy/elements/sig/signature--fid--old.png";
 
   test("queues the cleanup in the transaction, after the write, from the stored to the written data", async () => {
@@ -695,7 +695,7 @@ describe("updateScopedResponse — replaced Signature images (ENG-6810)", () => 
   });
 });
 
-describe("updateScopedResponse — what actually reaches Prisma", () => {
+describe("updateScopedResponse: what actually reaches Prisma", () => {
   test("quota definitions are read before the transaction opens and handed to the evaluator (ENG-3285)", async () => {
     const quotaContext = { quotas: [], survey: { id: survey.id } };
     mockLoadQuotaContext.mockResolvedValueOnce(quotaContext);
@@ -979,7 +979,7 @@ describe("the batch outcome write", () => {
   });
 });
 
-describe("updateScopedResponse — the Feedback Record cleanup on an outcome change (ENG-6785)", () => {
+describe("updateScopedResponse: the Feedback Record cleanup on an outcome change (ENG-6785)", () => {
   const patchOutcome = (outcome: "lowQuality" | null) =>
     updateScopedResponse({
       responseId: "clrs1",

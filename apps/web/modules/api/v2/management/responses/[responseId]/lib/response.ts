@@ -13,11 +13,8 @@ import { getSurveyQuestions } from "@/modules/api/v2/management/responses/[respo
 import { findAndDeleteUploadedFilesInResponse } from "@/modules/api/v2/management/responses/[responseId]/lib/utils";
 import { ZResponseUpdateSchema } from "@/modules/api/v2/management/responses/[responseId]/types/responses";
 import { ApiErrorResponseV2 } from "@/modules/api/v2/types/api-error";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
 import { requestEmailAuditErasureRequired } from "@/modules/email/lib/email-audit-maintenance";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 import { enqueueReplacedSignatureFileCleanup } from "@/modules/storage/lib/replaced-signature-files";
 
 export const getResponse = reactCache(async (responseId: string) => {
@@ -148,13 +145,13 @@ export const deleteResponse = async (responseId: string): Promise<Result<Respons
 };
 
 // A rejected foreign key and a nonexistent one must be indistinguishable, so every failure below
-// is the same generic 404 — anything more specific would be a cross-tenant existence oracle.
+// is the same generic 404: anything more specific would be a cross-tenant existence oracle.
 const notFound = (field: string): ApiErrorResponseV2 => ({
   type: "not_found",
   details: [{ field, issue: "not found" }],
 });
 
-/** Either the request-scoped transaction client or the shared one — both satisfy these reads. */
+/** Either the request-scoped transaction client or the shared one; both satisfy these reads. */
 type ResponseDbClient = Prisma.TransactionClient | typeof prisma;
 
 /** The response's own tenant anchor, loaded once and shared by the FK checks below. */
@@ -185,8 +182,8 @@ const validateContactScope = async (
  * Deliberately does NOT require the display's contact to match the response's: the display is already
  * pinned to this response's workspace and survey, and a caller-supplied contactId is separately
  * scoped to the same workspace by validateContactScope, so a contact rule adds no tenant isolation
- * here. It would instead reject legitimate same-tenant edits — clearing contactId while keeping the
- * response's own display, or moving the response to another contact in the same workspace — and,
+ * here. It would instead reject legitimate same-tenant edits (clearing contactId while keeping the
+ * response's own display, or moving the response to another contact in the same workspace) and,
  * because the errors are deliberately uniform, report them as an undiagnosable 404 on displayId.
  * (assertDisplayOwnership enforces it on the create path, where a fresh display has no prior owner.)
  */
@@ -218,7 +215,7 @@ const validateDisplayScope = async (
 /**
  * ENG-1923: contactId and displayId are caller-supplied FKs mass-assigned into the update in
  * updateResponse. When either is present, verify it belongs to this response's own workspace/survey
- * before persisting — a caller authorized on this response must not be able to re-point it at
+ * before persisting: a caller authorized on this response must not be able to re-point it at
  * another tenant's contact or display (cross-tenant BOLA). surveyId is not updatable (omitted from
  * the schema), so the response's workspace anchor is stable.
  *
@@ -288,7 +285,7 @@ export const updateResponse = async (
       where: {
         id: responseId,
       },
-      // Canonicalize the language on write (ENG-1067) — see normalizeResponseLanguage.
+      // Canonicalize the language on write (ENG-1067): see normalizeResponseLanguage.
       data: { ...responseInput, language: normalizeResponseLanguage(responseInput.language) },
     });
 
@@ -324,7 +321,7 @@ export const updateResponse = async (
 };
 
 /**
- * `surveyId` is the stored response's survey, as the route already loaded it — passed in so the quota
+ * `surveyId` is the stored response's survey, as the route already loaded it, passed in so the quota
  * definitions are read before the transaction opens. Evaluation still checks it against the updated
  * row and skips on a mismatch.
  */

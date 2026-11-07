@@ -3,13 +3,10 @@ import { type TIngestFlag } from "@formbricks/types/embedded-data-ingest";
 import { TResponseWithQuotaFull } from "@formbricks/types/quota";
 import { TResponseUpdateInput } from "@formbricks/types/responses";
 import { updateResponse } from "@/lib/response/service";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 
 /**
- * `surveyId` is the stored response's survey, as the caller already loaded it — passed in so the quota
+ * `surveyId` is the stored response's survey, as the caller already loaded it, passed in so the quota
  * definitions are read before the transaction opens. Evaluation still checks it against the updated
  * row and skips on a mismatch.
  */

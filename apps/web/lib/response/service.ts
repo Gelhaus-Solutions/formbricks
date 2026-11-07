@@ -18,9 +18,9 @@ import {
 } from "@formbricks/types/responses";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { TTag } from "@formbricks/types/tags";
-import { reduceQuotaLimits } from "@/modules/ee/quotas/lib/quotas";
 import { requestEmailAuditErasureRequired } from "@/modules/email/lib/email-audit-maintenance";
 import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
+import { reduceQuotaLimits } from "@/modules/quotas/lib/quotas";
 import { deleteResponseFileUrls } from "@/modules/storage/lib/delete-response-files";
 import { enqueueReplacedSignatureFileCleanup } from "@/modules/storage/lib/replaced-signature-files";
 import {
@@ -305,7 +305,7 @@ export const getResponseSnapshotForPipeline = async (responseId: string): Promis
 
 // The full TEmbeddedValueResponse shape, so reserved values run through the shared projection
 // (redactQuery, type coercion) instead of raw meta reads (ENG-1848). Kept as a named selection so
-// the row type stays checked against TEmbeddedValueResponse — a field added there without being
+// the row type stays checked against TEmbeddedValueResponse: a field added there without being
 // selected here must fail the build, not read undefined at runtime.
 const filteringValuesSelection = {
   id: true,
@@ -572,7 +572,7 @@ export const getResponsesByWorkspaceId = reactCache(
  * `ingestFlags` is the Embedded Data ingest contract's verdict on `responseInput.data` (ENG-1845),
  * computed server-side by the caller and passed separately so it can never arrive from the client.
  *
- * Omitting it leaves the stored column untouched — the authenticated management routes update a
+ * Omitting it leaves the stored column untouched: the authenticated management routes update a
  * response without running the contract, and must not clear what a client ingest wrote. Passing it
  * unions by key: a key this payload rewrote takes its new verdict, including none at all, so a value
  * corrected on a later block stops being flagged.
@@ -616,7 +616,7 @@ export const updateResponse = async (
       : currentTtc;
     // Calculate total only when finished
     const ttc = responseInput.finished ? calculateTtcTotal(mergedTtc) : mergedTtc;
-    // Canonicalize on write (ENG-1067), same as response creation — see normalizeResponseLanguage.
+    // Canonicalize on write (ENG-1067), same as response creation: see normalizeResponseLanguage.
     const language = normalizeResponseLanguage(responseInput.language);
     const variables = {
       ...currentResponse.variables,
@@ -641,7 +641,7 @@ export const updateResponse = async (
         ttc,
         language,
         variables,
-        // Written whenever the contract ran, empty included — see `buildPrismaResponseData` for why
+        // Written whenever the contract ran, empty included: see `buildPrismaResponseData` for why
         // `null` has to stay reserved for "no ingest boundary has written this".
         ...(mergedIngestFlags !== undefined && { ingestFlags: mergedIngestFlags }),
       },

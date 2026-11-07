@@ -9,14 +9,14 @@ import {
   createResponseWithQuotaEvaluation,
   resolveCreateResponseContext,
 } from "@/app/api/v1/client/[workspaceId]/responses/lib/response";
-import { loadQuotaEvaluationContext } from "@/modules/ee/quotas/lib/evaluation-service";
+import { loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 
 /**
  * The dataset is written inside one interactive transaction, so these bound how long that transaction
  * may wait for a connection and how long it may run. The 20-response dataset issues a few hundred
  * statements; the generous ceiling exists so a slow database turns into a slower success rather than a
  * half-written batch, not because the write is expected to take that long. The LLM call is *not*
- * covered — it has already resolved by the time this runs.
+ * covered: it has already resolved by the time this runs.
  */
 const PERSIST_TRANSACTION_MAX_WAIT_MS = 10_000;
 const PERSIST_TRANSACTION_TIMEOUT_MS = 30_000;
@@ -30,15 +30,15 @@ export type TPersistExampleResponseDatasetArgs = {
 /**
  * Persists one generated example-response dataset as a single all-or-nothing write.
  *
- * Every row the dataset produces — the tag, each response's Display, the Response itself, its tag
- * link, its backdated `createdAt`, and the impression-only Displays — is written through one
+ * Every row the dataset produces (the tag, each response's Display, the Response itself, its tag
+ * link, its backdated `createdAt`, and the impression-only Displays) is written through one
  * transaction. A failure part-way through therefore leaves no synthetic rows behind, and the survey
  * stays eligible for another generation attempt instead of tripping the zero-response guard on a
  * partial batch (ENG-2147).
  *
  * `Response` children (`TagsOnResponses`, `ResponseQuotaLink`) cascade, so the rollback needs no
- * cleanup of its own. Synthetic responses never contain file uploads — no upload element type is
- * synthesizable — so there is nothing in object storage to unwind either.
+ * cleanup of its own. Synthetic responses never contain file uploads (no upload element type is
+ * synthesizable), so there is nothing in object storage to unwind either.
  */
 export const persistExampleResponseDataset = async ({
   surveyId,
@@ -66,8 +66,8 @@ export const persistExampleResponseDataset = async ({
 
       for (const item of dataset.responses) {
         // Each response gets its own Display so the dashboard's "displays" count and completion-rate
-        // calc line up with the response row. Backdate the display to the same moment as the response
-        // — the assertDisplayOwnership check inside createResponse runs against the matching surveyId.
+        // calc line up with the response row. Backdate the display to the same moment as the response:
+        // the assertDisplayOwnership check inside createResponse runs against the matching surveyId.
         const display = await tx.display.create({
           data: { survey: { connect: { id: surveyId } }, createdAt: item.createdAt },
           select: { id: true },

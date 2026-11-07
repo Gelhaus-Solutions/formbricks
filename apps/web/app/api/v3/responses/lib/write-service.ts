@@ -21,10 +21,7 @@ import { andVisibleSurveys } from "@/lib/survey/visibility/predicate";
 import { getUniqueConstraintFields, isUniqueConstraintError } from "@/lib/utils/prisma-constraint";
 import { drainDeletionCleanups } from "@/modules/deletion-cleanup/lib/drain";
 import { enqueueResponseOutcomeCleanups } from "@/modules/deletion-cleanup/lib/enqueue";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 import { enqueueReplacedSignatureFileCleanup } from "@/modules/storage/lib/replaced-signature-files";
 import { type TV3ResponseSurveyRow, v3ResponseReadSelect, v3ResponseSurveySelect } from "./service";
 
@@ -40,7 +37,7 @@ import { type TV3ResponseSurveyRow, v3ResponseReadSelect, v3ResponseSurveySelect
  * 1. **Reference checks run inside the transaction**, against the same snapshot the write uses. A
  *    `displayId` checked before the transaction can be claimed by a concurrent create in between.
  * 2. **Quota evaluation runs after the row exists**, in the same transaction, because a `reserved`
- *    quota operand resolves against the persisted row (ENG-1840) — and because it may itself flip
+ *    quota operand resolves against the persisted row (ENG-1840), and because it may itself flip
  *    `finished` to `true`.
  * 3. **Pipeline dispatch runs after commit**, and its `finished` comes from the row that was read
  *    back, never from the request body. A dispatch inside the transaction emits an event for a
@@ -107,12 +104,12 @@ export type TV3WriteReadbackRow = Prisma.ResponseGetPayload<{ select: typeof v3W
  * `buildServerEmbeddedValues`, whose catalog accessors read `meta.country`, `meta.url`,
  * `meta.userAgent.browser`, `createdAt`/`updatedAt` and `ttc` off this row. Every accessor is
  * wrapped in a `try`/`catch` that answers `undefined`, so a row missing those columns does not
- * fail — it silently resolves every reserved operand as unset, and a quota conditioned on one of
+ * fail: it silently resolves every reserved operand as unset, and a quota conditioned on one of
  * them counts nothing. v1 and v2 hand over the full row, so a narrower select here would make v3
  * the one write path where such a quota stops counting, with nothing logged.
  *
  * Shaped so `toQuotaEvaluationRow` can build a `TEmbeddedValueResponse` out of it without an escape
- * hatch — which is what makes a future narrowing of this select a build failure rather than a quota
+ * hatch, which is what makes a future narrowing of this select a build failure rather than a quota
  * that quietly stops matching.
  */
 const v3QuotaEvaluationSelect = {
@@ -166,7 +163,7 @@ export async function readbackV3Response(
 /**
  * Resolve the contact a create attributes the response to, and snapshot its attributes.
  *
- * Scoped to the caller's workspace, so "not in this workspace" and "does not exist" are one answer —
+ * Scoped to the caller's workspace, so "not in this workspace" and "does not exist" are one answer,
  * which is what keeps it from being an existence oracle for the tenant next door.
  */
 async function checkContact(
@@ -335,7 +332,7 @@ export async function collectReferenceIssues(
  * outright.
  *
  * The columns come from `getUniqueConstraintFields`, which is the one place in the codebase allowed
- * to touch Prisma's `error.meta` — a shape Prisma states is not public API and which differs by
+ * to touch Prisma's `error.meta`, a shape Prisma states is not public API and which differs by
  * engine and version. Reading `meta.target` directly, as the obvious version of this does, matches
  * nothing on this repo: under Prisma 7 + `@prisma/adapter-pg` that key is absent, and since 7.10 the
  * adapter reports only the constraint name (`meta.driverAdapterError.cause.constraint.index`), which
@@ -380,7 +377,7 @@ function raceIssuesFromUniqueViolation(error: unknown): InvalidParam[] | null {
  * A scoped write that matched no row.
  *
  * The update's `where` carries `survey: { workspaceId }`, so P2025 means the response is gone or was
- * never this caller's — the same fact a pre-flight rejection establishes, and it has to answer the
+ * never this caller's: the same fact a pre-flight rejection establishes, and it has to answer the
  * same 403. `mapV3ThrownError` does not map raw Prisma errors, so without this translation the
  * promise in the scoped-update comment is not kept and the caller gets a 500 instead.
  *
@@ -389,11 +386,11 @@ function raceIssuesFromUniqueViolation(error: unknown): InvalidParam[] | null {
  *
  * That answer is a 403, and it is **not** the body the routine case gets: a foreign reference caught
  * by the pre-flight is a 422 naming the field, which is what the contract documents. An earlier
- * version of this comment claimed the two matched — they do not, and the difference is worth being
+ * version of this comment claimed the two matched; they do not, and the difference is worth being
  * precise about, because it is a documented-status divergence rather than a cosmetic one.
  *
- * It is still the right answer. The divergence is reachable only by losing a race — the reference was
- * in scope when checked and out of scope by the time the row was written — and in that state the
+ * It is still the right answer. The divergence is reachable only by losing a race (the reference was
+ * in scope when checked and out of scope by the time the row was written), and in that state the
  * server cannot honestly say which field is at fault without re-reading and guessing. 403 with the
  * uniform body says the least, and says nothing a foreign-reference 403 elsewhere does not already
  * say. Which reference lost is recoverable from the logged Prisma error, and deliberately not from
@@ -430,7 +427,7 @@ export type TV3CreateResponsePersist = {
  * Create one response, its tags and its quota links in a single transaction.
  *
  * The quota step can flip `finished` to `true` on the row it just counted, so nothing downstream may
- * assume the request body's `finished` is what got stored — the caller reads the row back.
+ * assume the request body's `finished` is what got stored; the caller reads the row back.
  */
 export async function createScopedResponse(input: TV3CreateResponsePersist): Promise<TV3WriteOutcome> {
   const { workspaceId, survey, meta, tagIds, contactId, displayId, singleUseId } = input;
@@ -439,9 +436,9 @@ export async function createScopedResponse(input: TV3CreateResponsePersist): Pro
   // one. Create already refuses duplicates at the schema, but the patch deliberately allows them.
   const uniqueTagIds = [...new Set(tagIds)];
   // Already resolved to one of the survey's own declared codes by `resolveV3WriteLanguage`, so it is
-  // deliberately not canonicalized again here — that is what would push it out of the survey's set.
+  // deliberately not canonicalized again here: that is what would push it out of the survey's set.
   const language = input.language ?? null;
-  // Read before the transaction opens — see `TQuotaEvaluationContext`.
+  // Read before the transaction opens: see `TQuotaEvaluationContext`.
   const quotaContext = await loadQuotaEvaluationContext(survey.id);
 
   try {
@@ -466,12 +463,12 @@ export async function createScopedResponse(input: TV3CreateResponsePersist): Pro
           // refused a foreign reference with a 422 naming the field, so this is the second layer:
           // it re-states the tenant predicate inside the write, where it reaches the SQL and rolls
           // the whole create back with P2025 on a non-match. That closes the window between check
-          // and write, and — more to the point — it keeps holding if someone later moves, reorders
+          // and write, and (more to the point) it keeps holding if someone later moves, reorders
           // or forgets the checks. ENG-825, ENG-827 and ENG-1923 were all this shape.
           //
           // `display` is scoped by survey rather than workspace, and by `response: null`: Display has
           // no `workspaceId`, and workspace-only scoping would lose the cross-survey check ENG-825
-          // was about. Verified against a real database — a foreign `surveyId` and an already-claimed
+          // was about. Verified against a real database: a foreign `surveyId` and an already-claimed
           // display both raise P2025 and leave no row.
           ...(displayId
             ? { display: { connect: { id: displayId, surveyId: survey.id, response: null } } }
@@ -533,12 +530,12 @@ export type TV3UpdateResponsePersist = {
   responseId: string;
   workspaceId: string;
   survey: TV3WriteSurveyRow;
-  /** Only the keys the payload actually carried — an absent one must not be written as `undefined`. */
+  /** Only the keys the payload actually carried: an absent one must not be written as `undefined`. */
   patch: {
     finished?: boolean;
     endingId?: string | null;
     language?: string | null;
-    /** `null` restores — see `ResponseOutcome`. */
+    /** `null` restores: see `ResponseOutcome`. */
     outcome?: TResponseOutcome | null;
     data?: TResponseData;
     variables?: Record<string, TResponseDataValue>;
@@ -555,7 +552,7 @@ export type TV3UpdateResponsePersist = {
  * Apply a patch to one response, scoped, in a single transaction.
  *
  * `tags` is replace-the-set rather than add: the contract defines it as the complete set, so the
- * join rows are cleared and rewritten. Everything else is set only when the payload carried it —
+ * join rows are cleared and rewritten. Everything else is set only when the payload carried it;
  * spreading `undefined` into a Prisma `update` is the difference between "leave it" and "null it"
  * for the nullable columns, and `endingId` and `language` are both nullable.
  */
@@ -565,7 +562,7 @@ export async function updateScopedResponse({
   survey,
   patch,
 }: TV3UpdateResponsePersist): Promise<TV3WriteOutcome> {
-  // Read before the transaction opens — see `TQuotaEvaluationContext`.
+  // Read before the transaction opens: see `TQuotaEvaluationContext`.
   const quotaContext = await loadQuotaEvaluationContext(survey.id);
 
   try {
@@ -596,7 +593,7 @@ export async function updateScopedResponse({
         patch.outcome !== undefined &&
         (await readStoredOutcome(tx, responseId, workspaceId)) !== patch.outcome;
 
-      // Scoped `where`, never a bare id — a response outside the workspace matches nothing and
+      // Scoped `where`, never a bare id: a response outside the workspace matches nothing and
       // Prisma raises P2025, which the operation renders as the same 403 as a pre-flight rejection.
       const updated = await tx.response.update({
         where: { id: responseId, survey: { workspaceId } },
@@ -613,7 +610,7 @@ export async function updateScopedResponse({
             : {
                 tags: {
                   deleteMany: {},
-                  // Deduplicated — see the note in `createScopedResponse`.
+                  // Deduplicated: see the note in `createScopedResponse`.
                   // Scoped like the create path: the id alone would let a tag that left the
                   // workspace between check and write still attach.
                   create: [...new Set(patch.tagIds)].map((tagId) => ({
@@ -745,7 +742,7 @@ const outcomeScopeWhere = (
 });
 
 /**
- * Which of `ids` are in scope, and the survey each belongs to — what a batch authorizes against before it
+ * Which of `ids` are in scope, and the survey each belongs to: what a batch authorizes against before it
  * writes anything. One query for up to a batch of ids; the caller checks one response per distinct survey.
  */
 export async function listScopedResponseSurveyRefs(
@@ -763,7 +760,7 @@ export type TV3OutcomeChange = { id: string; surveyId: string; previous: TRespon
 export type TV3BatchOutcomeResult = {
   /** Responses in scope, including those that already carried the outcome: a retry reports the same number. */
   matched: number;
-  /** Only the responses whose outcome actually changed, with what it was — the audit trail and the events. */
+  /** Only the responses whose outcome actually changed, with what it was: the audit trail and the events. */
   changes: TV3OutcomeChange[];
   /** The changed responses as the pipeline needs them, read back after commit. */
   rows: TV3WriteReadbackRow[];
@@ -774,7 +771,7 @@ export type TV3BatchOutcomeResult = {
  *
  * Scope-filters rather than rejecting, like the batch delete: the workspace (and the caller's visible
  * surveys) sit in every statement's `where`, so a foreign or missing id matches nothing. Only responses
- * whose outcome differs are written — a retry, or a batch that overlaps an earlier one, neither churns
+ * whose outcome differs are written: a retry, or a batch that overlaps an earlier one, neither churns
  * `updatedAt` nor re-fires `responseUpdated` for rows that did not change.
  *
  * The read-back runs after commit and is scoped the same way; a row that vanished in between simply
@@ -844,7 +841,7 @@ export async function setScopedResponsesOutcome(
  * `tags` arrives as join rows (`{ tag: … }[]`) where `ZResponse` wants `TTag[]`, and `contact`
  * carries an attribute row where it wants `{ id, userId }`. Handing the raw row over parses as a
  * failure, `sendToPipeline` throws, and because dispatch is deliberately non-fatal the request still
- * answers 201 — so the response is created and **no webhook, integration, follow-up or Hub ingestion
+ * answers 201, so the response is created and **no webhook, integration, follow-up or Hub ingestion
  * ever runs**, with nothing in the reply to say so. Found by smoke-testing a real create; a unit test
  * now parses this function's output against `ZResponse` so it cannot drift back.
  */
@@ -880,7 +877,7 @@ export function toV3PipelineResponse(row: TV3WriteReadbackRow): TResponse {
 }
 
 /**
- * Emit the pipeline events for a committed write — after commit, and never fatally.
+ * Emit the pipeline events for a committed write: after commit, and never fatally.
  *
  * **A queueing failure does not fail the request.** The row is already committed, so a 500 here
  * would tell a caller its write failed when it did not, and the retry that follows creates a second

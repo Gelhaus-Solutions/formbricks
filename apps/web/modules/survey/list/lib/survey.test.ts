@@ -16,8 +16,8 @@ import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
 import { checkForInvalidMediaInBlocks } from "@/lib/survey/utils";
 import { validateInputs } from "@/lib/utils/validate";
 import { resolveCopiedSurveyCustomCss } from "@/modules/custom-css/lib/service";
-import { getQuotas } from "@/modules/ee/quotas/lib/quotas";
 import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
+import { getQuotas } from "@/modules/quotas/lib/quotas";
 import { buildWhereClause } from "@/modules/survey/lib/utils";
 import { doesWorkspaceExist, getWorkspaceWithLanguages } from "@/modules/survey/list/lib/workspace";
 import { TWorkspaceWithLanguages } from "../types/surveys";
@@ -82,7 +82,7 @@ vi.mock("@/modules/custom-css/lib/service", () => ({
   resolveCopiedSurveyCustomCss: vi.fn(async () => ({ customCss: null })),
 }));
 
-vi.mock("@/modules/ee/quotas/lib/quotas", () => ({
+vi.mock("@/modules/quotas/lib/quotas", () => ({
   getQuotas: vi.fn(),
 }));
 
@@ -175,8 +175,8 @@ const resetMocks = () => {
   vi.mocked(can).mockResolvedValue(true);
 
   // copySurveyToOtherWorkspace wraps its writes in a transaction (ENG-1978) so the survey and its
-  // Embedded Data rows land together. Reset first like every mock above — otherwise the call history
-  // these tests assert on accumulates across tests — then run the callback against the same mocked
+  // Embedded Data rows land together. Reset first like every mock above (otherwise the call history
+  // these tests assert on accumulates across tests), then run the callback against the same mocked
   // client, and start the copy with no existing links so the reconcile is a no-op unless a test says
   // otherwise.
   vi.mocked(prisma.$transaction).mockReset();
@@ -247,7 +247,7 @@ const mockExistingSurveyDetails = {
   questions: [],
   endings: [{ type: "default", headline: { default: "Thanks!" } }],
   // ENG-3228: the copy plans its Embedded Data off the source's ROWS, so this relation is what
-  // decides which fields the duplicate gets and who owns each one — since ENG-2404 it is all there is.
+  // decides which fields the duplicate gets and who owns each one; since ENG-2404 it is all there is.
   embeddedDataLinks: [
     {
       storageKey: "var_cuid",
@@ -406,7 +406,7 @@ describe("copySurveyToOtherWorkspace", () => {
   });
 
   // Resolve only what the query selects, the way Prisma does. Returning the whole survey regardless
-  // of the `select` would let these tests pass even when a column is never read — which is the bug.
+  // of the `select` would let these tests pass even when a column is never read, which is the bug.
   const mockSourceSurvey = (columns: Record<string, unknown>) => {
     const sourceSurvey: Record<string, unknown> = { ...mockExistingSurveyDetails, ...columns };
     vi.mocked(prisma.survey.findUnique).mockImplementation((({ select }: { select: object }) =>
@@ -586,7 +586,7 @@ describe("copySurveyToOtherWorkspace", () => {
       expect(prisma.survey.create).toHaveBeenCalledTimes(1);
     });
 
-    test("a destination without the plan still gets the copy — without the CSS, and with a notice", async () => {
+    test("a destination without the plan still gets the copy: without the CSS, and with a notice", async () => {
       mockSourceSurvey({ customCss: sourceCss });
       vi.mocked(resolveCopiedSurveyCustomCss).mockResolvedValueOnce({
         customCss: null,
@@ -648,8 +648,8 @@ describe("copySurveyToOtherWorkspace", () => {
       "slug",
       "publishOn",
       "closeOn",
-      // Visibility (ENG-3282): the copy gets its own creation facts — owned by the actor, restricted or
-      // workspace-visible by who made it — never the source survey's owner, state or history.
+      // Visibility (ENG-3282): the copy gets its own creation facts (owned by the actor, restricted or
+      // workspace-visible by who made it), never the source survey's owner, state or history.
       "visibility",
       "ownerId",
       "visibilityVersion",
@@ -671,7 +671,7 @@ describe("copySurveyToOtherWorkspace", () => {
 
   test("defines the copied survey's embedded data in the TARGET workspace, not the source", async () => {
     // The function's `workspaceId` argument is the source. Reading it instead of the created
-    // survey's own workspace would define the fields in the wrong tenant — which the composite
+    // survey's own workspace would define the fields in the wrong tenant, which the composite
     // foreign keys then reject, leaving the copy with no fields at all.
     await copySurveyToOtherWorkspace(sourceWorkspaceId, surveyId, targetWorkspaceId, userId);
 
@@ -690,8 +690,8 @@ describe("copySurveyToOtherWorkspace", () => {
       .mocked(prisma.surveyEmbeddedData.create)
       .mock.calls.map(([args]) => (args as { data: { storageKey: string; order: number } }).data);
 
-    // A variable keeps its cuid and a hidden field its name, so the copy's recall tokens — cloned
-    // verbatim from the source — still resolve. The positions come across too, so the copy exports
+    // A variable keeps its cuid and a hidden field its name, so the copy's recall tokens (cloned
+    // verbatim from the source) still resolve. The positions come across too, so the copy exports
     // its columns in the same order as the survey it was made from.
     expect(links.map(({ storageKey, order }) => [storageKey, order])).toEqual([
       ["var_cuid", 0],
@@ -717,7 +717,7 @@ describe("copySurveyToOtherWorkspace", () => {
     expect(newSurvey.hiddenFields).toEqual({ enabled: true, fieldIds: ["plan"] });
   });
 
-  test("a source with no rows copies no fields — zero rows is zero fields", async () => {
+  test("a source with no rows copies no fields: zero rows is zero fields", async () => {
     // The zero-row fallback to the legacy columns went with the columns (ENG-2404): the migration
     // that dropped them gave every survey still without links its rows first.
     vi.mocked(prisma.survey.findUnique).mockResolvedValue({

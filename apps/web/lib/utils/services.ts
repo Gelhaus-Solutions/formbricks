@@ -5,7 +5,6 @@ import { Prisma } from "@formbricks/database/prisma";
 import { ZId, ZString } from "@formbricks/types/common";
 import { DatabaseError, InvalidInputError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { validateInputs } from "@/lib/utils/validate";
-import { getQuota as getQuotaService } from "@/modules/ee/quotas/lib/quotas";
 
 export const getActionClass = reactCache(
   async (actionClassId: string): Promise<{ workspaceId: string } | null> => {
@@ -227,9 +226,28 @@ export const getWebhook = async (id: string): Promise<{ workspaceId: string } | 
 export const getQuota = reactCache(async (quotaId: string): Promise<{ surveyId: string }> => {
   validateInputs([quotaId, ZId]);
 
-  const quota = await getQuotaService(quotaId);
+  try {
+    const quota = await prisma.surveyQuota.findUnique({
+      where: {
+        id: quotaId,
+      },
+      select: {
+        surveyId: true,
+      },
+    });
 
-  return { surveyId: quota.surveyId };
+    if (!quota) {
+      throw new ResourceNotFoundError("Quota", quotaId);
+    }
+
+    return quota;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      throw new DatabaseError(error.message);
+    }
+
+    throw error;
+  }
 });
 
 export const getTeam = reactCache(async (teamId: string): Promise<{ organizationId: string } | null> => {

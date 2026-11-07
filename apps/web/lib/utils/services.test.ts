@@ -17,9 +17,7 @@ import {
   Workspace,
 } from "@formbricks/database/prisma";
 import { DatabaseError, InvalidInputError, ResourceNotFoundError } from "@formbricks/types/errors";
-import { TSurveyQuota } from "@formbricks/types/quota";
 import { validateInputs } from "@/lib/utils/validate";
-import { getQuota as getQuotaService } from "@/modules/ee/quotas/lib/quotas";
 import {
   getActionClass,
   getApiKey,
@@ -104,10 +102,6 @@ vi.mock("@formbricks/database", () => ({
       findUnique: vi.fn(),
     },
   },
-}));
-
-vi.mock("@/modules/ee/quotas/lib/quotas", () => ({
-  getQuota: vi.fn(),
 }));
 
 describe("Service Functions", () => {
@@ -406,23 +400,27 @@ describe("Service Functions", () => {
   describe("getQuota", () => {
     const quotaId = "quota123";
 
-    test("returns surveyId when found (delegates to getQuotaService)", async () => {
-      const mockQuota = { surveyId: "survey123" } as TSurveyQuota;
-      vi.mocked(getQuotaService).mockResolvedValue(mockQuota);
+    test("returns the surveyId when found", async () => {
+      vi.mocked(prisma.surveyQuota.findUnique).mockResolvedValue({ surveyId: "survey123" } as never);
 
       const result = await getQuota(quotaId);
       expect(validateInputs).toHaveBeenCalled();
-      expect(getQuotaService).toHaveBeenCalledWith(quotaId);
-      expect(result).toEqual(mockQuota);
+      expect(prisma.surveyQuota.findUnique).toHaveBeenCalledWith({
+        where: { id: quotaId },
+        select: { surveyId: true },
+      });
+      expect(result).toEqual({ surveyId: "survey123" });
     });
 
-    test("throws DatabaseError when underlying service fails", async () => {
-      vi.mocked(getQuotaService).mockRejectedValue(new DatabaseError("error"));
+    test("throws DatabaseError when the database fails", async () => {
+      vi.mocked(prisma.surveyQuota.findUnique).mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError("Error", { code: "P2002", clientVersion: "1.0.0" })
+      );
       await expect(getQuota(quotaId)).rejects.toThrow(DatabaseError);
     });
 
     test("throws ResourceNotFoundError when quota not found", async () => {
-      vi.mocked(getQuotaService).mockRejectedValue(new ResourceNotFoundError("Quota", quotaId));
+      vi.mocked(prisma.surveyQuota.findUnique).mockResolvedValue(null);
       await expect(getQuota(quotaId)).rejects.toThrow(ResourceNotFoundError);
     });
   });

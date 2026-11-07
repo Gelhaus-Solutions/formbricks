@@ -36,12 +36,12 @@ import type { TV3ResponsesFilter } from "./parse-v3-responses-list-query";
  * Prisma codes are branched **here**, before anything wraps them.
  *
  * `DatabaseError` takes only a message, and the codebase convention is to rethrow
- * `new DatabaseError(error.message)` — which destroys the code. By the time a shared mapper sees it there
+ * `new DatabaseError(error.message)`, which destroys the code. By the time a shared mapper sees it there
  * is nothing left to branch on, so it correctly answers a generic 500. Mapping at the throw site is the
  * only place the code still exists.
  *
  * `P2025` becomes `ResourceNotFoundError` so the shared mapper renders it as the *same* 403 body a
- * pre-flight ownership rejection produces — which is the whole point, since a scoped write that matches
+ * pre-flight ownership rejection produces, which is the whole point, since a scoped write that matches
  * nothing must not be distinguishable from one the caller may not touch.
  *
  * `P2003` (a dangling foreign key) is deliberately left alone: it is the caller's input and deserves a
@@ -76,7 +76,7 @@ type TWorkspaceScope = {
  * Deliberately unscoped, and safe because of what the caller does next: the operation feeds this into
  * `requireV3WorkspaceAccess` and answers an identical 403 whether the response is missing or forbidden.
  * Resolving the scope *from the response* rather than trusting a client-supplied `workspaceId` is what
- * makes the scope unforgeable — a caller cannot pair someone else's response id with a workspace they
+ * makes the scope unforgeable: a caller cannot pair someone else's response id with a workspace they
  * happen to have access to. Same shape as `authorizeTagMutation`.
  */
 export async function getResponseWorkspaceId(responseId: string): Promise<string | null> {
@@ -94,7 +94,7 @@ export async function getResponseWorkspaceId(responseId: string): Promise<string
 
 /**
  * The deleted row as the delete reads it back: the response's own scalars, no relations. `data` feeds the
- * file-URL cleanup below and, with `variables`, the *shape* of the audit record — the operation reduces
+ * file-URL cleanup below and, with `variables`, the *shape* of the audit record; the operation reduces
  * both to field names before anything reaches the audit trail (ENG-2873). Mirrors v1's
  * `responseSelection` minus its `contact`/`tags` joins, which are not worth adding to a delete.
  */
@@ -109,12 +109,12 @@ const deletedResponseSelect = {
   data: true,
   variables: true,
   ttc: true,
-  // Deliberately absent: `meta` and `contactAttributes`. Nothing reads either — they would reach only
+  // Deliberately absent: `meta` and `contactAttributes`. Nothing reads either: they would reach only
   // the audit log's `oldObject`, and both are precisely what this resource's contract names as never
   // exposed in any view; writing them to a store with its own retention, access model and export path
   // is exposing them. `redactPII` (`lib/utils/logger-helpers.ts`) now redacts `ipAddress` and reduces
   // attribute snapshots to field names (ENG-2873), so a producer that does forward them is caught at
-  // the sink — but not reading them at all is still the cleaner guarantee. `contactId` and `surveyId`
+  // the sink, but not reading them at all is still the cleaner guarantee. `contactId` and `surveyId`
   // keep the record reviewable without either.
   singleUseId: true,
   language: true,
@@ -127,7 +127,7 @@ export type TDeletedResponse = Prisma.ResponseGetPayload<{ select: typeof delete
  * Delete one response inside its workspace, and clean up everything that goes with it.
  *
  * The order is load-bearing, because what needs cleaning up **vanishes with the row**: the file URLs
- * live only inside `response.data`. Written the obvious way — delete, then work out what to clean up —
+ * live only inside `response.data`. Written the obvious way (delete, then work out what to clean up),
  * they are already gone. So the delete's own `select` captures them, which is also how the legacy path
  * gets them.
  *
@@ -138,7 +138,7 @@ export type TDeletedResponse = Prisma.ResponseGetPayload<{ select: typeof delete
  *
  * **The delete's `select` must stay scalar-only.** On Prisma 7 a `delete` whose `select` pulls in a
  * relation is compiled as read-then-delete, and the client returns the *read* payload without checking
- * that the DELETE matched a row — so a concurrent caller that lost the race is told it succeeded
+ * that the DELETE matched a row, so a concurrent caller that lost the race is told it succeeded
  * instead of raising `P2025`. Measured: with a relation in the select two racing deletes of the same
  * row both resolved, 3 times out of 3; with scalars only, exactly one raised `P2025` every time. That
  * is why the survey's element ids are fetched by their own query rather than joined in here.
@@ -159,12 +159,12 @@ export async function deleteScopedResponse(
   try {
     deleted = await prisma.$transaction(async (tx) => {
       // Scoped `where`, never a bare id. A response outside the workspace matches nothing and Prisma
-      // raises P2025, which becomes the same 403 as a pre-flight rejection — so one scoped statement
+      // raises P2025, which becomes the same 403 as a pre-flight rejection, so one scoped statement
       // does the ownership check and the delete together, with no window between them and no second
       // query whose absence a caller could time.
       const deletedRow = await tx.response.delete({
         where: { id: responseId, survey: { workspaceId } },
-        // Scalars only, deliberately — see the note above the function. The survey's element ids are
+        // Scalars only, deliberately: see the note above the function. The survey's element ids are
         // read separately, below.
         select: deletedResponseSelect,
       });
@@ -183,12 +183,11 @@ export async function deleteScopedResponse(
       await requestEmailAuditErasureRequired({ responseId }, tx);
 
       // Deliberately no `reduceQuotaLimits` here. `ON DELETE CASCADE` drops the `ResponseQuotaLink`
-      // rows, and the only fullness predicate in the repo is `screenedInCount >= quota.limit`
-      // (`modules/ee/quotas/lib/utils.ts`) counting those same live rows — so the cascade *already*
-      // gives the capacity back. Decrementing `limit` on top of that cancels the slot the cascade freed
+      // rows, and a quota is full when `screenedInCount >= quota.limit` counting those same live rows,
+      // so the cascade *already* gives the capacity back. Decrementing `limit` on top of that cancels the slot the cascade freed
       // and permanently shrinks a customer-configured setting that nothing restores; repeated deletes
       // ratchet it down. `limit` is user-facing ("Limit" in the quota editor), and the dashboard's
-      // checkbox — "Decrement all limits of quotas including this response" — is an explicit opt-in to
+      // checkbox ("Decrement all limits of quotas including this response") is an explicit opt-in to
       // that separate intent, not delete housekeeping. So v3 takes v1's `decrementQuotas = false`
       // default. Exposing it as an opt-in flag later is additive; making it unconditional now would be
       // an irreversible default no caller can decline.
@@ -210,8 +209,8 @@ export async function deleteScopedResponse(
   const { row, fileUrls } = deleted;
 
   // Skipped rather than called with an empty list: nothing to do, and it keeps the storage call out of
-  // the common path. `workspaceId` is never `undefined` here — it came from the scope the caller was
-  // already authorized against — which matters because a falsy second argument makes
+  // the common path. `workspaceId` is never `undefined` here (it came from the scope the caller was
+  // already authorized against), which matters because a falsy second argument makes
   // `deleteResponseFileUrls` delete nothing and only emit a `logger.error`, failing silently.
   if (fileUrls.length > 0) {
     try {
@@ -247,17 +246,17 @@ export type TBatchDeleteResult = {
  * an already-deleted id is indistinguishable from a foreign one.
  *
  * `deleteMany`'s own `count` is what gets reported, never the length of the earlier read. The two can
- * disagree — a concurrent caller may remove a row in between — and only the write knows what it
+ * disagree (a concurrent caller may remove a row in between), and only the write knows what it
  * actually did. This is also why the batch needs no equivalent of the single delete's scalar-only
  * `select` rule: `deleteMany` returns a count rather than a row, so there is no relation join for
  * Prisma to compile into a read-then-delete.
  *
- * Responses are deleted before displays. Both orders are correct — `Response_displayId_fkey` is
- * `ON DELETE SET NULL`, so removing a display first nulls the referencing rows rather than failing —
+ * Responses are deleted before displays. Both orders are correct (`Response_displayId_fkey` is
+ * `ON DELETE SET NULL`, so removing a display first nulls the referencing rows rather than failing),
  * but that null-out is a wasted write pass over rows about to be deleted anyway, and it touches the
  * unique index on `displayId`. This order also matches the single delete.
  *
- * What the rows leave outside the database — their files and their Hub records — is queued in the same
+ * What the rows leave outside the database (their files and their Hub records) is queued in the same
  * transaction (`enqueueResponsesDeletionCleanups`, per survey): a delete that commits always gets its
  * cleanup, retried until done, and one that rolls back queues nothing. The files are drained straight
  * after commit, as before; the Hub records a few minutes later, once any record still on its way has
@@ -314,7 +313,7 @@ export async function deleteScopedResponses(
  * Narrower than v1's `responseSelection` in two ways that matter.
  *
  * `contactAttributes` is absent. The contract says the snapshot is never exposed in either view, and
- * nothing in the read path consumes it — `contact.userId` is the only identity the payload carries.
+ * nothing in the read path consumes it: `contact.userId` is the only identity the payload carries.
  *
  * The contact's attributes are **scoped to the one key** rather than pulled wholesale. v1 selects
  * every attribute for every response and then finds `userId` in JavaScript
@@ -322,7 +321,7 @@ export async function deleteScopedResponses(
  * the query for one string, on every row of every page.
  *
  * `meta` **is** selected here, unlike on the delete path: the reserved half of `embeddedData[]` reads
- * from it. It is an input to the projection, never echoed — the projection drops `ipAddress` and
+ * from it. It is an input to the projection, never echoed; the projection drops `ipAddress` and
  * everything the catalog marks `display: "none"`.
  */
 export const v3ResponseReadSelect = {
@@ -359,10 +358,10 @@ export type TV3ResponseRow = Prisma.ResponseGetPayload<{ select: typeof v3Respon
  *
  * `blocks` carries the file-upload and element lookups. The legacy `questions` blob is deliberately
  * not selected: nothing on the common path reads it, and hauling it across the wire for every survey
- * on a 250-row page costs real bytes — `rescueLegacyBlocks` fetches it only for the surveys that
+ * on a 250-row page costs real bytes; `rescueLegacyBlocks` fetches it only for the surveys that
  * turn out to need it. `languages`
  * carries what resolves the response's label language. `embeddedDataLinks` uses the shared constant
- * so the ordering rule stays decided in one place — see its own comment.
+ * so the ordering rule stays decided in one place: see its own comment.
  */
 export const v3ResponseSurveySelect = {
   id: true,
@@ -384,7 +383,7 @@ export type TV3ResponseSurveyRow = Prisma.SurveyGetPayload<{ select: typeof v3Re
  * Fill in `blocks` for any survey whose column is empty but whose legacy `questions` is not.
  *
  * `Survey.blocks` is `Json[] @default([])` and `ZSurvey.blocks` uses `.prefault([])`, so a row with
- * empty `blocks` and populated `questions` is representable and schema-valid — the blocks migration
+ * empty `blocks` and populated `questions` is representable and schema-valid; the blocks migration
  * having run is not a guarantee one cannot be met. The answer plan is built from `blocks` alone, so
  * without this every stored answer on such a survey comes back as `unresolved[]` with
  * `elementNotInSurvey`: a live survey's answers reported as orphans.
@@ -433,7 +432,7 @@ async function rescueLegacyBlocks<TSurvey extends { id: string; blocks: unknown[
  * ones, and it runs `selectSurvey` with five relations the serializer never reads.
  *
  * Returns a map so the caller indexes by `surveyId` without a second pass. Ids with no surviving
- * survey are simply absent — a response whose survey was deleted cannot be serialized against a
+ * survey are simply absent: a response whose survey was deleted cannot be serialized against a
  * definition, and the caller decides what that means rather than this function inventing an answer.
  */
 export async function getV3ResponseSurveys(
@@ -460,7 +459,7 @@ export async function getV3ResponseSurveys(
  * The most rows a capped count will walk before answering "at least this many".
  *
  * Shared by the list's `meta.totalCount` and by `/count`, so the two can never disagree about where
- * exactness stops. At the cap the value is exactly this number and means "at least" — a scope with
+ * exactness stops. At the cap the value is exactly this number and means "at least": a scope with
  * precisely this many matches reports `gte`, which is the contract's reading.
  */
 export const V3_RESPONSE_COUNT_CAP = 10_000;
@@ -472,7 +471,7 @@ export const V3_RESPONSE_COUNT_CAP = 10_000;
  * caller-supplied value below is a bound parameter instead.
  *
  * Functions rather than module constants because the unit suite mocks `@formbricks/database/prisma`,
- * and a `Prisma.raw` call at module scope crashes at import time under that mock — taking the whole
+ * and a `Prisma.raw` call at module scope crashes at import time under that mock, taking the whole
  * file's tests with it. `keyset-cursor.ts` keeps its own `Prisma.raw` calls inside functions for the
  * same reason.
  */
@@ -483,7 +482,7 @@ const idColumn = (): Prisma.Sql => Prisma.raw('r."id"');
  * The scope and the allow-listed filters, as SQL fragments.
  *
  * The workspace clause is present on **every** query and is never optional. `Response` has no
- * `workspaceId` column, so scope is only reachable through the survey — and a caller authorized for
+ * `workspaceId` column, so scope is only reachable through the survey, and a caller authorized for
  * one workspace can still name another workspace's `surveyId`, so filtering on `surveyId` alone
  * would serve that survey's responses. Pairing the two is what makes the scope real rather than
  * assumed, and it also means an out-of-scope `surveyId` yields an empty page rather than an error
@@ -491,7 +490,7 @@ const idColumn = (): Prisma.Sql => Prisma.raw('r."id"');
  */
 const scopeAndFilters = (filter: TV3ResponsesFilter, access: TSurveyActorContext): Prisma.Sql[] => {
   // ENG-3282: the survey visibility predicate rides inside the scope clause, so a restricted survey's
-  // responses are absent from the page and from the count alike (contract §7) — never post-filtered.
+  // responses are absent from the page and from the count alike (contract §7), never post-filtered.
   const clauses: Prisma.Sql[] = [
     Prisma.sql`EXISTS (SELECT 1 FROM "Survey" s WHERE s."id" = r."surveyId" AND s."workspaceId" = ${filter.workspaceId} AND ${visibleSurveySqlPredicate(access, "s")})`,
   ];
@@ -522,7 +521,7 @@ export interface TV3ResponseKeysetRow {
   /**
    * Carried out of phase one so the caller can load the page's surveys in parallel with hydrating
    * it, rather than waiting for the rows to come back to learn which surveys they belong to. It
-   * costs nothing here — the column is already in the index this query walks.
+   * costs nothing here: the column is already in the index this query walks.
    */
   surveyId: string;
 }
@@ -530,8 +529,8 @@ export interface TV3ResponseKeysetRow {
 /**
  * Phase one of the list read: the ordered ids for a page.
  *
- * Raw SQL because the page condition has to be a row-constructor comparison — `(created_at, id) < (…)`
- * — which is the only form PostgreSQL puts inside the Index Cond, and which no Prisma `where` can
+ * Raw SQL because the page condition has to be a row-constructor comparison, `(created_at, id) < (…)`,
+ * which is the only form PostgreSQL puts inside the Index Cond, and which no Prisma `where` can
  * express. `keyset-cursor.ts` measured the alternatives: the `OR` expansion discards 4000 rows to
  * return 20, the row constructor discards none.
  *
@@ -611,7 +610,7 @@ export async function countV3Responses({
   precision: "capped" | "exact";
   /**
    * The cap the capped path stops at. Defaults to {@link V3_RESPONSE_COUNT_CAP} and no caller passes
-   * anything else — it exists so the `gte` branch is reachable in a test. Pinning it otherwise needs a
+   * anything else: it exists so the `gte` branch is reachable in a test. Pinning it otherwise needs a
    * fixture of 10 000 responses, which is why `relation: "eq"` could be hardcoded here without a
    * single test noticing.
    *

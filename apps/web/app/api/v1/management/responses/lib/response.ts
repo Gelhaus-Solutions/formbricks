@@ -18,10 +18,7 @@ import { getSurvey } from "@/lib/survey/service";
 import { andVisibleSurveys } from "@/lib/survey/visibility/predicate";
 import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
 import { validateInputs } from "@/lib/utils/validate";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 import { getContactByUserId } from "./contact";
 
 export const responseSelection = {
@@ -127,7 +124,7 @@ const handleCreateResponseError = (error: unknown): never => {
   throw error;
 };
 
-/** The reads a create needs, made before its transaction opens — see `TCreateResponseContext`. */
+/** The reads a create needs, made before its transaction opens: see `TCreateResponseContext`. */
 export const resolveCreateResponseContext = async ({
   workspaceId,
   userId,

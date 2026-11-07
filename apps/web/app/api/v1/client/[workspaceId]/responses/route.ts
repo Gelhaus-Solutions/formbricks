@@ -23,8 +23,8 @@ import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
 import { resolveClientApiIds } from "@/lib/utils/resolve-client-id";
 import { formatValidationErrorsForV1Api, validateResponseData } from "@/modules/api/lib/validation";
 import { verifyResponseRecaptcha } from "@/modules/api/lib/verify-response-recaptcha";
-import { createQuotaFullObject } from "@/modules/ee/quotas/lib/helpers";
 import { getIsContactsEnabled } from "@/modules/features/lib/flags";
+import { createQuotaFullObject } from "@/modules/quotas/lib/helpers";
 import { validateClientFileUploads } from "@/modules/storage/utils";
 import { verifyLinkSurveyPinToken } from "@/modules/survey/link/lib/pin-token";
 import { enforceVerifiedEmailGate } from "@/modules/survey/link/lib/verify-email-gate";
@@ -182,7 +182,7 @@ export const POST = withV1ApiWrapper({
       return { response: verifiedEmailErrorResponse };
     }
 
-    // Same gate the v2 endpoint applies — without it, posting to the v1 URL opts the caller out of the
+    // Same gate the v2 endpoint applies: without it, posting to the v1 URL opts the caller out of the
     // survey's spam protection entirely.
     const recaptchaErrorResponse = await verifyResponseRecaptcha({
       survey,
@@ -246,7 +246,7 @@ export const POST = withV1ApiWrapper({
     try {
       const meta: TResponseInput["meta"] = {
         // The browser-runtime context the renderer snapshotted at display time (ENG-1841). This
-        // literal is a whitelist — anything not re-listed here never reaches the database — so the
+        // literal is a whitelist (anything not re-listed here never reaches the database), so the
         // auto-captured keys have to be pulled in explicitly. Spread from the schema rather than
         // retyped key by key, so the two cannot drift.
         ...pickAutoCapturedResponseMeta(responseInputData?.meta),

@@ -70,7 +70,7 @@ vi.mock("@/modules/features/lib/flags", () => ({
   getIsContactsEnabled: mocks.getIsContactsEnabled,
 }));
 
-vi.mock("@/modules/ee/quotas/lib/helpers", () => ({
+vi.mock("@/modules/quotas/lib/helpers", () => ({
   createQuotaFullObject: mocks.createQuotaFullObject,
 }));
 
@@ -135,7 +135,7 @@ const persisted = () => {
   return { data: responseInput.data, ingestFlags };
 };
 
-describe("POST /api/v2/client/[workspaceId]/responses — Embedded Data ingest contract", () => {
+describe("POST /api/v2/client/[workspaceId]/responses: Embedded Data ingest contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -220,7 +220,7 @@ describe("POST /api/v2/client/[workspaceId]/responses — Embedded Data ingest c
   });
 });
 
-describe("POST /api/v2/client/[workspaceId]/responses — duplicate submissions (ENG-1147)", () => {
+describe("POST /api/v2/client/[workspaceId]/responses: duplicate submissions (ENG-1147)", () => {
   const contactId = "clh8ruz3w0000qa8h9x0bt9ry";
   const existingResponseId = "cm8f4x9mm0001gx9h5b7d7h3q";
 

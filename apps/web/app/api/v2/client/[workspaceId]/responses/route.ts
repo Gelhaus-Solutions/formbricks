@@ -19,8 +19,8 @@ import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
 import { resolveClientApiIds } from "@/lib/utils/resolve-client-id";
 import { formatValidationErrorsForV1Api, validateResponseData } from "@/modules/api/lib/validation";
 import { validateOtherOptionLengthForMultipleChoice } from "@/modules/api/v2/lib/element";
-import { createQuotaFullObject } from "@/modules/ee/quotas/lib/helpers";
 import { getIsContactsEnabled } from "@/modules/features/lib/flags";
+import { createQuotaFullObject } from "@/modules/quotas/lib/helpers";
 import { validateClientFileUploads } from "@/modules/storage/utils";
 import { createResponseWithQuotaEvaluation } from "./lib/response";
 import { TResponseInputV2, ZResponseInputV2 } from "./types/response";
@@ -159,7 +159,7 @@ const createResponseForRequest = async ({
   try {
     const meta: TResponseInputV2["meta"] = {
       // The browser-runtime context the renderer snapshotted at display time (ENG-1841). This
-      // literal is a whitelist — anything not re-listed here never reaches the database — so the
+      // literal is a whitelist (anything not re-listed here never reaches the database), so the
       // auto-captured keys have to be pulled in explicitly. Spread from the schema rather than
       // retyped key by key, so the two cannot drift.
       ...pickAutoCapturedResponseMeta(responseInputData?.meta),
@@ -251,7 +251,7 @@ export const POST = async (request: Request, context: Context): Promise<Response
     // The Embedded Data ingest contract (ENG-1845), re-run server-side because this endpoint is
     // public and the renderer's filtering is never trusted. It has to precede
     // `validateResponseSubmission` on both counts: `validateResponseData` should see the values that
-    // will be stored, and `checkSurveyValidity` stamps `verifiedEmail` from the verification token —
+    // will be stored, and `checkSurveyValidity` stamps `verifiedEmail` from the verification token,
     // a forbidden field name no survey declares, so the contract has to run before that write rather
     // than after it.
     const ingestResult = applyIngestContractToResponseData(survey, responseInputData.data);

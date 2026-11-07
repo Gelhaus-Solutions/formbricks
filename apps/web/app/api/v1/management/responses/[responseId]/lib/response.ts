@@ -2,13 +2,10 @@ import "server-only";
 import { prisma } from "@formbricks/database";
 import { TResponse, TResponseInput } from "@formbricks/types/responses";
 import { updateResponse } from "@/lib/response/service";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 
 /**
- * `surveyId` is the stored response's survey, as the route already loaded it — passed in so the quota
+ * `surveyId` is the stored response's survey, as the route already loaded it, passed in so the quota
  * definitions are read before the transaction opens. Evaluation still checks it against the updated
  * row and skips on a mismatch.
  */

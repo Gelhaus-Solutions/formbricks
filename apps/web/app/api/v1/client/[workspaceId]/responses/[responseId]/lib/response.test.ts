@@ -3,14 +3,11 @@ import { prisma } from "@formbricks/database";
 import { TSurveyQuota } from "@formbricks/types/quota";
 import { TResponse } from "@formbricks/types/responses";
 import { updateResponse } from "@/lib/response/service";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 import { updateResponseWithQuotaEvaluation } from "./response";
 
 vi.mock("@/lib/response/service");
-vi.mock("@/modules/ee/quotas/lib/evaluation-service");
+vi.mock("@/modules/quotas/lib/evaluation-service");
 
 const mockUpdateResponse = vi.mocked(updateResponse);
 const mockEvaluateResponseQuotas = vi.mocked(evaluateResponseQuotas);

@@ -47,14 +47,14 @@ vi.mock("@/modules/api/lib/validation", () => ({ validateResponseData: mockValid
 vi.mock("@/lib/workspace/service", () => ({ getWorkspaceLegacyStoragePrefixes: async () => [] }));
 vi.mock("@/lib/organization/service", () => ({ getOrganization: mockGetOrganization }));
 // Metering is Cloud-only, so the constant has to be controllable or only the false branch is ever
-// reachable — a regression that stopped metering a real Cloud organization would pass unnoticed.
+// reachable: a regression that stopped metering a real Cloud organization would pass unnoticed.
 vi.mock("@/lib/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/constants")>()),
   get IS_FORMBRICKS_CLOUD() {
     return mockIsCloud();
   },
 }));
-vi.mock("@/modules/ee/quotas/lib/evaluation-service", () => ({ screenResponseQuotas: mockScreenQuotas }));
+vi.mock("@/modules/quotas/lib/evaluation-service", () => ({ screenResponseQuotas: mockScreenQuotas }));
 vi.mock("@formbricks/database", () => ({
   prisma: { responseQuotaLink: { groupBy: mockGroupBy } },
 }));
@@ -158,7 +158,7 @@ beforeEach(() => {
 
 /**
  * The promise the endpoint is named for. Asserted against the three functions that would leave a
- * trace — the row, the patch and the pipeline dispatch — rather than against a comment.
+ * trace (the row, the patch and the pipeline dispatch) rather than against a comment.
  */
 describe("nothing is written", () => {
   test("a valid create validation writes no row and dispatches nothing", async () => {
@@ -208,7 +208,7 @@ describe("authorization", () => {
     expect(await missing.text()).toBe(await foreign.text());
   });
 
-  /** The operation's own permission, not `read` — validating is as privileged as writing. */
+  /** The operation's own permission, not `read`: validating is as privileged as writing. */
   test("both branches ask for readWrite", async () => {
     await validate({ operation: "create", data: { surveyId: SURVEY_ID, finished: true, data: {} } });
     await validate({ operation: "patch", responseId: RESPONSE_ID, data: { finished: true } });
@@ -257,7 +257,7 @@ describe("the verdict", () => {
 
   /**
    * No `surveyId` means no scope to authorize against and none to disclose, so the caller is told
-   * what is wrong rather than refused — and nothing was looked up.
+   * what is wrong rather than refused, and nothing was looked up.
    */
   test("a document with no surveyId is answered without touching the database", async () => {
     const response = await validate({ operation: "create", data: { finished: true, data: {} } });
@@ -317,7 +317,7 @@ describe("effects", () => {
   /**
    * `firesPipeline` used to report the `responseFinished` transition, so a patch of an
    * already-finished response answered `false`. Every patch dispatches `responseUpdated`, and the job
-   * fans any event to its webhooks — so a caller that dry-ran a correction, read `false`, and expected
+   * fans any event to its webhooks, so a caller that dry-ran a correction, read `false`, and expected
    * silence watched its webhooks fire.
    */
   test("every create and every patch fires the pipeline, transition or not", async () => {

@@ -6,11 +6,8 @@ import { PrismaErrorType } from "@formbricks/database/types/error";
 import { ok, okVoid } from "@formbricks/types/error-handlers";
 import { TSurveyQuota } from "@formbricks/types/quota";
 import { getDisplayForResponseValidation } from "@/lib/display/service";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
 import { requestEmailAuditErasureRequired } from "@/modules/email/lib/email-audit-maintenance";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 import { enqueueReplacedSignatureFileCleanup } from "@/modules/storage/lib/replaced-signature-files";
 import { deleteDisplay } from "../display";
 import {
@@ -70,7 +67,7 @@ vi.mock("@/modules/storage/lib/replaced-signature-files", () => ({
   enqueueReplacedSignatureFileCleanup: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/quotas/lib/evaluation-service", () => ({
+vi.mock("@/modules/quotas/lib/evaluation-service", () => ({
   evaluateResponseQuotas: vi.fn(),
   loadQuotaEvaluationContext: vi.fn(),
 }));
@@ -536,7 +533,7 @@ describe("Response Lib", () => {
     });
 
     // ENG-1923 perf: when the update sets no contact/display link (both null) there is no FK to
-    // validate, so the tenant lookup is skipped entirely — a missing response is still surfaced as
+    // validate, so the tenant lookup is skipped entirely; a missing response is still surfaced as
     // a 404 by the update's Prisma handler. Guards against reintroducing an unconditional
     // round-trip when neither link is being (re)assigned.
     test("skips the tenant lookup when neither contactId nor displayId is set", async () => {
@@ -569,7 +566,7 @@ describe("Response Lib", () => {
     });
 
     // ENG-1923: a caller authorized on this response must not re-point it at another tenant's
-    // contact or display. Foreign and nonexistent ids fail identically as a 404 — no oracle.
+    // contact or display. Foreign and nonexistent ids fail identically as a 404: no oracle.
     test("rejects a contactId that does not belong to the response's workspace (ENG-1923)", async () => {
       vi.mocked(prisma.contact.findUnique).mockResolvedValue(null);
 
@@ -610,7 +607,7 @@ describe("Response Lib", () => {
     });
 
     // ENG-1923: the tenant guard must not reject legitimate same-tenant edits. contactId and
-    // displayId are required-nullable in ZResponseUpdateSchema, so every PUT carries both — clearing
+    // displayId are required-nullable in ZResponseUpdateSchema, so every PUT carries both: clearing
     // the contact while keeping the response's own display is an ordinary update, even though that
     // display still records the previous contact. Tenant isolation comes from workspace + survey +
     // self-link; a display↔contact match rule would 404 this case, reported against the wrong field.

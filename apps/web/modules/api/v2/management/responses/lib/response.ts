@@ -13,10 +13,7 @@ import { getResponsesQuery } from "@/modules/api/v2/management/responses/lib/uti
 import { TGetResponsesFilter, TResponseInput } from "@/modules/api/v2/management/responses/types/responses";
 import { ApiErrorResponseV2 } from "@/modules/api/v2/types/api-error";
 import { ApiResponseWithMeta } from "@/modules/api/v2/types/api-success";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 
 export const getResponses = async (
   workspaceIds: string[],
@@ -82,7 +79,7 @@ const resolveOrganization = async (workspaceId: string): Promise<Result<string, 
   return ok(organizationIdResult.data);
 };
 
-/** The reads a create needs, made before its transaction opens — see `TCreateResponseContext`. */
+/** The reads a create needs, made before its transaction opens: see `TCreateResponseContext`. */
 export const resolveCreateResponseContext = async (
   workspaceId: string,
   userId: string | null | undefined
@@ -127,7 +124,7 @@ export const createResponse = async (
 
       // Uniform not-found for "does not exist" and "exists but belongs elsewhere". Distinguishing the
       // two would confirm that a display id is real, making this endpoint a cross-tenant existence
-      // oracle — the same reason the historical-response import raises not-found rather than forbidden
+      // oracle, the same reason the historical-response import raises not-found rather than forbidden
       // (#8679). Matches the shape the sibling handlers already return for a foreign display.
       if (display?.surveyId !== surveyId) {
         return err({

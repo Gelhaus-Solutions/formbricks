@@ -13,10 +13,7 @@ import { TResponseInput } from "@formbricks/types/responses";
 import { getOrganization } from "@/lib/organization/service";
 import { calculateTtcTotal } from "@/lib/response/utils";
 import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 import { getContactByUserId } from "./contact";
 import { createResponse, createResponseWithQuotaEvaluation, resolveCreateResponseContext } from "./response";
 
@@ -68,7 +65,7 @@ vi.mock("./contact", () => ({
   getContactByUserId: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/quotas/lib/evaluation-service", () => ({
+vi.mock("@/modules/quotas/lib/evaluation-service", () => ({
   evaluateResponseQuotas: vi.fn(),
   loadQuotaEvaluationContext: vi.fn(),
 }));

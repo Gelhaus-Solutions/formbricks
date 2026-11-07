@@ -29,8 +29,8 @@ import { type TSurveyVisibilityFilter, buildSurveyAccessWhere } from "@/lib/surv
 import { validateInputs } from "@/lib/utils/validate";
 import { getTranslate } from "@/lingodotdev/server";
 import { resolveCopiedSurveyCustomCss } from "@/modules/custom-css/lib/service";
-import { getQuotas } from "@/modules/ee/quotas/lib/quotas";
 import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
+import { getQuotas } from "@/modules/quotas/lib/quotas";
 import { assertCanWriteCustomHeadScripts } from "@/modules/survey/lib/custom-head-scripts-permission";
 import { buildWhereClause } from "@/modules/survey/lib/utils";
 import { doesWorkspaceExist, getWorkspaceWithLanguages } from "@/modules/survey/list/lib/workspace";
@@ -60,7 +60,7 @@ const getExistingSurvey = async (surveyId: string) => {
       questions: true,
       blocks: true,
       endings: true,
-      // ENG-3228: the copy follows the source's ROWS — the legacy shape cannot say that a field is a
+      // ENG-3228: the copy follows the source's ROWS: the legacy shape cannot say that a field is a
       // link to the workspace library, so copying it localized every shared field a survey had.
       // Since ENG-2404 the rows are all there is. Selected with the row's ownership (`key`) and id
       // so `planCopiedEmbeddedFields` can decide per field whether to re-link it or clone it.
@@ -91,7 +91,7 @@ const getExistingSurvey = async (surveyId: string) => {
       recontactDays: true,
       displayLimit: true,
       // Behaviour, presentation and security settings. The copy is built by spreading whatever this
-      // select returns, so a settings column missing here is not reset on purpose — it is never read,
+      // select returns, so a settings column missing here is not reset on purpose; it is never read,
       // and the new row silently falls back to its database default. That is how duplicates lost PIN
       // protection, response limits and redirect URLs (ENG-2144), and the recontact fields before
       // that (#6802). Add new Survey settings columns here; `survey.test.ts` fails if you forget.
@@ -148,21 +148,21 @@ type TSourceEmbeddedLinks = NonNullable<Awaited<ReturnType<typeof getExistingSur
  *
  * The three cases, and why they differ:
  *
- * - **A local field** is the survey's own, so the copy gets its own — same definition, no library
+ * - **A local field** is the survey's own, so the copy gets its own: same definition, no library
  *   link. This is what every copy did to every field before the rows existed.
  * - **A shared field, same workspace.** The library row is right there, so the copy links the same
  *   row under the same storage key and the two surveys go on sharing one definition.
  * - **A shared field, another workspace.** Definitions do not cross a workspace boundary, so the
- *   copy looks for the same field in the target's library — same `key`, `source` and `dataType`,
+ *   copy looks for the same field in the target's library (same `key`, `source` and `dataType`,
  *   because a `plan` that is ingested text over here and computed over there is a different field
- *   wearing the same name — and links it when it finds one. This mirrors what the segment handling
+ *   wearing the same name) and links it when it finds one. This mirrors what the segment handling
  *   a few lines below already does for a public segment of the same title.
  *
  * When there is no match the field is **localized**: the copy gets a private definition rather than
  * losing the field. It takes the library `key` as its name, not the display label, because a local
  * field's name is the legacy variable name or hidden field id the copy's derived `variables` /
  * `hiddenFields` will carry, and a label like `Plan tier` is not a legal one. The storage key is
- * preserved either way — it is the address recall tokens and logic operands inside the copied blocks
+ * preserved either way: it is the address recall tokens and logic operands inside the copied blocks
  * already point at.
  */
 const planCopiedEmbeddedFields = async (
@@ -267,7 +267,7 @@ export const copySurveyToOtherWorkspace = async (
       if (!targetWorkspace) throw new ResourceNotFoundError("Workspace", targetWorkspaceId);
 
       // The copy runs these scripts on the target workspace's link surveys, where no one with Manage
-      // access has approved them, so carrying them over takes Manage there — as writing them would.
+      // access has approved them, so carrying them over takes Manage there, as writing them would.
       await assertCanWriteCustomHeadScripts(
         { type: "user", id: userId },
         targetWorkspace.id,
@@ -284,7 +284,7 @@ export const copySurveyToOtherWorkspace = async (
         })
       : [];
 
-    // ENG-3282: a copy is a new survey on every count — the target workspace's cap applies, and it is
+    // ENG-3282: a copy is a new survey on every count: the target workspace's cap applies, and it is
     // owned by the person copying it, with the visibility a fresh creation in the target organization
     // would get. Neither is read from the source: `getExistingSurvey` selects no visibility column.
     await assertWorkspaceSurveyLimit(targetWorkspace.id);
@@ -300,8 +300,8 @@ export const copySurveyToOtherWorkspace = async (
     // The relation is the copy's Embedded Data plan, not a column to clone: `Survey` owns a relation
     // by this name, so spreading it into `SurveyCreateInput` would be a nested relation write.
     // ENG-2949: custom CSS is carried as source and processed for the destination, under the destination
-    // organization's plan. A destination that may not add CSS still gets the copy — without the CSS, and
-    // with a notice — and the source survey is only ever read.
+    // organization's plan. A destination that may not add CSS still gets the copy (without the CSS, and
+    // with a notice), and the source survey is only ever read.
     const { embeddedDataLinks, customCss: sourceCustomCss, ...restExistingSurvey } = existingSurvey;
     const copiedCustomCss = await resolveCopiedSurveyCustomCss({
       source: sourceCustomCss,
@@ -593,9 +593,9 @@ export const copySurveyToOtherWorkspace = async (
 
         // ENG-1978: the copy carries the source survey's Embedded Data, so the new survey needs its
         // own rows and links. ENG-3228: from the plan built off the source's ROWS, which is what
-        // lets a shared field stay shared — reading the legacy columns here silently localized every
+        // lets a shared field stay shared; reading the legacy columns here silently localized every
         // one of them. `workspaceId` is read off the created row rather than the function's
-        // `workspaceId` argument, which is the SOURCE workspace — a copy into a different workspace
+        // `workspaceId` argument, which is the SOURCE workspace; a copy into a different workspace
         // must define its fields there.
         await reconcileEmbeddedData(tx, {
           surveyId: createdSurvey.id,
@@ -614,9 +614,9 @@ export const copySurveyToOtherWorkspace = async (
       },
       // This create was untransacted before ENG-1978, so wrapping it introduced Prisma's 5s
       // interactive-transaction ceiling where there had been none. It is the deepest of the
-      // reconcile call sites (a `reconcileEmbeddedData(` grep enumerates them) — it clones blocks,
+      // reconcile call sites (a `reconcileEmbeddedData(` grep enumerates them): it clones blocks,
       // endings, the welcome card, Embedded Data, follow-ups and quotas, and resolves an action
-      // class per trigger through `connectOrCreate` — so a large survey could plausibly reach it and
+      // class per trigger through `connectOrCreate`, so a large survey could plausibly reach it and
       // fail a copy that used to succeed. Matches the ceiling on `updateSurveyInternal` for the same
       // reason.
       { timeout: 20_000, maxWait: 10_000 }
@@ -671,7 +671,7 @@ export const getSurveyCount = reactCache(
 
 /**
  * Every survey in the workspace, archived ones included. Filter-independent, so the list can tell an
- * empty workspace (onboarding) from a filter that matched nothing — and a count rather than a flag so
+ * empty workspace (onboarding) from a filter that matched nothing, and a count rather than a flag so
  * an optimistic delete can decrement it before the server answers.
  */
 export const getWorkspaceSurveyCount = reactCache(

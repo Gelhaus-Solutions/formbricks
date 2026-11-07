@@ -18,10 +18,7 @@ import {
   getOrganizationIdFromWorkspaceId,
 } from "@/modules/api/v2/management/responses/lib/organization";
 import type { ApiErrorResponseV2 } from "@/modules/api/v2/types/api-error";
-import {
-  evaluateResponseQuotas,
-  loadQuotaEvaluationContext,
-} from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 import {
   type TCreateResponseContext,
   createResponse,
@@ -39,7 +36,7 @@ vi.mock("@/modules/api/v2/management/responses/lib/contact", () => ({
   getContactByUserId: vi.fn(),
 }));
 
-vi.mock("@/modules/ee/quotas/lib/evaluation-service", () => ({
+vi.mock("@/modules/quotas/lib/evaluation-service", () => ({
   evaluateResponseQuotas: vi.fn(),
   loadQuotaEvaluationContext: vi.fn(),
 }));

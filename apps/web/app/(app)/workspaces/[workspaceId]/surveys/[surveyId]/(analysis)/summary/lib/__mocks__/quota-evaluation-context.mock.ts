@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { loadQuotaEvaluationContext as loadQuotaEvaluationContextImpl } from "@/modules/ee/quotas/lib/evaluation-service";
+import type { loadQuotaEvaluationContext as loadQuotaEvaluationContextImpl } from "@/modules/quotas/lib/evaluation-service";
 
 /**
  * Quota-definition loader for the example-response persistence tests, which must stay off the
@@ -7,6 +7,6 @@ import type { loadQuotaEvaluationContext as loadQuotaEvaluationContextImpl } fro
  */
 export const loadQuotaEvaluationContext = vi.fn<typeof loadQuotaEvaluationContextImpl>();
 
-vi.mock("@/modules/ee/quotas/lib/evaluation-service", () => ({
+vi.mock("@/modules/quotas/lib/evaluation-service", () => ({
   loadQuotaEvaluationContext,
 }));

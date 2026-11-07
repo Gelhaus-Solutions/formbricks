@@ -7,8 +7,8 @@ import { POST } from "./route";
  * so a contract wired into one and not the other would leave a public endpoint through which a
  * crafted body still writes whatever it likes into `response.data`.
  *
- * `withV1ApiWrapper` is reduced to its handler: everything it adds — auth, rate limiting, audit
- * logging — is orthogonal to what is being proved here, and mocking it away is what keeps this test
+ * `withV1ApiWrapper` is reduced to its handler: everything it adds (auth, rate limiting, audit
+ * logging) is orthogonal to what is being proved here, and mocking it away is what keeps this test
  * about the contract.
  */
 const mocks = vi.hoisted(() => ({
@@ -73,7 +73,7 @@ vi.mock("@/modules/features/lib/flags", () => ({
   getIsContactsEnabled: mocks.getIsContactsEnabled,
 }));
 
-vi.mock("@/modules/ee/quotas/lib/helpers", () => ({
+vi.mock("@/modules/quotas/lib/helpers", () => ({
   createQuotaFullObject: mocks.createQuotaFullObject,
 }));
 
@@ -153,7 +153,7 @@ const persisted = () => {
   return { data: responseInput.data, ingestFlags };
 };
 
-describe("POST /api/v1/client/[workspaceId]/responses — Embedded Data ingest contract", () => {
+describe("POST /api/v1/client/[workspaceId]/responses: Embedded Data ingest contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -208,7 +208,7 @@ describe("POST /api/v1/client/[workspaceId]/responses — Embedded Data ingest c
   /**
    * The ordering the route depends on: `verifiedEmail` is a forbidden field name, so no survey can
    * declare it and the contract would drop it. The gate therefore has to write it *after* the
-   * contract has run — if the two are ever swapped, email verification silently stops recording an
+   * contract has run; if the two are ever swapped, email verification silently stops recording an
    * address.
    */
   test("leaves the verified-email gate as the last writer of response data", async () => {
@@ -226,7 +226,7 @@ describe("POST /api/v1/client/[workspaceId]/responses — Embedded Data ingest c
   });
 });
 
-describe("POST /api/v1/client/[workspaceId]/responses — duplicate submissions (ENG-1147)", () => {
+describe("POST /api/v1/client/[workspaceId]/responses: duplicate submissions (ENG-1147)", () => {
   const contactId = "clh8ruz3w0000qa8h9x0bt9ry";
   const existingResponseId = "cm8f4x9mm0001gx9h5b7d7h3q";
 

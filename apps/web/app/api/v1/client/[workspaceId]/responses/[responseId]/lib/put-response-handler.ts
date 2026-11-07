@@ -13,7 +13,7 @@ import { getSurvey } from "@/lib/survey/service";
 import { resolveClientApiIds } from "@/lib/utils/resolve-client-id";
 import { formatValidationErrorsForV1Api, validateResponseData } from "@/modules/api/lib/validation";
 import { validateOtherOptionLengthForMultipleChoice } from "@/modules/api/v2/lib/element";
-import { createQuotaFullObject } from "@/modules/ee/quotas/lib/helpers";
+import { createQuotaFullObject } from "@/modules/quotas/lib/helpers";
 import { validateClientFileUploads } from "@/modules/storage/utils";
 import { verifyLinkSurveyPinToken } from "@/modules/survey/link/lib/pin-token";
 import { VERIFIED_EMAIL_RESPONSE_KEY } from "@/modules/survey/link/lib/verify-email-gate";
@@ -242,7 +242,7 @@ export const putResponseHandler = async ({
 
   // The Embedded Data ingest contract (ENG-1845). This boundary matters as much as the POST one and
   // is easier to miss: `validateResponseData` below only validates keys matching element ids, so
-  // everything else passes through — which is how a crafted PUT could write a locked key, an unknown
+  // everything else passes through, which is how a crafted PUT could write a locked key, an unknown
   // key or an oversize value straight into `response.data`, where exports read it. Ahead of
   // validation and quota evaluation so both see the values that will be stored.
   const ingestResult = applyIngestContractToResponseData(survey, responseUpdateInput.data);

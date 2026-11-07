@@ -16,7 +16,7 @@ import { getOrganization } from "@/lib/organization/service";
 import { calculateTtcTotal } from "@/lib/response/utils";
 import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
 import { validateInputs } from "@/lib/utils/validate";
-import { evaluateResponseQuotas } from "@/modules/ee/quotas/lib/evaluation-service";
+import { evaluateResponseQuotas } from "@/modules/quotas/lib/evaluation-service";
 import { getContact } from "./contact";
 import { createResponse, createResponseWithQuotaEvaluation, resolveCreateResponseContext } from "./response";
 
@@ -60,7 +60,7 @@ vi.mock("@/lib/response/utils", async (importOriginal) => ({
 }));
 vi.mock("@/lib/utils/helper");
 vi.mock("@/lib/utils/validate");
-vi.mock("@/modules/ee/quotas/lib/evaluation-service");
+vi.mock("@/modules/quotas/lib/evaluation-service");
 vi.mock("@formbricks/database", () => ({
   prisma: {
     response: {
@@ -198,7 +198,7 @@ describe("createResponse V2", () => {
   });
 
   // ENG-2251: a P2002 on this create can only be one of the response table's unique constraints,
-  // so an unmatched (or unrecoverable) target is still a duplicate — a 409, never a 500.
+  // so an unmatched (or unrecoverable) target is still a duplicate: a 409, never a 500.
   test("should throw UniqueConstraintError on P2002 without singleUseId or displayId target", async () => {
     const prismaError = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
       code: "P2002",

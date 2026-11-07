@@ -67,7 +67,7 @@ vi.mock("@formbricks/database/prisma", () => ({
 }));
 vi.mock("@formbricks/logger", () => ({ logger: { error: vi.fn(), warn: vi.fn() } }));
 vi.mock("@/lib/display/service", () => ({ deleteDisplay: mockDeleteDisplay }));
-vi.mock("@/modules/ee/quotas/lib/quotas", () => ({ reduceQuotaLimits: mockReduceQuotas }));
+vi.mock("@/modules/quotas/lib/quotas", () => ({ reduceQuotaLimits: mockReduceQuotas }));
 vi.mock("@/modules/storage/lib/delete-response-files", () => ({ deleteResponseFileUrls: mockDeleteFiles }));
 vi.mock("@/modules/deletion-cleanup/lib/enqueue", () => ({ enqueueResponsesDeletionCleanups: mockEnqueue }));
 vi.mock("@/modules/deletion-cleanup/lib/drain", () => ({ drainDeletionCleanups: mockDrain }));
@@ -87,7 +87,7 @@ const SCOPE = { workspaceId: "ws_1" };
 /**
  * Runs the callback with a tx whose `response.delete` and `survey.findUnique` are our spies, like a
  * real interactive transaction. The survey is a separate query rather than a join precisely so the
- * delete keeps raising P2025 — see the service's own note.
+ * delete keeps raising P2025: see the service's own note.
  */
 const runTransaction = (result: unknown, survey: unknown = { blocks: [], questions: [] }) => {
   mockTxDelete.mockResolvedValue(result);
@@ -112,7 +112,7 @@ describe("deleteScopedResponse", () => {
 
   /**
    * The security core of the service. `Response` has no `workspaceId` column, so tenancy is only
-   * expressible as `survey: { workspaceId }` — and it has to be in the `where` of the delete itself, not
+   * expressible as `survey: { workspaceId }`, and it has to be in the `where` of the delete itself, not
    * a check before it. A bare-id delete with a prior ownership read has a window between the two and
    * relies on nobody ever calling the accessor directly.
    */
@@ -146,7 +146,7 @@ describe("deleteScopedResponse", () => {
   });
 
   /**
-   * The file URLs live only inside `response.data`, so reading them after the delete returns nothing —
+   * The file URLs live only inside `response.data`, so reading them after the delete returns nothing:
    * the delete's own select is the only place they can come from. The same select carries the scalars
    * the audit trail records, for the same reason: the row is gone afterwards.
    */
@@ -164,7 +164,7 @@ describe("deleteScopedResponse", () => {
   });
 
   /**
-   * The audit event records this row, and `redactPII` matches exact key names — so `meta.ipAddress`
+   * The audit event records this row, and `redactPII` matches exact key names, so `meta.ipAddress`
    * would reach the audit store in plaintext, and a workspace's own contact attributes would survive
    * wherever their key is not one of the standard ones. Both are named by this resource's contract as
    * never exposed in any view, and neither is read by anything here, so the select is the right place
@@ -197,7 +197,7 @@ describe("deleteScopedResponse", () => {
     const relations = Object.entries(select).filter(([, v]) => typeof v === "object" && v !== null);
     expect(relations).toStrictEqual([]);
 
-    // Both shapes, matching v1/v2 and the helper's documented union — not just `blocks`.
+    // Both shapes, matching v1/v2 and the helper's documented union, not just `blocks`.
     expect(mockTxSurvey).toHaveBeenCalledWith({
       where: { id: "svy_1" },
       select: { blocks: true, questions: true },
@@ -209,7 +209,7 @@ describe("deleteScopedResponse", () => {
    *
    * `ResponseQuotaLink` is `onDelete: Cascade` and the repo's only fullness predicate is
    * `screenedInCount >= quota.limit` over those live rows, so the cascade already returns the capacity.
-   * `reduceQuotaLimits` decrements `SurveyQuota.limit` — the customer's configured target — which
+   * `reduceQuotaLimits` decrements `SurveyQuota.limit` (the customer's configured target), which
    * cancels the freed slot and ratchets the limit down irreversibly. The dashboard exposes that as an
    * explicit opt-in checkbox; an API delete must not do it silently.
    *
@@ -336,7 +336,7 @@ describe("deleteScopedResponse", () => {
 
     await deleteScopedResponse(RESPONSE_ID, SCOPE);
 
-    // Not a correctness requirement — with a real workspace id an empty list is a harmless no-op — so
+    // Not a correctness requirement (with a real workspace id an empty list is a harmless no-op), so
     // this pins the intent rather than a hazard: a response with no uploads must not reach storage at
     // all, which keeps the S3 client off the common path.
     expect(mockDeleteFiles).not.toHaveBeenCalled();
@@ -345,7 +345,7 @@ describe("deleteScopedResponse", () => {
   /**
    * A failed file cleanup must not report a failed delete: the row is already gone and the caller's
    * request succeeded. Orphaned objects are a storage problem, logged loudly. The audit row still comes
-   * back — the delete happened, so the trail must record it even though cleanup did not finish.
+   * back: the delete happened, so the trail must record it even though cleanup did not finish.
    */
   test("still succeeds when storage cleanup fails, and still returns the audit row", async () => {
     runTransaction(deletedRow({ data: { screenshots: ["https://s/a.png"] } }));
@@ -356,7 +356,7 @@ describe("deleteScopedResponse", () => {
 
   /**
    * A scoped delete matching nothing raises P2025, and that has to become the error the shared mapper
-   * renders as the *same* 403 a pre-flight rejection produces — otherwise a foreign id is
+   * renders as the *same* 403 a pre-flight rejection produces; otherwise a foreign id is
    * distinguishable from a nonexistent one.
    */
   test("turns a P2025 into ResourceNotFoundError, before anything can wrap it", async () => {
@@ -388,8 +388,8 @@ describe("getResponseWorkspaceId", () => {
 });
 
 /**
- * The batch path's own unit tests. Its behaviour against real SQL — scope-filtering, the authoritative
- * count, the FK-safe ordering — is proven in `service.integration.test.ts`, which is the only place it
+ * The batch path's own unit tests. Its behaviour against real SQL (scope-filtering, the authoritative
+ * count, the FK-safe ordering) is proven in `service.integration.test.ts`, which is the only place it
  * can be. These cover the parts that are ours rather than Postgres's: what goes into each statement,
  * how the survey reads are grouped, and what comes back.
  */
@@ -589,7 +589,7 @@ describe("deleteScopedResponses", () => {
   });
 
   /**
-   * The catch must rethrow, not absorb. Swallowing here would surface as `deleted: 0` — a 200 telling
+   * The catch must rethrow, not absorb. Swallowing here would surface as `deleted: 0`: a 200 telling
    * the caller nothing matched, when in fact the transaction failed and rows may still be there.
    */
   test("propagates a failed transaction instead of reporting nothing deleted", async () => {
@@ -610,7 +610,7 @@ describe("deleteScopedResponses", () => {
 
 /**
  * `Survey.blocks` is `Json[] @default([])` and `ZSurvey.blocks` uses `.prefault([])`, so a row with
- * empty `blocks` and populated `questions` is representable and schema-valid — the blocks migration
+ * empty `blocks` and populated `questions` is representable and schema-valid; the blocks migration
  * having run is not a guarantee one cannot be met. The answer plan is built from `blocks` alone, so
  * such a survey would report every stored answer as `elementNotInSurvey`: a live survey's answers
  * returned as orphans.
@@ -649,7 +649,7 @@ describe("legacy surveys whose blocks were never backfilled", () => {
     expect(JSON.stringify(derived?.blocks)).toContain(legacyQuestion.id);
   });
 
-  /** A migrated survey must not be re-derived — the stored blocks are the source of truth. */
+  /** A migrated survey must not be re-derived: the stored blocks are the source of truth. */
   /**
    * The rescue costs nothing on the common path: a page whose surveys all have blocks issues no
    * second query at all.
