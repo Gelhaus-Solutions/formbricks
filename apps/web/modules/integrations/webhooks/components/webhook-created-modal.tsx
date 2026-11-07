@@ -6,6 +6,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Webhook } from "@formbricks/database/prisma-browser";
+import { getDocsUrl } from "@/lib/docs-links";
 import { copyToClipboard } from "@/lib/utils/clipboard";
 import { Button } from "@/modules/ui/components/button";
 import {
@@ -19,6 +20,10 @@ import {
 } from "@/modules/ui/components/dialog";
 import { Input } from "@/modules/ui/components/input";
 import { Label } from "@/modules/ui/components/label";
+
+const webhookVerifyDocsUrl = getDocsUrl(
+  "/platform/features/integrations/webhooks#webhook-security-with-standard-webhooks"
+);
 
 interface WebhookCreatedModalProps {
   readonly open: boolean;
@@ -75,13 +80,15 @@ export const WebhookCreatedModal = ({ open, webhook, onClose }: WebhookCreatedMo
             <p className="mt-2 text-xs text-slate-500">
               {t("workspace.integrations.webhooks.secret_copy_warning")}
             </p>
-            <Link
-              href="https://formbricks.com/docs/platform/features/integrations/webhooks#webhook-security-with-standard-webhooks"
-              target="_blank"
-              className="mt-2 inline-flex items-center gap-1 text-xs text-slate-600 underline hover:text-slate-800">
-              {t("workspace.integrations.webhooks.learn_to_verify")}
-              <ExternalLinkIcon className="size-3" />
-            </Link>
+            {webhookVerifyDocsUrl && (
+              <Link
+                href={webhookVerifyDocsUrl}
+                target="_blank"
+                className="mt-2 inline-flex items-center gap-1 text-xs text-slate-600 underline hover:text-slate-800">
+                {t("workspace.integrations.webhooks.learn_to_verify")}
+                <ExternalLinkIcon className="size-3" />
+              </Link>
+            )}
           </div>
         </DialogBody>
 

@@ -268,12 +268,14 @@ export const CustomCssCard = ({
                 </>
               )}
             </div>
-            <Button type="button" size="sm" variant="ghost" asChild>
-              <Link href={CUSTOM_CSS_DOCS_URL} target="_blank" rel="noopener noreferrer">
-                {t("common.learn_more")}
-                <ExternalLinkIcon aria-hidden />
-              </Link>
-            </Button>
+            {CUSTOM_CSS_DOCS_URL && (
+              <Button type="button" size="sm" variant="ghost" asChild>
+                <Link href={CUSTOM_CSS_DOCS_URL} target="_blank" rel="noopener noreferrer">
+                  {t("common.learn_more")}
+                  <ExternalLinkIcon aria-hidden />
+                </Link>
+              </Button>
+            )}
           </div>
 
           {footer}

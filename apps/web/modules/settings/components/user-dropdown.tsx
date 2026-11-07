@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import formbricks from "@formbricks/js";
 import type { TUser } from "@formbricks/types/user";
 import { cn } from "@/lib/cn";
+import { getDocsUrl } from "@/lib/docs-links";
 import { useSignOut } from "@/modules/auth/hooks/use-sign-out";
 import { ProfileAvatar } from "@/modules/ui/components/avatars";
 import {
@@ -31,13 +32,20 @@ interface UserDropdownProps {
   className?: string;
   // Whether the Formbricks-in-Formbricks in-app survey widget is configured (workspace id set). The
   // "What's New" and "Share feedback" items only trigger Formbricks surveys, so they are hidden when
-  // the widget is not mounted — otherwise they would render but do nothing.
+  // the widget is not mounted; otherwise they would render but do nothing.
   isFormbricksSurveysConfigured?: boolean;
+}
+
+interface TDropdownLink {
+  label: string;
+  href: string;
+  target?: string;
+  icon: typeof UserCircleIcon;
 }
 
 // The avatar/account trigger + menu (Account, Documentation, Share feedback, Log out) shown at the
 // bottom of the sidebar. Extracted so the standalone org/account settings shell renders the same
-// user menu the workspace navigation does — otherwise those routes have no way to log out, which
+// user menu the workspace navigation does; otherwise those routes have no way to log out, which
 // strands billing-role users who get redirected straight into settings.
 export const UserDropdown = ({
   user,
@@ -51,18 +59,23 @@ export const UserDropdown = ({
   const router = useRouter();
   const { signOut: signOutWithAudit } = useSignOut({ id: user.id, email: user.email });
 
-  const dropdownNavigation = [
+  const docsUrl = getDocsUrl("/platform/introduction");
+  const dropdownNavigation: TDropdownLink[] = [
     {
       label: t("common.account"),
       href: "/account/settings/profile",
       icon: UserCircleIcon,
     },
-    {
-      label: t("common.documentation"),
-      href: "https://formbricks.com/docs",
-      target: "_blank",
-      icon: ArrowUpRightIcon,
-    },
+    ...(docsUrl
+      ? [
+          {
+            label: t("common.documentation"),
+            href: docsUrl,
+            target: "_blank",
+            icon: ArrowUpRightIcon,
+          },
+        ]
+      : []),
   ];
 
   const triggerClasses = cn(

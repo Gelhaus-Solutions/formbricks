@@ -51,7 +51,7 @@ interface CollaborateModalProps {
   listQueryKey?: ReturnType<typeof surveyKeys.list>;
   /**
    * A change was stored, in effect or pending. The caller re-reads the effective visibility from the
-   * server — a pending change keeps reading as restricted until it settles.
+   * server: a pending change keeps reading as restricted until it settles.
    */
   onVisibilityChanged?: () => void;
   /** The feature turned out to be off for this organization: hide every visibility control. */
@@ -225,15 +225,17 @@ export const CollaborateModal = ({
                 "People with access" and "Remove all access". Nothing renders here until then. */}
           </DialogBody>
 
-          <DialogFooter className="sm:justify-between">
-            <a
-              href={SURVEY_VISIBILITY_DOCS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 self-center text-sm text-slate-500 underline-offset-4 hover:text-slate-800 hover:underline">
-              {t("common.learn_more")}
-              <ArrowUpRightIcon className="size-3.5" aria-hidden="true" />
-            </a>
+          <DialogFooter className={SURVEY_VISIBILITY_DOCS_URL ? "sm:justify-between" : undefined}>
+            {SURVEY_VISIBILITY_DOCS_URL && (
+              <a
+                href={SURVEY_VISIBILITY_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 self-center text-sm text-slate-500 underline-offset-4 hover:text-slate-800 hover:underline">
+                {t("common.learn_more")}
+                <ArrowUpRightIcon className="size-3.5" aria-hidden="true" />
+              </a>
+            )}
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => handleOpenChange(false)}>
                 {t("common.close")}

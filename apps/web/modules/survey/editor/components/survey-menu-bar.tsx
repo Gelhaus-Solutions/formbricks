@@ -20,6 +20,7 @@ import {
   TSurveyVisibility,
   ZSurvey,
 } from "@formbricks/types/surveys/types";
+import { getDocsUrl } from "@/lib/docs-links";
 import { structuredClone } from "@/lib/pollyfills/structuredClone";
 import type { TSurveyAccess } from "@/lib/survey/visibility/access";
 import { getFormattedErrorMessage } from "@/lib/utils/error-message";
@@ -60,6 +61,8 @@ import { type TAutoSaveFailure } from "../lib/auto-save-badge";
 import { createSaveAttemptOrder } from "../lib/save-attempt-order";
 import { describeElementIssue, isMissingRequiredTrigger, isSurveyValid } from "../lib/validation";
 import { AutoSaveIndicator } from "./auto-save-indicator";
+
+const fileUploadsDocsUrl = getDocsUrl("/self-hosting/configuration/file-uploads");
 
 interface SurveyMenuBarProps {
   localSurvey: TSurvey;
@@ -991,15 +994,17 @@ export const SurveyMenuBar = ({
           <div>
             <Alert variant="warning" size="small" role="status">
               <AlertTitle>{t("common.storage_not_configured")}</AlertTitle>
-              <AlertButton className="flex items-center justify-center">
-                <a
-                  className="flex h-full w-full items-center justify-center bg-white!"
-                  href="https://formbricks.com/docs/self-hosting/configuration/file-uploads"
-                  target="_blank"
-                  rel="noopener noreferrer">
-                  <span>{t("common.learn_more")}</span>
-                </a>
-              </AlertButton>
+              {fileUploadsDocsUrl && (
+                <AlertButton className="flex items-center justify-center">
+                  <a
+                    className="flex h-full w-full items-center justify-center bg-white!"
+                    href={fileUploadsDocsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    <span>{t("common.learn_more")}</span>
+                  </a>
+                </AlertButton>
+              )}
             </Alert>
           </div>
         )}

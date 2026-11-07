@@ -3,9 +3,12 @@
 import { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { TActionClassInput } from "@formbricks/types/action-classes";
+import { getDocsUrl } from "@/lib/docs-links";
 import { AdvancedOptionToggle } from "@/modules/ui/components/advanced-option-toggle";
 import { FormControl, FormField, FormItem } from "@/modules/ui/components/form";
 import { Input } from "@/modules/ui/components/input";
+
+const cssSelectorDocsUrl = getDocsUrl("/surveys/website-app-surveys/actions#css-selector");
 
 interface CssSelectorProps {
   form: UseFormReturn<TActionClassInput>;
@@ -43,14 +46,15 @@ export const CssSelector = ({ form, disabled }: Readonly<CssSelectorProps>) => {
                   isInvalid={!!error}
                 />
                 <p id="CssSelectorHelp" className="text-xs text-slate-500">
-                  {t("workspace.actions.css_selector_help")}{" "}
-                  <a
-                    href="https://formbricks.com/docs/surveys/website-app-surveys/actions#css-selector"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline">
-                    {t("common.learn_more")}
-                  </a>
+                  {t("workspace.actions.css_selector_help")}
+                  {cssSelectorDocsUrl && (
+                    <>
+                      {" "}
+                      <a href={cssSelectorDocsUrl} target="_blank" rel="noreferrer" className="underline">
+                        {t("common.learn_more")}
+                      </a>
+                    </>
+                  )}
                 </p>
               </div>
             </AdvancedOptionToggle>

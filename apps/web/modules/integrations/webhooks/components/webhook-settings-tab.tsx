@@ -10,6 +10,7 @@ import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { PipelineTriggers, Webhook } from "@formbricks/database/prisma-browser";
 import { TSurvey } from "@formbricks/types/surveys/types";
+import { getDocsUrl } from "@/lib/docs-links";
 import { copyToClipboard } from "@/lib/utils/clipboard";
 import { getFormattedErrorMessage } from "@/lib/utils/error-message";
 import { SurveySelect } from "@/modules/integrations/webhooks/components/survey-select";
@@ -21,6 +22,11 @@ import { Input } from "@/modules/ui/components/input";
 import { Label } from "@/modules/ui/components/label";
 import { deleteWebhookAction, testEndpointAction, updateWebhookAction } from "../actions";
 import { TWebhookInput } from "../types/webhooks";
+
+const webhookVerifyDocsUrl = getDocsUrl(
+  "/platform/features/integrations/webhooks#webhook-security-with-standard-webhooks"
+);
+const webhookDocsUrl = getDocsUrl("/platform/features/integrations/webhooks");
 
 interface WebhookSettingsTabProps {
   webhook: Webhook;
@@ -267,13 +273,15 @@ export const WebhookSettingsTab = ({
             <p className="mt-1 text-xs text-slate-500">
               {t("workspace.integrations.webhooks.secret_description")}
             </p>
-            <Link
-              href="https://formbricks.com/docs/platform/features/integrations/webhooks#webhook-security-with-standard-webhooks"
-              target="_blank"
-              className="mt-1 inline-flex items-center gap-1 text-xs text-slate-600 underline hover:text-slate-800">
-              {t("workspace.integrations.webhooks.learn_to_verify")}
-              <ExternalLinkIcon className="size-3" />
-            </Link>
+            {webhookVerifyDocsUrl && (
+              <Link
+                href={webhookVerifyDocsUrl}
+                target="_blank"
+                className="mt-1 inline-flex items-center gap-1 text-xs text-slate-600 underline hover:text-slate-800">
+                {t("workspace.integrations.webhooks.learn_to_verify")}
+                <ExternalLinkIcon className="size-3" />
+              </Link>
+            )}
           </div>
         )}
 
@@ -309,13 +317,13 @@ export const WebhookSettingsTab = ({
               </Button>
             )}
 
-            <Button variant="secondary" asChild>
-              <Link
-                href="https://formbricks.com/docs/platform/features/integrations/webhooks"
-                target="_blank">
-                {t("common.read_docs")}
-              </Link>
-            </Button>
+            {webhookDocsUrl && (
+              <Button variant="secondary" asChild>
+                <Link href={webhookDocsUrl} target="_blank">
+                  {t("common.read_docs")}
+                </Link>
+              </Button>
+            )}
           </div>
 
           {!isReadOnly && (

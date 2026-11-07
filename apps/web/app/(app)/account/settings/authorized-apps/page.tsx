@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { AuthenticationError } from "@formbricks/types/errors";
 import { SettingsCard } from "@/app/(app)/workspaces/[workspaceId]/settings/components/SettingsCard";
+import { getDocsUrl } from "@/lib/docs-links";
 import { getUser } from "@/lib/user/service";
 import { formatDateTimeForDisplay } from "@/lib/utils/datetime";
 import { getTranslate } from "@/lingodotdev/server";
@@ -16,6 +17,8 @@ import { PageContentWrapper } from "@/modules/ui/components/page-content-wrapper
 import { PageHeader } from "@/modules/ui/components/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/modules/ui/components/table";
 import { RevokeOAuthConsentButton } from "./components/RevokeOAuthConsentButton";
+
+const mcpDocsUrl = getDocsUrl("/platform/mcp/overview");
 
 type TOAuthConsent = {
   id: string;
@@ -72,14 +75,13 @@ const Page = async () => {
         title={t("auth.oauth.authorized_apps_title")}
         description={t("auth.oauth.authorized_apps_description")}
         cta={
-          <Button asChild variant="secondary" size="sm">
-            <a
-              href="https://formbricks.com/docs/platform/mcp/overview"
-              target="_blank"
-              rel="noopener noreferrer">
-              {t("auth.oauth.mcp_docs_link")}
-            </a>
-          </Button>
+          mcpDocsUrl ? (
+            <Button asChild variant="secondary" size="sm">
+              <a href={mcpDocsUrl} target="_blank" rel="noopener noreferrer">
+                {t("auth.oauth.mcp_docs_link")}
+              </a>
+            </Button>
+          ) : undefined
         }>
         {apps.length === 0 ? (
           <p className="text-sm text-slate-600">{t("auth.oauth.no_authorized_apps")}</p>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { WidgetStatusIndicator } from "@/app/(app)/workspaces/[workspaceId]/components/WidgetStatusIndicator";
 import { SettingsCard } from "@/app/(app)/workspaces/[workspaceId]/settings/components/SettingsCard";
 import { WEBAPP_URL } from "@/lib/constants";
+import { getDocsUrl } from "@/lib/docs-links";
 import { getPostHogFeatureFlag } from "@/lib/posthog/get-feature-flag";
 import { getTranslate } from "@/lingodotdev/server";
 import { organizationSettingsPath } from "@/modules/settings/lib/routes";
@@ -19,8 +20,7 @@ export const AppConnectionPage = async ({
 }) => {
   const t = await getTranslate();
   const { workspaceId } = await params;
-  const workspaceIdMigrationUrl =
-    "https://formbricks.com/docs/surveys/website-app-surveys/workspace-id-migration";
+  const workspaceIdMigrationUrl = getDocsUrl("/surveys/website-app-surveys/workspace-id-migration");
 
   const { workspace, organization, session } = await getWorkspaceAuth(workspaceId);
   const showAIPrompt = session?.user.id
@@ -58,7 +58,7 @@ Paste this snippet into your <head> on every page:
     formbricks.setup({ workspaceId: "${workspace.id}", appUrl: "${WEBAPP_URL}" });
   }
 
-## Next.js — App Router
+## Next.js: App Router
 1. Install: npm install @formbricks/js zod
 2. Create app/formbricks.tsx:
 
@@ -84,7 +84,7 @@ Paste this snippet into your <head> on every page:
   // ...
   <Suspense><FormbricksProvider /></Suspense>
 
-## Next.js — Pages Router
+## Next.js: Pages Router
 1. Install: npm install @formbricks/js zod
 2. In src/pages/_app.tsx:
 
@@ -159,7 +159,7 @@ Paste this snippet into your <head> on every page:
 
 ---
 
-## After setup — identify users
+## After setup: identify users
 
 Call setUserId with the authenticated user's ID. Call logout() on sign-out.
 
@@ -309,10 +309,15 @@ Formbricks(
               <Alert variant="info" size="small" role="status">
                 <AlertDescription>
                   <p>
-                    {t("workspace.app-connection.environment_id_legacy_alert")}{" "}
-                    <Link href={workspaceIdMigrationUrl} target="_blank" rel="noopener noreferrer">
-                      {t("workspace.app-connection.environment_id_legacy_alert_link")}
-                    </Link>
+                    {t("workspace.app-connection.environment_id_legacy_alert")}
+                    {workspaceIdMigrationUrl && (
+                      <>
+                        {" "}
+                        <Link href={workspaceIdMigrationUrl} target="_blank" rel="noopener noreferrer">
+                          {t("workspace.app-connection.environment_id_legacy_alert_link")}
+                        </Link>
+                      </>
+                    )}
                   </p>
                 </AlertDescription>
               </Alert>

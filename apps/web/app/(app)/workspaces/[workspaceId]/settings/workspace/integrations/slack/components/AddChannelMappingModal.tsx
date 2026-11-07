@@ -17,6 +17,7 @@ import { TSurvey } from "@formbricks/types/surveys/types";
 import { getTextContent } from "@formbricks/types/surveys/validation";
 import { createOrUpdateIntegrationAction } from "@/app/(app)/workspaces/[workspaceId]/settings/workspace/integrations/actions";
 import SlackLogo from "@/images/slacklogo.png";
+import { getDocsUrl } from "@/lib/docs-links";
 import { getFormattedErrorMessage } from "@/lib/utils/error-message";
 import { recallToHeadline } from "@/lib/utils/recall";
 import { getElementsFromBlocks } from "@/modules/survey/lib/client-utils";
@@ -39,6 +40,8 @@ import {
 } from "@/modules/ui/components/dialog";
 import { DropdownSelector } from "@/modules/ui/components/dropdown-selector";
 import { Label } from "@/modules/ui/components/label";
+
+const slackDocsUrl = getDocsUrl("/platform/features/integrations/slack");
 
 interface AddChannelMappingModalProps {
   workspaceId: string;
@@ -262,15 +265,14 @@ export const AddChannelMappingModal = ({
                     setSelectedItem={setSelectedChannel}
                     disabled={channels.length === 0}
                   />
-                  <Link
-                    href="https://formbricks.com/docs/developer-docs/integrations/slack"
-                    target="_blank"
-                    className="text-xs">
-                    <Button variant="ghost" size="sm" className="my-2" type="button">
-                      <CircleHelpIcon className="size-4" />
-                      {t("workspace.integrations.slack.dont_see_your_channel")}
-                    </Button>
-                  </Link>
+                  {slackDocsUrl && (
+                    <Link href={slackDocsUrl} target="_blank" className="text-xs">
+                      <Button variant="ghost" size="sm" className="my-2" type="button">
+                        <CircleHelpIcon className="size-4" />
+                        {t("workspace.integrations.slack.dont_see_your_channel")}
+                      </Button>
+                    </Link>
+                  )}
                   {selectedChannel && hasMatchingId && (
                     <p className="text-xs text-amber-700">
                       <strong>{t("common.note")}:</strong>{" "}

@@ -8,6 +8,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { TActionClass, TActionClassInput } from "@formbricks/types/action-classes";
+import { getDocsUrl } from "@/lib/docs-links";
 import { getFormattedErrorMessage } from "@/lib/utils/error-message";
 import { buildActionObject } from "@/modules/survey/editor/lib/action-builder";
 import {
@@ -45,7 +46,7 @@ export const ActionSettingsTab = ({
   currentSurveyId,
   onActionUpdated,
 }: Readonly<ActionSettingsTabProps>) => {
-  const actionDocsHref = "https://formbricks.com/docs/surveys/website-app-surveys/actions";
+  const actionDocsHref = getDocsUrl("/surveys/website-app-surveys/actions");
   const { createdAt, updatedAt, id, ...restActionClass } = actionClass;
   const router = useRouter();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -171,11 +172,13 @@ export const ActionSettingsTab = ({
                 </Button>
               )}
 
-              <Button variant="secondary" asChild>
-                <Link href={actionDocsHref} target="_blank">
-                  {t("common.read_docs")}
-                </Link>
-              </Button>
+              {actionDocsHref && (
+                <Button variant="secondary" asChild>
+                  <Link href={actionDocsHref} target="_blank">
+                    {t("common.read_docs")}
+                  </Link>
+                </Button>
+              )}
             </div>
 
             {isReadOnly ? null : (

@@ -2,9 +2,12 @@
 
 import { Terminal } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { getDocsUrl } from "@/lib/docs-links";
 import { Alert, AlertDescription, AlertTitle } from "@/modules/ui/components/alert";
 import { FormControl, FormError, FormField, FormItem, FormLabel } from "@/modules/ui/components/form";
 import { Input } from "@/modules/ui/components/input";
+
+const actionsDocsUrl = getDocsUrl("/surveys/website-app-surveys/actions");
 
 interface CodeActionFormProps {
   readonly form: any;
@@ -49,15 +52,17 @@ export const CodeActionForm = ({ form, isReadOnly }: CodeActionFormProps) => {
           <span className="rounded-sm bg-slate-100 px-2 py-1 text-xs">
             formbricks.track(&quot;{watch("key")}&quot;)
           </span>{" "}
-          {t("workspace.actions.in_your_code_read_more_in_our")}{" "}
-          <a
-            href="https://formbricks.com/docs/surveys/website-app-surveys/actions"
-            target="_blank"
-            rel="noreferrer"
-            className="underline">
-            {t("common.docs")}
-          </a>
-          {"."}
+          {actionsDocsUrl ? (
+            <>
+              {t("workspace.actions.in_your_code_read_more_in_our")}{" "}
+              <a href={actionsDocsUrl} target="_blank" rel="noreferrer" className="underline">
+                {t("common.docs")}
+              </a>
+              {"."}
+            </>
+          ) : (
+            t("workspace.actions.in_your_code")
+          )}
         </AlertDescription>
       </Alert>
     </div>

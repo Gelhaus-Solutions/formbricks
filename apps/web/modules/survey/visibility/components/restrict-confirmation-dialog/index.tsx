@@ -101,14 +101,16 @@ export const RestrictConfirmationDialog = ({
 
           <VisibilityBlockersAlert blockers={blockers} />
 
-          <a
-            href={SURVEY_VISIBILITY_DOCS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-slate-500 underline-offset-4 hover:text-slate-800 hover:underline">
-            {t("common.learn_more")}
-            <ArrowUpRightIcon className="size-3.5" aria-hidden="true" />
-          </a>
+          {SURVEY_VISIBILITY_DOCS_URL && (
+            <a
+              href={SURVEY_VISIBILITY_DOCS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-sm text-slate-500 underline-offset-4 hover:text-slate-800 hover:underline">
+              {t("common.learn_more")}
+              <ArrowUpRightIcon className="size-3.5" aria-hidden="true" />
+            </a>
+          )}
         </div>
       }
       buttonText={t("workspace.surveys.visibility.change_to_restricted")}

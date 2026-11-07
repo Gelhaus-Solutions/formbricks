@@ -1,3 +1,4 @@
+import { getDocsUrl } from "@/lib/docs-links";
 import { formatDateForDisplay } from "@/lib/utils/datetime";
 
 /**
@@ -16,7 +17,7 @@ export const SURVEY_FOLLOW_UPS_SUNSET_DATE = new Date("2026-12-01T00:00:00.000Z"
  * The sunset date as the announcement means it: a calendar day, not an instant.
  *
  * `formatDateForDisplay` builds an `Intl.DateTimeFormat` with no `timeZone`, so it renders in the
- * viewer's own zone — and midnight UTC on 1 December is still 30 November anywhere west of it. Left
+ * viewer's own zone, and midnight UTC on 1 December is still 30 November anywhere west of it. Left
  * alone, a reader in New York would be told follow-ups stop working on "Nov 30, 2026" while the docs
  * and the deprecation announcement both say 1 December. Locale still controls the formatting; only
  * the represented calendar day is pinned, which is exactly the split CODING_STANDARDS.md asks for.
@@ -33,10 +34,10 @@ export const formatSurveyFollowUpsSunsetDate = (locale: string): string =>
   });
 
 /** Docs page that explains the replacement. */
-export const WORKFLOWS_DOCS_URL = "https://formbricks.com/docs/workflows/overview";
+export const WORKFLOWS_DOCS_URL = getDocsUrl("/workflows/overview");
 
 interface FollowUpsTabVisibilityInput {
-  /** Follow-ups persisted on the survey — deliberately the server count, see below. */
+  /** Follow-ups persisted on the survey: deliberately the server count, see below. */
   followUpCount: number;
   isSurveyFollowUpsAllowed: boolean;
   isWorkflowsAllowed: boolean;
@@ -50,13 +51,13 @@ interface FollowUpsTabVisibilityInput {
  * entitlement has since lapsed (a Cloud trial or a downgrade), because hiding the tab there would
  * hide automation the survey still carries.
  *
- * With no follow-ups yet, the tab survives only where Workflows cannot replace it — self-hosted
+ * With no follow-ups yet, the tab survives only where Workflows cannot replace it: self-hosted
  * without an enterprise license being the case that matters, since follow-ups are free there
  * (`getSurveyFollowUpsPermission`) while Workflows are licensed. Taking the feature away from that
  * deployment would leave it with no path forward at all, so it keeps the tab until the packaging
  * question is settled.
  *
- * Everyone else — Workflows available, or follow-ups not entitled anyway — no longer sees it. That
+ * Everyone else (Workflows available, or follow-ups not entitled anyway) no longer sees it. That
  * is what stops new follow-ups being created, and it retires the upsell that used to sell a
  * deprecated feature to organizations that never had it.
  *

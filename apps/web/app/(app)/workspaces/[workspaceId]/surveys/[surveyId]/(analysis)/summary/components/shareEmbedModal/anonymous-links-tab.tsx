@@ -10,6 +10,7 @@ import { TUserLocale } from "@formbricks/types/user";
 import { updateSingleUseLinksAction } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/actions";
 import { DisableLinkModal } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/disable-link-modal";
 import { DocumentationLinks } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/documentation-links";
+import { getDocsUrl } from "@/lib/docs-links";
 import { ShareSurveyLink } from "@/modules/analysis/components/ShareSurveyLink";
 import { generateSingleUseIdsAction } from "@/modules/survey/list/actions";
 import { AdvancedOptionToggle } from "@/modules/ui/components/advanced-option-toggle";
@@ -373,19 +374,19 @@ export const AnonymousLinksTab = ({
           links={[
             {
               title: t("workspace.surveys.share.anonymous_links.single_use_links"),
-              href: "https://formbricks.com/docs/surveys/link-surveys/single-use-links",
+              href: getDocsUrl("/surveys/link-surveys/single-use-links"),
             },
             {
               title: t("workspace.surveys.share.anonymous_links.data_prefilling"),
-              href: "https://formbricks.com/docs/surveys/link-surveys/data-prefilling",
+              href: getDocsUrl("/surveys/link-surveys/data-prefilling"),
             },
             {
               title: t("workspace.surveys.share.anonymous_links.source_tracking"),
-              href: "https://formbricks.com/docs/surveys/link-surveys/source-tracking",
+              href: getDocsUrl("/surveys/link-surveys/source-tracking"),
             },
             {
               title: t("workspace.surveys.share.anonymous_links.custom_start_point"),
-              href: "https://formbricks.com/docs/surveys/link-surveys/start-at-block",
+              href: getDocsUrl("/surveys/link-surveys/start-at-block"),
             },
           ]}
         />

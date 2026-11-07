@@ -15,29 +15,30 @@ import { TActionClass } from "@formbricks/types/action-classes";
 import { TSegment } from "@formbricks/types/segment";
 import { useWorkspaceContext } from "@/app/(app)/workspaces/[workspaceId]/context/workspace-context";
 import { useSurvey } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/context/survey-context";
+import { getDocsUrl } from "@/lib/docs-links";
 import { Alert, AlertButton, AlertDescription, AlertTitle } from "@/modules/ui/components/alert";
 import { H4, InlineSmall, Small } from "@/modules/ui/components/typography";
 import { DocumentationLinksSection } from "./documentation-links-section";
 
 const createDocumentationLinks = (t: ReturnType<typeof useTranslation>["t"]) => [
   {
-    href: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#html",
+    href: getDocsUrl("/surveys/website-app-surveys/framework-guides#html"),
     title: t("workspace.surveys.summary.in_app.html_embed"),
   },
   {
-    href: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#react-js",
+    href: getDocsUrl("/surveys/website-app-surveys/framework-guides#react-js"),
     title: t("workspace.surveys.summary.in_app.javascript_sdk"),
   },
   {
-    href: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#swift",
+    href: getDocsUrl("/surveys/website-app-surveys/framework-guides#swift"),
     title: t("workspace.surveys.summary.in_app.ios_sdk"),
   },
   {
-    href: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#android",
+    href: getDocsUrl("/surveys/website-app-surveys/framework-guides#android"),
     title: t("workspace.surveys.summary.in_app.kotlin_sdk"),
   },
   {
-    href: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#react-native",
+    href: getDocsUrl("/surveys/website-app-surveys/framework-guides#react-native"),
     title: t("workspace.surveys.summary.in_app.react_native_sdk"),
   },
 ];

@@ -67,13 +67,17 @@ export const ConnectIntegration = ({
         {!isEnabled && (
           <p className="mb-8 rounded-sm border-slate-200 bg-slate-100 p-3 text-sm">
             {integrationDetails?.notConfiguredText}
-            <br />
-            <Trans
-              i18nKey="workspace.integrations.follow_these_docs_to_configure_it"
-              components={{
-                docsLink: <Link href={integrationDetails?.docsLink ?? ""} className="underline" />,
-              }}
-            />
+            {integrationDetails?.docsLink && (
+              <>
+                <br />
+                <Trans
+                  i18nKey="workspace.integrations.follow_these_docs_to_configure_it"
+                  components={{
+                    docsLink: <Link href={integrationDetails.docsLink} className="underline" />,
+                  }}
+                />
+              </>
+            )}
           </p>
         )}
         <Button loading={isConnecting} onClick={handleConnect} disabled={!isEnabled}>

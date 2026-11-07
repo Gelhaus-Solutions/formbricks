@@ -3,6 +3,7 @@
 import { AlertCircleIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { getDocsUrl } from "@/lib/docs-links";
 import { Alert, AlertButton, AlertDescription, AlertTitle } from "@/modules/ui/components/alert";
 import { Button } from "@/modules/ui/components/button";
 import { FacebookIcon } from "@/modules/ui/components/icons/facebook-icon";
@@ -10,6 +11,8 @@ import { LinkedinIcon } from "@/modules/ui/components/icons/linkedin-icon";
 import { RedditIcon } from "@/modules/ui/components/icons/reddit-icon";
 import { ThreadsIcon } from "@/modules/ui/components/icons/threads-icon";
 import { XIcon } from "@/modules/ui/components/icons/x-icon";
+
+const sourceTrackingDocsUrl = getDocsUrl("/surveys/link-surveys/source-tracking");
 
 interface SocialMediaTabProps {
   surveyUrl: string;
@@ -98,16 +101,14 @@ export const SocialMediaTab: React.FC<SocialMediaTabProps> = ({ surveyUrl, surve
         <AlertDescription>
           {t("workspace.surveys.share.social_media.source_tracking_enabled_alert_description")}
         </AlertDescription>
-        <AlertButton
-          onClick={() => {
-            window.open(
-              "https://formbricks.com/docs/surveys/link-surveys/source-tracking",
-              "_blank",
-              "noopener,noreferrer"
-            );
-          }}>
-          {t("common.learn_more")}
-        </AlertButton>
+        {sourceTrackingDocsUrl && (
+          <AlertButton
+            onClick={() => {
+              window.open(sourceTrackingDocsUrl, "_blank", "noopener,noreferrer");
+            }}>
+            {t("common.learn_more")}
+          </AlertButton>
+        )}
       </Alert>
     </>
   );

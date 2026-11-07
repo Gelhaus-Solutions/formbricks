@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/cn";
+import { getDocsUrl } from "@/lib/docs-links";
 import { Button } from "@/modules/ui/components/button";
 import { CodeBlock } from "@/modules/ui/components/code-block";
 import {
@@ -40,7 +41,7 @@ interface TSubMethod {
   label: string;
   steps: string[];
   content?: ReactNode;
-  docsHref: string;
+  docsHref: string | null;
 }
 
 type TInstallMethodId = "ai" | "website" | "google-tag-manager" | "wordpress" | "mobile";
@@ -52,7 +53,7 @@ interface TInstallMethod {
   description: string;
   steps?: string[];
   content?: ReactNode;
-  docsHref?: string;
+  docsHref?: string | null;
   subMethods?: TSubMethod[];
 }
 
@@ -87,7 +88,7 @@ export const InstallMethodCards = ({
           {htmlSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#html",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/framework-guides#html"),
     },
     {
       id: "react",
@@ -102,7 +103,7 @@ export const InstallMethodCards = ({
           {reactSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#react-js",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/framework-guides#react-js"),
     },
     {
       id: "nextjs",
@@ -118,7 +119,7 @@ export const InstallMethodCards = ({
           {nextjsSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#next-js",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/framework-guides#next-js"),
     },
     {
       id: "vue",
@@ -133,7 +134,7 @@ export const InstallMethodCards = ({
           {vueSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#vue-js",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/framework-guides#vue-js"),
     },
   ];
 
@@ -151,7 +152,7 @@ export const InstallMethodCards = ({
           {reactNativeSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#react-native",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/framework-guides#react-native"),
     },
     {
       id: "swift",
@@ -166,7 +167,7 @@ export const InstallMethodCards = ({
           {swiftSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#swift",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/framework-guides#swift"),
     },
     {
       id: "android",
@@ -181,7 +182,7 @@ export const InstallMethodCards = ({
           {androidSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#android",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/framework-guides#android"),
     },
     {
       id: "flutter",
@@ -196,7 +197,7 @@ export const InstallMethodCards = ({
           {flutterSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/framework-guides#flutter",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/framework-guides#flutter"),
     },
   ];
 
@@ -249,7 +250,7 @@ export const InstallMethodCards = ({
           {htmlSnippet}
         </CodeBlock>
       ),
-      docsHref: "https://formbricks.com/docs/surveys/website-app-surveys/google-tag-manager",
+      docsHref: getDocsUrl("/surveys/website-app-surveys/google-tag-manager"),
     },
     {
       id: "wordpress",
@@ -262,7 +263,7 @@ export const InstallMethodCards = ({
         t("workspace.app-connection.install_method_wordpress_step_3"),
         t("workspace.app-connection.install_method_wordpress_step_4"),
       ],
-      docsHref: "https://formbricks.com/docs/platform/features/integrations/wordpress",
+      docsHref: getDocsUrl("/platform/features/integrations/wordpress"),
     },
   ];
 
@@ -289,12 +290,14 @@ export const InstallMethodCards = ({
           ))}
         </ol>
         {selected.content}
-        <Button variant="secondary" size="sm" asChild>
-          <Link href={selected.docsHref} target="_blank" rel="noopener noreferrer">
-            {t("common.learn_more")}
-            <ExternalLinkIcon />
-          </Link>
-        </Button>
+        {selected.docsHref && (
+          <Button variant="secondary" size="sm" asChild>
+            <Link href={selected.docsHref} target="_blank" rel="noopener noreferrer">
+              {t("common.learn_more")}
+              <ExternalLinkIcon />
+            </Link>
+          </Button>
+        )}
       </div>
     );
   };

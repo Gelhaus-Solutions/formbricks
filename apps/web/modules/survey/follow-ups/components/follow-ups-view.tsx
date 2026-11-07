@@ -54,7 +54,7 @@ export const FollowUpsView = ({
   const surveyFollowUps: TSurveyFollowUp[] = localSurvey.followUps.filter((f) => !f.deleted);
 
   // Follow-ups are deprecated, so the only place a new one can still be started is a deployment
-  // Workflows cannot reach yet. Everywhere else the entry point is a Workflow — that is what stops
+  // Workflows cannot reach yet. Everywhere else the entry point is a Workflow: that is what stops
   // the migration debt growing while nothing is removed. A restricted survey keeps the entry point,
   // disabled: its follow-ups would never send.
   const { isCreationOffered, canCreate, isSending } = getFollowUpsAvailability({
@@ -71,11 +71,13 @@ export const FollowUpsView = ({
         <AlertDescription>
           {t("workspace.surveys.edit.follow_ups_deprecation_description", { date: sunsetDate })}
         </AlertDescription>
-        <AlertButton asChild>
-          <Link href={WORKFLOWS_DOCS_URL} target="_blank" rel="noopener noreferrer">
-            {t("common.learn_more")}
-          </Link>
-        </AlertButton>
+        {WORKFLOWS_DOCS_URL && (
+          <AlertButton asChild>
+            <Link href={WORKFLOWS_DOCS_URL} target="_blank" rel="noopener noreferrer">
+              {t("common.learn_more")}
+            </Link>
+          </AlertButton>
+        )}
       </Alert>
 
       {/* An entitlement can lapse (a Cloud trial, or a downgrade) while the survey keeps carrying
@@ -116,7 +118,7 @@ export const FollowUpsView = ({
       </div>
 
       {/* Only offered where a new follow-up can still be started. Reachable with Workflows
-          available too — delete the last follow-up in-session — and there the promo card would be a
+          available too (delete the last follow-up in-session), and there the promo card would be a
           dead end advertising the very thing this deprecation is trying to stop. */}
       {!surveyFollowUps.length && isCreationOffered && (
         <div className="flex flex-col items-center gap-y-4 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">

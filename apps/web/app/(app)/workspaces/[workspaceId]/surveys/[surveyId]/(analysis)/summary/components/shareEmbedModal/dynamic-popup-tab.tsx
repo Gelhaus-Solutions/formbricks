@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useWorkspace } from "@/app/(app)/workspaces/[workspaceId]/context/workspace-context";
 import { DocumentationLinks } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/shareEmbedModal/documentation-links";
+import { getDocsUrl } from "@/lib/docs-links";
 import { Alert, AlertButton, AlertDescription, AlertTitle } from "@/modules/ui/components/alert";
 
 interface DynamicPopupTabProps {
@@ -30,11 +31,11 @@ export const DynamicPopupTab = ({ surveyId }: DynamicPopupTabProps) => {
         links={[
           {
             title: t("workspace.surveys.share.dynamic_popup.code_no_code_triggers"),
-            href: "https://formbricks.com/docs/surveys/website-app-surveys/actions",
+            href: getDocsUrl("/surveys/website-app-surveys/actions"),
           },
           {
             title: t("workspace.surveys.share.dynamic_popup.recontact_options"),
-            href: "https://formbricks.com/docs/surveys/website-app-surveys/recontact",
+            href: getDocsUrl("/surveys/website-app-surveys/recontact"),
           },
         ]}
       />
