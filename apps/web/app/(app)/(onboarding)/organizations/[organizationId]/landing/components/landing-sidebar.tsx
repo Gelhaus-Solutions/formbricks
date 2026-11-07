@@ -71,7 +71,7 @@ export const LandingSidebar = ({
       className={cn(
         "z-40 flex w-sidebar-collapsed flex-col justify-between rounded-r-xl border-r border-slate-200 bg-white pt-3 shadow-md transition-all duration-100"
       )}>
-      <Image src={FBLogo} width={160} height={30} alt={t("workspace.formbricks_logo")} />
+      <Image src={FBLogo} width={133} height={30} alt={t("workspace.formbricks_logo")} />
 
       <div className="flex flex-col">
         {/* Organization Switcher */}
