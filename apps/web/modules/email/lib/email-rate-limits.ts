@@ -105,7 +105,6 @@ export const emailRateLimits: Record<TEmailType, TEmailRateLimit> = {
   invite: { recipient: { inOrganization: limit(3, DAY) }, deployment: limit(5000, DAY) },
   invite_accepted: {},
   email_verification: { recipient: { total: limit(5) } },
-  sso_recovery_verification: { recipient: { total: limit(5) } },
   // Limited to 3 an hour per user where the change is requested, and to 3 an hour for one address across
   // users: the recipient is still someone's inbox, whoever asked. No per-deployment cap, which every tenant
   // shares and a few hundred accounts could spend to silence everyone else's email change. A taken address
@@ -117,8 +116,6 @@ export const emailRateLimits: Record<TEmailType, TEmailRateLimit> = {
   password_reset_notification: {},
   account_deletion: {},
   account_deletion_notification: {},
-  sso_recovery_notification: {},
-  sso_sign_in_hint: { recipient: { total: limit(3) } },
   data_retention_notice: {},
   // One per export the user started, and starting one is already rate-limited per user.
   attachment_export: {},

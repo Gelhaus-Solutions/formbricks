@@ -55,7 +55,6 @@ export const AZUREAD_TENANT_ID = env.AZUREAD_TENANT_ID;
 export const OIDC_CLIENT_ID = env.OIDC_CLIENT_ID;
 export const OIDC_CLIENT_SECRET = env.OIDC_CLIENT_SECRET;
 export const OIDC_ISSUER = env.OIDC_ISSUER;
-export const OIDC_DISPLAY_NAME = env.OIDC_DISPLAY_NAME;
 export const OIDC_SIGNING_ALGORITHM = env.OIDC_SIGNING_ALGORITHM;
 
 export const SAML_DATABASE_URL = env.SAML_DATABASE_URL;
@@ -65,7 +64,6 @@ export const SAML_AUDIENCE = "https://saml.formbricks.com";
 export const SAML_PATH = "/api/auth/saml/callback";
 
 export const SIGNUP_ENABLED = IS_FORMBRICKS_CLOUD || IS_DEVELOPMENT || E2E_TESTING;
-export const EMAIL_AUTH_ENABLED = env.EMAIL_AUTH_DISABLED !== "1";
 export const INVITE_DISABLED = env.INVITE_DISABLED === "1";
 export const INVITE_RATE_LIMIT_PER_24_HOURS = env.INVITE_RATE_LIMIT_PER_24_HOURS;
 export const EMAIL_RATE_LIMIT_MULTIPLIER = env.EMAIL_RATE_LIMIT_MULTIPLIER;

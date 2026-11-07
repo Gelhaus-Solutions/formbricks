@@ -125,13 +125,7 @@ describe("emailRateLimits", () => {
       (emailType) => emailRateLimits[emailType].recipient?.total
     );
     expect(withTotal.sort()).toEqual(
-      [
-        "email_change_verification",
-        "email_verification",
-        "password_reset",
-        "sso_recovery_verification",
-        "sso_sign_in_hint",
-      ].sort()
+      ["email_change_verification", "email_verification", "password_reset"].sort()
     );
   });
 });

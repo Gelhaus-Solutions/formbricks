@@ -17,10 +17,7 @@ import {
   sendPasswordResetLinkEmail,
   sendPasswordResetNotifyEmail,
   sendResponseFinishedEmail,
-  sendSsoRecoveryFactorsRemovedEmail,
-  sendSsoSignInHintEmail,
   sendSurveyRetentionNoticeEmail,
-  sendVerificationEmail,
   sendVerificationLinkEmail,
   sendVerificationNewEmail,
 } from "./index";
@@ -60,8 +57,6 @@ vi.mock("@formbricks/email", () => ({
   renderNewEmailVerification: async () => "html",
   renderPasswordResetNotifyEmail: async () => "html",
   renderResponseFinishedEmail: async () => "html",
-  renderSsoRecoveryFactorsRemovedEmail: async () => "html",
-  renderSsoSignInHintEmail: async () => "html",
   renderSurveyRetentionNoticeEmail: async () => "html",
   renderMemberRetentionNoticeEmail: async () => "html",
   renderVerificationEmail: async () => "html",
@@ -94,18 +89,6 @@ const senders: [string, () => Promise<unknown>][] = [
   ],
   ["password_reset_notification", () => sendPasswordResetNotifyEmail({ email, locale })],
   ["account_deletion_notification", () => sendAccountDeletedEmail({ email, locale })],
-  [
-    "sso_recovery_notification",
-    () =>
-      sendSsoRecoveryFactorsRemovedEmail({
-        email,
-        locale,
-        passwordRemoved: true,
-        twoFactorRemoved: false,
-        apiKeysRemoved: false,
-      }),
-  ],
-  ["sso_sign_in_hint", () => sendSsoSignInHintEmail({ email, locale, providerNames: ["Microsoft"] })],
   [
     "data_retention_notice",
     () =>
@@ -278,14 +261,6 @@ describe("email source attribution", () => {
     expect(renderInviteAcceptedEmail).toHaveBeenCalledWith(
       expect.objectContaining({ inviterName: "Inviter", inviteeName: "Win at" })
     );
-  });
-
-  test.each([
-    ["email_verification", "email_verification"],
-    ["sso_recovery", "sso_recovery_verification"],
-  ] as const)("distinguishes the %s verification purpose", async (purpose, emailType) => {
-    await sendVerificationEmail({ id: "user", email, locale, purpose });
-    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ emailType }));
   });
 
   test("classifies legacy survey follow-ups separately from workflow emails", async () => {

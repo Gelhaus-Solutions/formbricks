@@ -34,13 +34,6 @@ export const exampleData = {
     // No props needed
   },
 
-  ssoRecoveryFactorsRemovedEmail: {
-    passwordRemoved: true,
-    twoFactorRemoved: true,
-    apiKeysRemoved: true,
-    securitySettingsLink: "https://app.formbricks.com/account/settings/profile",
-  },
-
   attachmentExportReadyEmail: {
     surveyName: "Mystery shopper visit",
     archiveSize: "5.7 GB",
@@ -86,11 +79,6 @@ export const exampleData = {
     ],
     settingsLink:
       "https://app.formbricks.com/organizations/example-organization-id/settings/data-retention/exemptions",
-  },
-
-  ssoSignInHintEmail: {
-    providerNames: ["Microsoft"],
-    loginLink: "https://app.formbricks.com/auth/login",
   },
 
   inviteEmail: {

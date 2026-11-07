@@ -41,7 +41,6 @@ vi.mock("@/lib/constants", () => ({
   OIDC_CLIENT_ID: "mock-oidc-client-id",
   OIDC_CLIENT_SECRET: "mock-oidc-client-secret",
   OIDC_ISSUER: "mock-oidc-issuer",
-  OIDC_DISPLAY_NAME: "mock-oidc-display-name",
   OIDC_SIGNING_ALGORITHM: "mock-oidc-signing-algorithm",
   SAML_DATABASE_URL: "mock-saml-database-url",
   WEBAPP_URL: "mock-webapp-url",

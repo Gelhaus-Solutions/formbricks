@@ -91,20 +91,6 @@ const translations: Record<TranslationKey, TranslationValue> = {
     "Link to uploaded file is not included for data privacy reasons",
   "emails.render_email_response_value_signature_link_not_included":
     "Link to the signature is not included for data privacy reasons",
-  "emails.sso_recovery_factors_removed_email_api_keys":
-    "API keys you had created were deleted. You can create new ones in your organization settings.",
-  "emails.sso_recovery_factors_removed_email_did_not_expect":
-    "If you did not just sign in with single sign-on, contact your administrator immediately.",
-  "emails.sso_recovery_factors_removed_email_heading": "Credentials removed from your account",
-  "emails.sso_recovery_factors_removed_email_password": "Your password was removed.",
-  "emails.sso_recovery_factors_removed_email_review_security": "Review security settings",
-  "emails.sso_recovery_factors_removed_email_sign_in_hint":
-    "You can keep signing in with single sign-on. To use a password or two-factor authentication again, set them up in your security settings.",
-  "emails.sso_recovery_factors_removed_email_subject":
-    "Credentials were removed from your Formbricks account",
-  "emails.sso_recovery_factors_removed_email_text":
-    "You just signed in with single sign-on for the first time. Because your email address had never been verified, we removed the credentials that were set on the account before:",
-  "emails.sso_recovery_factors_removed_email_two_factor": "Two-factor authentication was removed.",
   "emails.member_retention_notice_email_heading": "Your account will be deactivated",
   "emails.member_retention_notice_email_keep":
     "To keep your account active, sign in before then. Once deactivated, an owner or manager of the organization can reactivate it.",
@@ -129,17 +115,6 @@ const translations: Record<TranslationKey, TranslationValue> = {
   "emails.retention_notice_email_text_surveys":
     "{organizationName} automatically archives surveys that haven't been used in a while. The following is due soon:",
   "emails.retention_notice_email_view_settings": "View data retention settings",
-  "emails.sso_sign_in_hint_email_did_not_request":
-    "If you did not request this, you can ignore this email. Nothing about your account has changed.",
-  "emails.sso_sign_in_hint_email_go_to_login": "Go to sign in",
-  "emails.sso_sign_in_hint_email_heading": "Sign in with single sign-on",
-  "emails.sso_sign_in_hint_email_no_access":
-    "If you can no longer sign in this way, contact your administrator.",
-  "emails.sso_sign_in_hint_email_subject": "How to sign in to your Formbricks account",
-  "emails.sso_sign_in_hint_email_text":
-    "We received a request to reset the password for your Formbricks account. Your account does not use a password, so there is nothing to reset. You sign in with:",
-  "emails.sso_sign_in_hint_email_text_unavailable":
-    "We received a request to reset the password for your Formbricks account. Your account does not use a password: it signs in with single sign-on, which is not available on this Formbricks instance right now. Contact your administrator to get access again.",
   "emails.response_data": "Response data",
   "emails.response_finished_email_subject": "A response for {surveyName} was completed ✅",
   "emails.schedule_your_meeting": "Schedule your meeting",

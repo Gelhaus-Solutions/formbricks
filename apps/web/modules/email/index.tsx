@@ -16,8 +16,6 @@ import {
   renderNewEmailVerification,
   renderPasswordResetNotifyEmail,
   renderResponseFinishedEmail,
-  renderSsoRecoveryFactorsRemovedEmail,
-  renderSsoSignInHintEmail,
   renderSurveyRetentionNoticeEmail,
   renderVerificationEmail,
 } from "@formbricks/email";
@@ -31,21 +29,10 @@ import type { TSurvey } from "@formbricks/types/surveys/types";
 import { TUserEmail, TUserLocale } from "@formbricks/types/user";
 import { IMPRINT_ADDRESS, IMPRINT_URL, MAIL_FROM, PRIVACY_URL, TERMS_URL, WEBAPP_URL } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
-import {
-  createEmailChangeToken,
-  createEmailToken,
-  createInviteToken,
-  createToken,
-  createTokenForLinkSurvey,
-} from "@/lib/jwt";
+import { createEmailChangeToken, createInviteToken, createTokenForLinkSurvey } from "@/lib/jwt";
 import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
 import { TElementResponseMappingSurvey, getElementResponseMapping } from "@/lib/responses";
 import { getTranslate } from "@/lingodotdev/server";
-import {
-  TVerificationRequestPurpose,
-  VERIFICATION_LINK_TTL_SECONDS,
-  buildVerificationLinks,
-} from "@/modules/auth/lib/verification-links";
 import { toEmailDisplayText } from "@/modules/email/lib/email-display-text";
 import type { TEmailRateLimitContext } from "@/modules/email/lib/email-rate-limits";
 import { sendEmail } from "@/modules/email/lib/send-email";
@@ -90,59 +77,6 @@ export const sendVerificationNewEmail = async (
   } catch (error) {
     logger.error(error, "Error in sendVerificationNewEmail");
     throw error;
-  }
-};
-
-export const sendVerificationEmail = async ({
-  id,
-  email,
-  locale,
-  callbackUrl,
-  purpose = "email_verification",
-  linkTtlSeconds = VERIFICATION_LINK_TTL_SECONDS,
-}: {
-  id: string;
-  email: TUserEmail;
-  locale: TUserLocale;
-  callbackUrl?: string;
-  purpose?: TVerificationRequestPurpose;
-  /**
-   * Overridden only by an SSO-recovery resend, which has to mint a link no longer-lived than the intent
-   * it points at — see `getSsoRecoveryPairedTtlSeconds`. Everything else gets the full window.
-   */
-  linkTtlSeconds?: number;
-}): Promise<boolean> => {
-  try {
-    const t = await getTranslate(locale);
-    const token = createToken(id, {
-      expiresIn: linkTtlSeconds,
-      purpose,
-    });
-    const { verifyLink, verificationRequestLink } = buildVerificationLinks({
-      token,
-      webAppUrl: WEBAPP_URL,
-      callbackUrl,
-      purpose,
-      verificationRequestToken: createEmailToken(email),
-    });
-
-    const html = await renderVerificationEmail({
-      verificationRequestLink,
-      verifyLink,
-      t,
-      ...legalProps,
-    });
-
-    return await sendEmail({
-      emailType: purpose === "sso_recovery" ? "sso_recovery_verification" : "email_verification",
-      auditContext: { trigger: "system" },
-      to: email,
-      subject: t("emails.verification_email_subject"),
-      html,
-    });
-  } catch (error) {
-    logger.error(error, "Error in sendVerificationEmail");
-    throw error; // Re-throw the error to maintain the original behavior
   }
 };
 
@@ -249,79 +183,6 @@ export const sendAccountDeletedEmail = async (user: {
     auditContext: { trigger: "system" },
     to: user.email,
     subject: t("emails.account_deleted_email_subject"),
-    html,
-  });
-};
-
-/**
- * Tell a user that SSO recovery removed the local sign-in factors from their account (ENG-2633).
- *
- * Recovery strips the password and any second factor from an account whose address was never proven,
- * because marking it verified would otherwise leave an attacker who registered on someone else's
- * address holding a live credential. No signal separates that attacker from an owner who simply never
- * clicked a verification link, so the strip is unconditional and this mail is what keeps the
- * legitimate case from being a silent downgrade: it names what went and links to re-enrolment.
- */
-export const sendSsoRecoveryFactorsRemovedEmail = async ({
-  email,
-  locale,
-  passwordRemoved,
-  twoFactorRemoved,
-  apiKeysRemoved,
-}: {
-  email: string;
-  locale: TUserLocale;
-  passwordRemoved: boolean;
-  twoFactorRemoved: boolean;
-  /** Keys the account had created were deleted with the strip (ENG-2634). */
-  apiKeysRemoved: boolean;
-}): Promise<boolean> => {
-  const t = await getTranslate(locale);
-  const html = await renderSsoRecoveryFactorsRemovedEmail({
-    passwordRemoved,
-    twoFactorRemoved,
-    apiKeysRemoved,
-    // The account profile page is where both factors this mail can name are re-enrolled — the password
-    // form and the 2FA card both live there. There is no separate /settings/security route.
-    securitySettingsLink: `${WEBAPP_URL}/account/settings/profile`,
-    t,
-    ...legalProps,
-  });
-  return await sendEmail({
-    emailType: "sso_recovery_notification",
-    auditContext: { trigger: "system" },
-    to: email,
-    subject: t("emails.sso_recovery_factors_removed_email_subject"),
-    html,
-  });
-};
-
-/**
- * Tell a user who asked for a password reset that their account has no password and signs in with an
- * identity provider instead (ENG-3262). Goes only to the address on file, so naming the provider here
- * reveals nothing the forgot-password page does not — that page answers identically for every address.
- */
-export const sendSsoSignInHintEmail = async ({
-  email,
-  locale,
-  providerNames,
-}: {
-  email: string;
-  locale: TUserLocale;
-  providerNames: string[];
-}): Promise<boolean> => {
-  const t = await getTranslate(locale);
-  const html = await renderSsoSignInHintEmail({
-    providerNames,
-    loginLink: `${WEBAPP_URL}/auth/login`,
-    t,
-    ...legalProps,
-  });
-  return await sendEmail({
-    emailType: "sso_sign_in_hint",
-    auditContext: { trigger: "system" },
-    to: email,
-    subject: t("emails.sso_sign_in_hint_email_subject"),
     html,
   });
 };
@@ -591,7 +452,7 @@ export const sendResponseFinishedEmail = async (
   });
 
   // The whitelabel logo is stored as a relative `/storage/...` path, which an email client cannot
-  // resolve — it has no origin to resolve against, so the `<img>` renders broken. Resolve it to an
+  // resolve: it has no origin to resolve against, so the `<img>` renders broken. Resolve it to an
   // absolute URL here, exactly like every other email sender does.
   const logoUrl = organization.whitelabel?.logoUrl
     ? resolveStorageUrl(organization.whitelabel.logoUrl)
@@ -619,7 +480,7 @@ export const sendResponseFinishedEmail = async (
       responseId: response.id,
     },
     to: email,
-    // Never put the respondent's email address in the subject — it's PII that ends up in
+    // Never put the respondent's email address in the subject: it's PII that ends up in
     // notification previews and mailbox lists; replying still reaches them via replyTo.
     subject: t("emails.response_finished_email_subject", {
       surveyName: survey.name,

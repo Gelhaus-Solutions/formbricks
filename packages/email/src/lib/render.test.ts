@@ -24,8 +24,6 @@ import {
   renderNewEmailVerification,
   renderPasswordResetNotifyEmail,
   renderResponseFinishedEmail,
-  renderSsoRecoveryFactorsRemovedEmail,
-  renderSsoSignInHintEmail,
   renderSurveyRetentionNoticeEmail,
   renderVerificationEmail,
 } from "../index";
@@ -66,19 +64,6 @@ const renderers: [string, () => Promise<string>][] = [
   ],
   ["renderPasswordResetNotifyEmail", () => renderPasswordResetNotifyEmail({ ...legal, t })],
   ["renderAccountDeletedEmail", () => renderAccountDeletedEmail({ ...legal, t })],
-  [
-    "renderSsoRecoveryFactorsRemovedEmail",
-    () =>
-      renderSsoRecoveryFactorsRemovedEmail({
-        ...exampleData.ssoRecoveryFactorsRemovedEmail,
-        ...legal,
-        t,
-      }),
-  ],
-  [
-    "renderSsoSignInHintEmail",
-    () => renderSsoSignInHintEmail({ ...exampleData.ssoSignInHintEmail, ...legal, t }),
-  ],
   [
     "renderSurveyRetentionNoticeEmail",
     () => renderSurveyRetentionNoticeEmail({ ...exampleData.surveyRetentionNoticeEmail, ...legal, t }),
@@ -262,32 +247,6 @@ describe("survey retention notice", () => {
   });
 });
 
-describe("SSO sign-in hint", () => {
-  test("names every provider the account signs in with and links to the login page", async () => {
-    const html = await renderSsoSignInHintEmail({
-      providerNames: ["Microsoft", "Acme SSO"],
-      loginLink: "https://app.formbricks.com/auth/login",
-      t,
-    });
-
-    expect(html).toContain(">Microsoft<");
-    expect(html).toContain(">Acme SSO<");
-    expect(html).toContain('href="https://app.formbricks.com/auth/login"');
-  });
-
-  test("sends the reader to their administrator, with no login button, when no provider is offered", async () => {
-    const html = await renderSsoSignInHintEmail({
-      providerNames: [],
-      loginLink: "https://app.formbricks.com/auth/login",
-      t,
-    });
-
-    expect(html).toContain("Contact your administrator to get access again.");
-    expect(html).not.toContain("https://app.formbricks.com/auth/login");
-    expect(html).not.toContain("You sign in with:");
-  });
-});
-
 describe("legal footer", () => {
   test("renders imprint and privacy links only when the legal props are supplied", async () => {
     const withLegal = await renderVerificationEmail({
@@ -401,7 +360,7 @@ describe("follow-up email direction", () => {
     });
 
     // The follow-up body is per-survey authored content in any script, so it gets
-    // dir="auto" rather than a hard rtl/ltr — this is the element from the bug report.
+    // dir="auto" rather than a hard rtl/ltr: this is the element from the bug report.
     expect(html).toMatch(/<div dir="auto">[\s\S]*?شكرا لملاحظاتك/);
     // Response element labels, variable name/value and hidden-field id/value all carry
     // their own dir="auto" too, since each can hold independently-directioned content.
@@ -461,7 +420,7 @@ describe("follow-up email direction", () => {
 });
 
 describe("Tailwind render engine", () => {
-  // `react-email`'s own `Tailwind` component — not anything configured in this package — decides
+  // `react-email`'s own `Tailwind` component (not anything configured in this package) decides
   // which Tailwind version compiles the template classes. Pin that contract: these utilities
   // exist only in v4, so a downgrade would drop the declarations silently.
   test("compiles Tailwind v4 utilities", async () => {
