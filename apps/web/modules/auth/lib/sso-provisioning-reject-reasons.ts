@@ -39,7 +39,7 @@ export const SSO_PROVISIONING_REJECT_REASONS = [
   "invite_email_mismatch",
   /** The invite lookup itself failed — an unparseable callback URL, or a verification error. */
   "invite_token_validation_error",
-  /** Operator misconfiguration: `SKIP_INVITE_FOR_SSO` is set without a `DEFAULT_TEAM_ID`. */
+  /** Operator misconfiguration: invites are skipped for SSO but no default team is set. */
   "missing_default_team_id",
   /** Operator misconfiguration: single-org instance with no organization to assign the user to. */
   "no_organization_found",

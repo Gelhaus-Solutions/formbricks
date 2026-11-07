@@ -16,9 +16,8 @@ import "server-only";
  * fails at the IdP with a `redirect_uri` mismatch (loud, and caught by
  * better-auth-redirect-uri-pin.test.ts at upgrade time) rather than half-working.
  *
- * Deliberately dependency-free — no env, no license, no `auth` import — so it is exhaustively testable
- * and so it works during the window where the provider list is empty (the generic providers are gated
- * behind `ENTERPRISE_LICENSE_KEY`).
+ * Deliberately dependency-free (no env, no `auth` import), so it is exhaustively testable and works
+ * while the provider list is empty, as it is until SSO is rebuilt (GFORMS-14).
  */
 
 const AUTH_BASE_PATH = "/api/auth";
@@ -26,10 +25,9 @@ const LEGACY_CALLBACK_SEGMENT = `${AUTH_BASE_PATH}/oauth2/callback/`;
 const CURRENT_CALLBACK_SEGMENT = `${AUTH_BASE_PATH}/callback/`;
 
 /**
- * The generic-OAuth providers whose `redirectURI` is pinned to the legacy path. Kept as a local literal
- * rather than derived from `ssoGenericOAuthConfig`: that list is env- and license-gated and is empty on
- * an unlicensed instance, whereas this mapping must hold for any request that arrives. A test asserts
- * the two agree, so they cannot drift.
+ * The generic-OAuth providers whose `redirectURI` is pinned to the legacy path. Kept as a local literal:
+ * the provider list it mirrored left with the Enterprise folder, and this mapping must hold for any
+ * request that arrives.
  *
  * Scoping to known ids is what keeps this safe: the oauth-provider plugin owns ~15 sibling `/oauth2/*`
  * routes (`/oauth2/consent`, `/oauth2/userinfo`, `/oauth2/token`, …) for our own MCP OAuth server, and

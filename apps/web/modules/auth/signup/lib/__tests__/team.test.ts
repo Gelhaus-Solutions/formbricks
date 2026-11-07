@@ -17,11 +17,6 @@ vi.mock("@formbricks/database", () => ({
   },
 }));
 
-vi.mock("@/lib/constants", () => ({
-  DEFAULT_TEAM_ID: "team-123",
-  DEFAULT_ORGANIZATION_ID: "org-123",
-}));
-
 vi.mock("@/lib/membership/service", () => ({
   getMembershipByUserIdOrganizationId: vi.fn(),
 }));

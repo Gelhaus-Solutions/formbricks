@@ -33,35 +33,8 @@ export const PASSWORD_RESET_DISABLED = env.PASSWORD_RESET_DISABLED === "1";
 export const PASSWORD_RESET_TOKEN_LIFETIME_MINUTES = env.PASSWORD_RESET_TOKEN_LIFETIME_MINUTES;
 export const EMAIL_VERIFICATION_DISABLED = env.EMAIL_VERIFICATION_DISABLED === "1";
 
-export const GOOGLE_OAUTH_ENABLED = !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
-export const GITHUB_OAUTH_ENABLED = !!(env.GITHUB_ID && env.GITHUB_SECRET);
-export const AZURE_OAUTH_ENABLED = !!(env.AZUREAD_CLIENT_ID && env.AZUREAD_CLIENT_SECRET);
-export const OIDC_OAUTH_ENABLED = !!(env.OIDC_CLIENT_ID && env.OIDC_CLIENT_SECRET && env.OIDC_ISSUER);
-export const SAML_OAUTH_ENABLED = !!env.SAML_DATABASE_URL;
-export const SAML_XML_DIR = "./saml-connection";
-
-export const GITHUB_ID = env.GITHUB_ID;
-export const GITHUB_SECRET = env.GITHUB_SECRET;
-export const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
-export const GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
-
 export const HUB_API_URL = env.HUB_API_URL;
 export const HUB_API_KEY = env.HUB_API_KEY;
-
-export const AZUREAD_CLIENT_ID = env.AZUREAD_CLIENT_ID;
-export const AZUREAD_CLIENT_SECRET = env.AZUREAD_CLIENT_SECRET;
-export const AZUREAD_TENANT_ID = env.AZUREAD_TENANT_ID;
-
-export const OIDC_CLIENT_ID = env.OIDC_CLIENT_ID;
-export const OIDC_CLIENT_SECRET = env.OIDC_CLIENT_SECRET;
-export const OIDC_ISSUER = env.OIDC_ISSUER;
-export const OIDC_SIGNING_ALGORITHM = env.OIDC_SIGNING_ALGORITHM;
-
-export const SAML_DATABASE_URL = env.SAML_DATABASE_URL;
-export const SAML_TENANT = "formbricks.com";
-export const SAML_PRODUCT = "formbricks";
-export const SAML_AUDIENCE = "https://saml.formbricks.com";
-export const SAML_PATH = "/api/auth/saml/callback";
 
 export const SIGNUP_ENABLED = IS_FORMBRICKS_CLOUD || IS_DEVELOPMENT || E2E_TESTING;
 export const INVITE_DISABLED = env.INVITE_DISABLED === "1";
@@ -163,29 +136,6 @@ export const TEXT_RESPONSES_PER_PAGE = 5;
 export const MAX_RESPONSES_FOR_INSIGHT_GENERATION = 500;
 export const MAX_OTHER_OPTION_LENGTH = 250;
 
-/**
- * Workspaces an organization gets on a self-hosted instance with no active enterprise license
- * (Community Edition). Mirrors docs/self-hosting/advanced/license.mdx.
- */
-export const COMMUNITY_WORKSPACE_LIMIT = 1;
-
-/**
- * Workspaces a cloud organization falls back to when the license server cannot confirm the instance
- * license (expired, invalid_license, instance_mismatch, unreachable). Deliberately the Hobby (free
- * tier) allowance: an entitlement we cannot verify is treated as no entitlement. The create gate is
- * `count >= limit`, so an org already above it keeps every workspace it has and only pauses creating
- * new ones until the license resolves.
- */
-export const CLOUD_HOBBY_WORKSPACE_LIMIT = 1;
-
-export const SKIP_INVITE_FOR_SSO = env.AUTH_SKIP_INVITE_FOR_SSO === "1";
-export const DEFAULT_TEAM_ID = env.AUTH_DEFAULT_TEAM_ID;
-// Self-hosted SSO auto-provisioning (`AUTH_SSO_DEFAULT_ORGANIZATION_ID`): when set, every new SSO user
-// joins this organization without needing an invite, created on first sign-up if it does not exist
-// yet. ENG-2089.
-export const DEFAULT_ORGANIZATION_ID = env.AUTH_DEFAULT_ORGANIZATION_ID;
-export const DEFAULT_ORGANIZATION_ROLE = env.AUTH_DEFAULT_ORGANIZATION_ROLE;
-
 // Cloud-only kill-switch: when enabled, the personal-email sign-up block also applies to invited
 // users (default exempts invites). See @/modules/auth/lib/signup-email-domain.
 export const SIGNUP_DOMAIN_CHECK_ON_INVITES = env.SIGNUP_DOMAIN_CHECK_ON_INVITES === "1";
@@ -238,9 +188,6 @@ export const SURVEY_BG_COLORS = [
 
 export const DEBUG = env.DEBUG === "1";
 
-// Enterprise License constant
-export const ENTERPRISE_LICENSE_KEY = env.ENTERPRISE_LICENSE_KEY;
-
 export const REDIS_URL = env.REDIS_URL;
 export const RATE_LIMITING_DISABLED = env.RATE_LIMITING_DISABLED === "1";
 /**
@@ -253,7 +200,6 @@ export const RATE_LIMITING_DISABLED = env.RATE_LIMITING_DISABLED === "1";
  * setting it higher than the real chain lets a caller spoof the address by prepending entries.
  */
 export const TRUSTED_PROXY_HOP_COUNT = env.TRUSTED_PROXY_HOP_COUNT ?? 1;
-export const TELEMETRY_DISABLED = env.TELEMETRY_DISABLED === "1";
 
 // Opt-out for the Have-I-Been-Pwned breach check (ENG-1587). Set to "1" on air-gapped /
 // closed-network deployments that can't reach api.pwnedpasswords.com and want no outbound
