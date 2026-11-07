@@ -4,18 +4,13 @@ import { Prisma } from "@formbricks/database/prisma";
 import type { TCustomCssInput } from "@formbricks/types/custom-css";
 import { DatabaseError, ResourceNotFoundError, TooManyRequestsError } from "@formbricks/types/errors";
 import type { TSurvey } from "@formbricks/types/surveys/types";
-import {
-  type TV3SurveyWriteReport,
-  V3CustomCssInvalidError,
-  V3CustomCssPlanRequiredError,
-} from "@/app/api/v3/lib/custom-css";
+import { type TV3SurveyWriteReport, V3CustomCssInvalidError } from "@/app/api/v3/lib/custom-css";
 import { getActionClasses } from "@/lib/actionClass/service";
 import { cache } from "@/lib/cache";
 import { scheduleFeedbackSourceReconciliation } from "@/lib/feedback-source/mapping-reconciliation";
 import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { getCustomCssPlanAllowed } from "@/modules/custom-css/lib/access";
 import { processCustomCss } from "@/modules/custom-css/processor";
 import { getExternalUrlsPermission } from "@/modules/survey/lib/permission";
 import {
@@ -35,7 +30,7 @@ import { V3SurveyWritePermissionError } from "./write-permissions";
 
 vi.mock("server-only", () => ({}));
 
-// ENG-3641: the processor contract and the plan gate; the save rules between them run for real.
+// ENG-3641: the processor contract; the save rules around it run for real.
 vi.mock("@/modules/custom-css/processor", () => ({
   CUSTOM_CSS_PROCESSOR_VERSION: 3,
   processCustomCss: vi.fn(),
@@ -44,10 +39,6 @@ vi.mock("@/modules/custom-css/processor", () => ({
     const dark = input?.dark?.trim() ? input.dark : null;
     return light === null && dark === null ? null : { light, dark };
   },
-}));
-vi.mock("@/modules/custom-css/lib/access", () => ({
-  CUSTOM_CSS_PLAN_REQUIRED_MESSAGE: "Adding or editing custom CSS requires the Scale plan.",
-  getCustomCssPlanAllowed: vi.fn(),
 }));
 vi.mock("@/lib/cache", () => ({ cache: { del: vi.fn() } }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: vi.fn() }));
@@ -1417,7 +1408,6 @@ describe("patchV3Survey", () => {
 
     beforeEach(() => {
       vi.mocked(cache.del).mockResolvedValue({ ok: true, data: undefined });
-      vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(true);
       vi.mocked(processCustomCss).mockImplementation((({ input }: { input: TCustomCssInput }) => ({
         ok: true,
         compiled: {
@@ -1429,8 +1419,7 @@ describe("patchV3Survey", () => {
       })) as never);
     });
 
-    test("an unrelated patch on a downgraded organization keeps the CSS without a plan check or a write", async () => {
-      vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
+    test("an unrelated patch keeps the CSS without processing or a write", async () => {
       const report: TV3SurveyWriteReport = {};
 
       await patchV3Survey(
@@ -1444,7 +1433,6 @@ describe("patchV3Survey", () => {
         report
       );
 
-      expect(getCustomCssPlanAllowed).not.toHaveBeenCalled();
       expect(processCustomCss).not.toHaveBeenCalled();
       expect(lastUpdateData()).not.toHaveProperty("customCss");
       expect(cache.del).not.toHaveBeenCalled();
@@ -1452,8 +1440,6 @@ describe("patchV3Survey", () => {
     });
 
     test("echoing the GET source back is unchanged, whitespace-only fields included", async () => {
-      vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
       await patchV3Survey(
         surveyWithCss,
         { name: "Renamed", customCss: { light: "a{}", dark: "b{}" } },
@@ -1461,18 +1447,8 @@ describe("patchV3Survey", () => {
         "org_1"
       );
 
-      expect(getCustomCssPlanAllowed).not.toHaveBeenCalled();
-      expect(lastUpdateData()).not.toHaveProperty("customCss");
-    });
-
-    test("an addition without the plan is refused and nothing is written", async () => {
-      vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
-      await expect(
-        patchV3Survey(currentSurvey, { customCss: { light: "a{}", dark: null } }, "req", "org_1")
-      ).rejects.toBeInstanceOf(V3CustomCssPlanRequiredError);
       expect(processCustomCss).not.toHaveBeenCalled();
-      expect(prisma.survey.update).not.toHaveBeenCalled();
+      expect(lastUpdateData()).not.toHaveProperty("customCss");
     });
 
     test("an edit is processed, stored with its trusted output, reported and invalidates the workspace state", async () => {
@@ -1504,9 +1480,7 @@ describe("patchV3Survey", () => {
       expect(cache.del).toHaveBeenCalledWith([`fb:env:${workspaceId}:state`]);
     });
 
-    test("clearing is allowed without the plan", async () => {
-      vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
+    test("clearing stores null without processing", async () => {
       await patchV3Survey(surveyWithCss, { customCss: null }, "req", "org_1");
 
       expect(lastUpdateData().customCss).toBe(Prisma.DbNull);
@@ -1514,8 +1488,6 @@ describe("patchV3Survey", () => {
     });
 
     test("removing one field is a removal too, keeping the other's output", async () => {
-      vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
       await patchV3Survey(surveyWithCss, { customCss: { light: null, dark: "b{}" } }, "req", "org_1");
 
       expect(lastUpdateData().customCss).toEqual({ light: null, dark: storedCss.dark, processorVersion: 3 });

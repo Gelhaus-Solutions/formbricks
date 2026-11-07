@@ -1,5 +1,4 @@
 import { describe, expect, test, vi } from "vitest";
-import { getCustomCssPlanAllowed } from "./access";
 import { previewCustomCss, resolveCustomCssWrite } from "./service";
 
 /**
@@ -12,10 +11,6 @@ import { previewCustomCss, resolveCustomCssWrite } from "./service";
 vi.mock("server-only", () => ({}));
 vi.mock("@formbricks/database", () => ({ prisma: {} }));
 vi.mock("@/lib/cache", () => ({ cache: { del: vi.fn() } }));
-vi.mock("./access", () => ({
-  CUSTOM_CSS_PLAN_REQUIRED_MESSAGE: "Adding or editing custom CSS requires the Scale plan.",
-  getCustomCssPlanAllowed: vi.fn(),
-}));
 
 const SOURCE = {
   light:
@@ -25,12 +20,9 @@ const SOURCE = {
 
 describe("one processor for preview and save", () => {
   test.each(["survey", "workspace"] as const)("%s scope: preview and save agree", async (scope) => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(true);
-
     const preview = previewCustomCss(scope, SOURCE);
     const saved = await resolveCustomCssWrite({
       scope,
-      organizationId: "org_1",
       existing: null,
       input: SOURCE,
     });
@@ -49,13 +41,11 @@ describe("one processor for preview and save", () => {
   });
 
   test("a syntax error is rejected the same way by both, with no output", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(true);
     const broken = { light: '[data-fb-part="headline"] { color: red } }', dark: null };
 
     const preview = previewCustomCss("survey", broken);
     const saved = await resolveCustomCssWrite({
       scope: "survey",
-      organizationId: "org_1",
       existing: null,
       input: broken,
     });

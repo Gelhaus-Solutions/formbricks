@@ -3,14 +3,13 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { Prisma } from "@formbricks/database/prisma";
 import type { TActionClass } from "@formbricks/types/action-classes";
 import type { TCustomCssInput, TCustomCssStored } from "@formbricks/types/custom-css";
-import { InvalidInputError, OperationNotAllowedError, TooManyRequestsError } from "@formbricks/types/errors";
+import { InvalidInputError, TooManyRequestsError } from "@formbricks/types/errors";
 import type { TSurvey } from "@formbricks/types/surveys/types";
 import { getActionClasses } from "@/lib/actionClass/service";
 import { cache } from "@/lib/cache";
 import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { getCustomCssPlanAllowed } from "@/modules/custom-css/lib/access";
 import { processCustomCss } from "@/modules/custom-css/processor";
 import {
   createSurveyInput,
@@ -24,7 +23,7 @@ import { createSurvey, getSurvey, updateSurvey, updateSurveyInternal } from "./s
 /**
  * ENG-2949: the editor's save and autosave hand `updateSurveyInternal` the whole survey, custom CSS
  * included in its stored shape. These pin that the shared custom CSS service decides what is written:
- * source only, normalized comparison, the plan only for real additions and edits.
+ * source only, normalized comparison, processing only for real additions and edits.
  */
 
 vi.mock("@/lib/organization/service", () => ({
@@ -46,10 +45,6 @@ vi.mock("@/modules/custom-css/processor", () => ({
     return light === null && dark === null ? null : { light, dark };
   },
 }));
-vi.mock("@/modules/custom-css/lib/access", () => ({
-  CUSTOM_CSS_PLAN_REQUIRED_MESSAGE: "Adding or editing custom CSS requires the Scale plan.",
-  getCustomCssPlanAllowed: vi.fn(),
-}));
 
 const storedCss: TCustomCssStored = {
   light: { source: ".a{}", compiled: "@layer fb-survey{.a}" },
@@ -70,7 +65,6 @@ beforeEach(() => {
   vi.mocked(prisma.survey.update).mockResolvedValue(storedRow as never);
   vi.mocked(getActionClasses).mockResolvedValue([mockActionClass] as TActionClass[]);
   vi.mocked(getOrganizationByWorkspaceId).mockResolvedValue(mockOrganizationOutput);
-  vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(true);
   vi.mocked(cache.del).mockResolvedValue({ ok: true, data: undefined });
   vi.mocked(processCustomCss).mockImplementation((({ input }: { input: TCustomCssInput }) => ({
     ok: true,
@@ -84,12 +78,9 @@ beforeEach(() => {
 });
 
 describe("updateSurveyInternal custom CSS", () => {
-  test("the editor sending the stored CSS back is unchanged: no plan check, no processing, no write", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
+  test("the editor sending the stored CSS back is unchanged: no processing, no write", async () => {
     await updateSurvey({ ...updateSurveyInput, customCss: storedCss } as TSurvey);
 
-    expect(getCustomCssPlanAllowed).not.toHaveBeenCalled();
     expect(processCustomCss).not.toHaveBeenCalled();
     expect(lastUpdateData()).not.toHaveProperty("customCss");
     expect(cache.del).not.toHaveBeenCalled();
@@ -126,7 +117,6 @@ describe("updateSurveyInternal custom CSS", () => {
       },
     } as TSurvey);
 
-    expect(getCustomCssPlanAllowed).toHaveBeenCalledWith(mockOrganizationOutput.id);
     expect(processCustomCss).toHaveBeenCalledWith({
       scope: "survey",
       input: { light: ".a{color:red}", dark: ".b{}" },
@@ -139,25 +129,11 @@ describe("updateSurveyInternal custom CSS", () => {
     expect(cache.del).toHaveBeenCalledWith([`fb:env:${mockSurveyOutput.workspaceId}:state`]);
   });
 
-  test("a downgraded organization cannot edit, and nothing is written", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
-    await expect(
-      updateSurvey({
-        ...updateSurveyInput,
-        customCss: { light: { source: ".new{}", compiled: "" }, dark: null, processorVersion: 0 },
-      } as TSurvey)
-    ).rejects.toBeInstanceOf(OperationNotAllowedError);
-    expect(prisma.survey.update).not.toHaveBeenCalled();
-  });
-
-  test("a downgraded organization can still clear its CSS", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
+  test("clearing the CSS stores null without processing", async () => {
     await updateSurvey({ ...updateSurveyInput, customCss: null } as TSurvey);
 
     expect(lastUpdateData().customCss).toBe(Prisma.DbNull);
-    expect(getCustomCssPlanAllowed).not.toHaveBeenCalled();
+    expect(processCustomCss).not.toHaveBeenCalled();
   });
 
   test("CSS the processor rejects fails the save and keeps the stored revision", async () => {
@@ -193,7 +169,6 @@ describe("updateSurveyInternal custom CSS", () => {
       const select = args.select ?? {};
       return Object.keys(select).length === 1 && select.customCss ? { customCss: storedCss } : rowWithoutCss;
     }) as never);
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
 
     await updateSurvey({ ...updateSurveyInput, customCss: null } as TSurvey);
 

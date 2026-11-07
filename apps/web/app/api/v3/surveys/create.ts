@@ -183,13 +183,12 @@ async function finalizeV3AppSurveyCreate(survey: TSurvey, input: TV3CreateSurvey
 }
 
 /**
- * ENG-3641: survey CSS on create goes through the shared custom CSS service — Scale on Cloud, then the
- * caller's custom CSS budget, then the processor — before anything is written. No CSS (omitted, null or
- * empty source) needs none of them.
+ * ENG-3641: survey CSS on create goes through the shared custom CSS service (the caller's custom CSS
+ * budget, then the processor) before anything is written. No CSS (omitted, null or empty source) needs
+ * either of them.
  */
 async function resolveV3SurveyCreateCustomCss(
   input: TV3CreateSurveyBody,
-  organizationId: string | undefined,
   authentication: TV3Authentication
 ): Promise<{ stored: TCustomCssStored | null; warnings?: TCustomCssWarning[] }> {
   if (!input.customCss) {
@@ -198,17 +197,6 @@ async function resolveV3SurveyCreateCustomCss(
 
   const outcome = await resolveCustomCssWrite({
     scope: "survey",
-    organizationId:
-      organizationId ??
-      (async () => {
-        const organization = await getOrganizationByWorkspaceId(input.workspaceId);
-        if (!organization) {
-          throw new V3SurveyCreatePermissionError(
-            `Unable to verify custom CSS permissions for workspaceId '${input.workspaceId}'.`
-          );
-        }
-        return organization.id;
-      }),
     existing: null,
     input: input.customCss,
     principal: getV3CustomCssPrincipal(authentication),
@@ -311,11 +299,7 @@ export async function createV3Survey(
 
   await assertV3SurveyCreatePermissions(input, organizationId, options);
   await assertV3SurveyTargetingPermission(preparation.document, organizationId);
-  const customCss = await resolveV3SurveyCreateCustomCss(
-    preparation.document,
-    organizationId,
-    authentication
-  );
+  const customCss = await resolveV3SurveyCreateCustomCss(preparation.document, authentication);
 
   const survey = await executeV3SurveyCreate({
     input: preparation.document,

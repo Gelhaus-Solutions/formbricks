@@ -158,7 +158,6 @@ describe("workspace custom CSS tools (ENG-3641)", () => {
     previous: null,
     status: "ok",
     canEdit: true,
-    planAllowed: true,
   };
   const warning = {
     code: "import_removed",

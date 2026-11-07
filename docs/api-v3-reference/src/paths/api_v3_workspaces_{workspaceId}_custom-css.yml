@@ -4,7 +4,7 @@ get:
   description: >
     Returns the workspace's shared survey CSS as editable **source** (light and dark), the one
     recoverable previous revision, whether the stored CSS is being delivered to respondents
-    (`status`), and whether this caller may change it (`canEdit`, `planAllowed`). Compiled output is
+    (`status`), and whether this caller may change it (`canEdit`). Compiled output is
     never returned here. Requires read access to the workspace. Session cookie, `x-api-key`, or a
     Bearer token.
   tags:
@@ -41,7 +41,6 @@ get:
               previous: null
               status: ok
               canEdit: true
-              planAllowed: true
     "400":
       $ref: ../components/responses/V3BadRequest.yml
     "401":
@@ -70,8 +69,7 @@ patch:
     Workspace CSS reaches every survey in the workspace, so writing it is narrower than writing a
     survey: **organization owners and managers** for signed-in users (session or OAuth), and a
     **`manage`** grant on this workspace for API keys — a Read & write grant is refused with **403**.
-    On Formbricks Cloud, adding or editing needs the Scale plan (**403**
-    `custom_css_plan_required`); clearing never does. Successful changes refresh the cached
+    Successful changes refresh the cached
     configuration the SDKs receive (they pick it up on their next configuration fetch). Saves that
     add or edit CSS count against a custom CSS budget of 60 per minute per user or API key, shared
     with custom CSS validation and with survey writes that add or edit custom CSS; beyond it they
@@ -129,7 +127,6 @@ patch:
               previous: null
               status: ok
               canEdit: true
-              planAllowed: true
             warnings: []
     "400":
       description: >-
@@ -145,9 +142,8 @@ patch:
       $ref: ../components/responses/V3Unauthorized.yml
     "403":
       description: >-
-        Forbidden — no access to the workspace (404 not used; avoids existence leak), a principal
-        that may not write workspace CSS (`code: forbidden`), or an addition or edit on an
-        organization without the Scale plan (`code: custom_css_plan_required`).
+        Forbidden: no access to the workspace (404 not used; avoids existence leak), or a principal
+        that may not write workspace CSS (`code: forbidden`).
       content:
         application/problem+json:
           schema:

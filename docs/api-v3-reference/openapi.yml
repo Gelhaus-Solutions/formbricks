@@ -493,7 +493,7 @@ paths:
         '401':
           $ref: '#/components/responses/V3Unauthorized'
         '403':
-          description: 'Forbidden — no write access, missing external URL permission, missing Contacts entitlement for app-survey targeting, or workspace does not exist (404 not used; avoids existence leak). Survey custom CSS on an organization without the Scale plan (Formbricks Cloud) is refused with `code: custom_css_plan_required`.'
+          description: Forbidden — no write access, missing external URL permission, missing Contacts entitlement for app-survey targeting, or workspace does not exist (404 not used; avoids existence leak).
           content:
             application/problem+json:
               schema:
@@ -1212,7 +1212,7 @@ paths:
         '401':
           $ref: '#/components/responses/V3Unauthorized'
         '403':
-          description: 'Forbidden — no write access, missing external URL permission, missing Contacts entitlement for app-survey targeting, or survey does not exist (404 not used; avoids existence leak). Adding or editing `customCss` on an organization without the Scale plan (Formbricks Cloud) is refused with `code: custom_css_plan_required`; clearing it, or a patch that leaves it unchanged, is not.'
+          description: Forbidden — no write access, missing external URL permission, missing Contacts entitlement for app-survey targeting, or survey does not exist (404 not used; avoids existence leak).
           content:
             application/problem+json:
               schema:
@@ -4687,7 +4687,7 @@ paths:
       operationId: getWorkspaceCustomCssV3
       summary: Read workspace custom CSS
       description: |
-        Returns the workspace's shared survey CSS as editable **source** (light and dark), the one recoverable previous revision, whether the stored CSS is being delivered to respondents (`status`), and whether this caller may change it (`canEdit`, `planAllowed`). Compiled output is never returned here. Requires read access to the workspace. Session cookie, `x-api-key`, or a Bearer token.
+        Returns the workspace's shared survey CSS as editable **source** (light and dark), the one recoverable previous revision, whether the stored CSS is being delivered to respondents (`status`), and whether this caller may change it (`canEdit`). Compiled output is never returned here. Requires read access to the workspace. Session cookie, `x-api-key`, or a Bearer token.
       tags:
         - V3 Workspaces
       parameters:
@@ -4722,7 +4722,6 @@ paths:
                   previous: null
                   status: ok
                   canEdit: true
-                  planAllowed: true
         '400':
           $ref: '#/components/responses/V3BadRequest'
         '401':
@@ -4743,7 +4742,7 @@ paths:
       description: |
         Saves or clears the workspace's shared survey CSS. `customCss` replaces both fields; `null` clears all of it. The source is processed by the same processor every save path uses: constructs it removes come back as top-level `warnings`, and CSS it rejects is a **422** that leaves the saved CSS in effect. The replaced value becomes `previous`, the one recoverable revision — restore it by sending its source back. Unchanged source writes nothing.
 
-        Workspace CSS reaches every survey in the workspace, so writing it is narrower than writing a survey: **organization owners and managers** for signed-in users (session or OAuth), and a **`manage`** grant on this workspace for API keys — a Read & write grant is refused with **403**. On Formbricks Cloud, adding or editing needs the Scale plan (**403** `custom_css_plan_required`); clearing never does. Successful changes refresh the cached configuration the SDKs receive (they pick it up on their next configuration fetch). Saves that add or edit CSS count against a custom CSS budget of 60 per minute per user or API key, shared with custom CSS validation and with survey writes that add or edit custom CSS; beyond it they return **429**. Re-saving the same CSS and clearing it are never counted.
+        Workspace CSS reaches every survey in the workspace, so writing it is narrower than writing a survey: **organization owners and managers** for signed-in users (session or OAuth), and a **`manage`** grant on this workspace for API keys — a Read & write grant is refused with **403**. Successful changes refresh the cached configuration the SDKs receive (they pick it up on their next configuration fetch). Saves that add or edit CSS count against a custom CSS budget of 60 per minute per user or API key, shared with custom CSS validation and with survey writes that add or edit custom CSS; beyond it they return **429**. Re-saving the same CSS and clearing it are never counted.
       tags:
         - V3 Workspaces
       parameters:
@@ -4797,7 +4796,6 @@ paths:
                   previous: null
                   status: ok
                   canEdit: true
-                  planAllowed: true
                 warnings: []
         '400':
           description: Bad Request — malformed body, a missing `customCss` key or a missing `light` / `dark` key, an unsupported field (including `compiled` or `processorVersion`), or a field that is neither a string nor null. Every offending field is itemized in `invalid_params`. CSS over the size budget is a **422** `source_too_large`.
@@ -4808,7 +4806,7 @@ paths:
         '401':
           $ref: '#/components/responses/V3Unauthorized'
         '403':
-          description: 'Forbidden — no access to the workspace (404 not used; avoids existence leak), a principal that may not write workspace CSS (`code: forbidden`), or an addition or edit on an organization without the Scale plan (`code: custom_css_plan_required`).'
+          description: 'Forbidden: no access to the workspace (404 not used; avoids existence leak), or a principal that may not write workspace CSS (`code: forbidden`).'
           content:
             application/problem+json:
               schema:
@@ -5973,7 +5971,6 @@ components:
             - bad_gateway
             - bad_request
             - conflict
-            - custom_css_plan_required
             - forbidden
             - internal_server_error
             - invalid_workflow_state
@@ -7918,7 +7915,7 @@ components:
           anyOf:
             - $ref: '#/components/schemas/CustomCssInput'
             - type: 'null'
-          description: Optional survey custom CSS source. Processed by the server; constructs it removes come back as top-level `warnings` on the 201. Adding CSS needs the Scale plan on Formbricks Cloud (403 `custom_css_plan_required`); CSS that cannot be processed is a 422 with `details.errors`. Processing counts against the custom CSS budget of 60 per minute per user or API key, shared with custom CSS validation; beyond it the create is a 429 and nothing is written.
+          description: Optional survey custom CSS source. Processed by the server; constructs it removes come back as top-level `warnings` on the 201. CSS that cannot be processed is a 422 with `details.errors`. Processing counts against the custom CSS budget of 60 per minute per user or API key, shared with custom CSS validation; beyond it the create is a 429 and nothing is written.
       additionalProperties: false
     SurveyLanguage:
       type: object
@@ -8524,7 +8521,7 @@ components:
           anyOf:
             - $ref: '#/components/schemas/CustomCssInput'
             - type: 'null'
-          description: 'Survey custom CSS source. Omitted: unchanged. `null`: clears both fields. An object replaces both fields and needs both keys. Change is judged on normalized source, so echoing the value `GET` returned is a no-op that needs no plan. Adding or editing needs the Scale plan on Formbricks Cloud (403 `custom_css_plan_required`); clearing never does. A failed write keeps the saved CSS. Only an addition or edit is processed, so only it counts against the custom CSS budget of 60 per minute per user or API key, shared with custom CSS validation; beyond it the patch is a 429.'
+          description: 'Survey custom CSS source. Omitted: unchanged. `null`: clears both fields. An object replaces both fields and needs both keys. Change is judged on normalized source, so echoing the value `GET` returned is a no-op. A failed write keeps the saved CSS. Only an addition or edit is processed, so only it counts against the custom CSS budget of 60 per minute per user or API key, shared with custom CSS validation; beyond it the patch is a 429.'
       additionalProperties: false
     ValidateSurveyPatchRequest:
       type: object
@@ -11289,7 +11286,6 @@ components:
         - previous
         - status
         - canEdit
-        - planAllowed
       properties:
         workspaceId:
           type: string
@@ -11319,9 +11315,6 @@ components:
         canEdit:
           type: boolean
           description: 'Whether this caller may PATCH it: organization owners and managers for signed-in users, a `manage` grant on this workspace for API keys.'
-        planAllowed:
-          type: boolean
-          description: Whether the organization's plan allows additions and edits (Scale on Formbricks Cloud; every self-hosted plan). Removing CSS is always allowed.
       additionalProperties: false
     PatchWorkspaceCustomCssRequest:
       type: object

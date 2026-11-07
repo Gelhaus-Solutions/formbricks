@@ -1,24 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { can } from "@/lib/authorization";
-import { getCustomCssPermission } from "@/modules/features/lib/flags";
-import { canWriteWorkspaceCustomCss, getCustomCssPlanAllowed } from "./access";
+import { canWriteWorkspaceCustomCss } from "./access";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
-vi.mock("@/modules/features/lib/flags", () => ({ getCustomCssPermission: vi.fn() }));
 
 const workspace = { workspaceId: "ws_1", organizationId: "org_1" };
 
 beforeEach(() => {
   vi.clearAllMocks();
-});
-
-describe("getCustomCssPlanAllowed", () => {
-  test("is the organization's custom CSS entitlement", async () => {
-    vi.mocked(getCustomCssPermission).mockResolvedValue(false);
-    await expect(getCustomCssPlanAllowed("org_1")).resolves.toBe(false);
-    expect(getCustomCssPermission).toHaveBeenCalledWith("org_1");
-  });
 });
 
 describe("canWriteWorkspaceCustomCss", () => {

@@ -16,7 +16,6 @@ import type { InvalidParam } from "@/app/api/v3/lib/response";
 import { getActionClasses } from "@/lib/actionClass/service";
 import { reconcileEmbeddedData } from "@/lib/embedded-data/reconcile";
 import { scheduleFeedbackSourceReconciliation } from "@/lib/feedback-source/mapping-reconciliation";
-import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
 import { fillSurveyBlockCodes } from "@/lib/survey/fill-codes";
 import {
   APP_SURVEY_TRIGGER_REQUIRED_MESSAGE,
@@ -44,11 +43,7 @@ import {
 import { resolveV3SurveyTriggers } from "./triggers";
 import { getV3SurveyIntroducedMediaInvalidParams } from "./validation";
 import { NO_VISIBLE_SURVEYS } from "./visibility-context";
-import {
-  V3SurveyWritePermissionError,
-  assertV3SurveyTargetingWritePermission,
-  assertV3SurveyWritePermissions,
-} from "./write-permissions";
+import { assertV3SurveyTargetingWritePermission, assertV3SurveyWritePermissions } from "./write-permissions";
 
 function buildSurveyLanguageUpdate(
   currentSurvey: TSurvey,
@@ -500,29 +495,16 @@ export async function executeV3SurveyPatch(params: {
 
 /**
  * ENG-3641: survey CSS through the shared custom CSS service. The merged document carries the stored
- * source when the patch omits `customCss`, so an unrelated patch is `unchanged` — no plan check, no
- * processing, no write — and only a real addition or edit needs Scale and spends the caller's custom
- * CSS budget. Removal needs neither.
+ * source when the patch omits `customCss`, so an unrelated patch is `unchanged` (no processing, no
+ * write), and only a real addition or edit spends the caller's custom CSS budget. Removal does not.
  */
 async function resolveV3SurveyPatchCustomCss(
   currentSurvey: TSurvey,
   document: TV3SurveyDocument,
-  organizationId: string | undefined,
   principal: string | null | undefined
 ) {
   const outcome = await resolveCustomCssWrite({
     scope: "survey",
-    organizationId:
-      organizationId ??
-      (async () => {
-        const organization = await getOrganizationByWorkspaceId(currentSurvey.workspaceId);
-        if (!organization) {
-          throw new V3SurveyWritePermissionError(
-            `Unable to verify custom CSS permissions for workspaceId: ${currentSurvey.workspaceId}`
-          );
-        }
-        return organization.id;
-      }),
     existing: currentSurvey.customCss,
     input: document.customCss ?? null,
     principal,
@@ -580,7 +562,6 @@ export async function patchV3Survey(
   const customCss = await resolveV3SurveyPatchCustomCss(
     currentSurvey,
     preparation.document,
-    organizationId,
     customCssPrincipal
   );
 

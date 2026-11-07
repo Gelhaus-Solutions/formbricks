@@ -610,22 +610,14 @@ export const updateSurveyInternal = async (
     // ENG-2949: custom CSS is decided before anything is written: the segment block below writes
     // outside the transaction, so a refusal raised later would half-apply the save. Full-object payloads
     // (the editor's save and autosave) are revalidated from source against the stored row: unchanged
-    // source costs no plan check and no processing, removal needs no plan, and an addition or edit needs
-    // the plan, a unit of the custom CSS budget and a clean processor run. Failures keep the stored
-    // revision.
+    // source and removal cost no processing, and an addition or edit needs a unit of the custom CSS
+    // budget and a clean processor run. Failures keep the stored revision.
     const customCssSource = readCustomCssPayloadSource(customCss);
     const customCssWrite =
       customCssSource === undefined
         ? null
         : await resolveCustomCssWriteOrThrow({
             scope: "survey",
-            organizationId: async () => {
-              const organization = await getOrganizationByWorkspaceId(currentSurvey.workspaceId);
-              if (!organization) {
-                throw new ResourceNotFoundError("Organization", null);
-              }
-              return organization.id;
-            },
             // From the row, never from `currentSurvey`: `getSurvey` does not select the column, and a
             // missing value read as "no CSS" would turn a clear into a no-op.
             existing: await getStoredSurveyCustomCss(surveyId, currentSurvey.workspaceId),

@@ -115,7 +115,7 @@ const getExistingSurvey = async (surveyId: string) => {
       customHeadScripts: true,
       customHeadScriptsMode: true,
       // ENG-2949: read for its source only. It is never spread into the copy; the copy gets this source
-      // processed afresh under the destination's plan (`resolveCopiedSurveyCustomCss`).
+      // processed afresh for the destination (`resolveCopiedSurveyCustomCss`).
       customCss: true,
       inlineTriggers: true,
       // `publishOn` and `closeOn` are the deliberate exceptions. The scheduler promotes a survey on
@@ -299,13 +299,11 @@ export const copySurveyToOtherWorkspace = async (
 
     // The relation is the copy's Embedded Data plan, not a column to clone: `Survey` owns a relation
     // by this name, so spreading it into `SurveyCreateInput` would be a nested relation write.
-    // ENG-2949: custom CSS is carried as source and processed for the destination, under the destination
-    // organization's plan. A destination that may not add CSS still gets the copy (without the CSS, and
-    // with a notice), and the source survey is only ever read.
+    // ENG-2949: custom CSS is carried as source and processed for the destination. CSS that no longer
+    // passes the processor is left out of the copy (with a notice), and the source survey is only ever read.
     const { embeddedDataLinks, customCss: sourceCustomCss, ...restExistingSurvey } = existingSurvey;
     const copiedCustomCss = await resolveCopiedSurveyCustomCss({
       source: sourceCustomCss,
-      destinationOrganizationId: targetOrganizationId,
       principal: userId,
     });
     const hasLanguages = existingSurvey.languages && existingSurvey.languages.length > 0;

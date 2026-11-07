@@ -14,7 +14,6 @@ import { mapV3ThrownError } from "@/app/api/v3/lib/errors";
 import {
   problemBadRequest,
   problemCustomCssInvalid,
-  problemCustomCssPlanRequired,
   problemForbidden,
   successResponse,
 } from "@/app/api/v3/lib/response";
@@ -25,10 +24,8 @@ import {
   ZV3WorkspaceCustomCssPatchBody,
 } from "@/app/api/v3/workspaces/lib/custom-css-schemas";
 import {
-  CUSTOM_CSS_PLAN_REQUIRED_MESSAGE,
   WORKSPACE_CUSTOM_CSS_PERMISSION_MESSAGE,
   canWriteWorkspaceCustomCss,
-  getCustomCssPlanAllowed,
 } from "@/modules/custom-css/lib/access";
 import { getCustomCssHealth } from "@/modules/custom-css/lib/delivery";
 import {
@@ -49,10 +46,9 @@ const serializeResource = async (
   record: { customCss: TCustomCssStored | null; previous: TCustomCssStored | null },
   authentication: TV3Authentication
 ): Promise<TV3WorkspaceCustomCssResource> => {
-  const [health, canEdit, planAllowed] = await Promise.all([
+  const [health, canEdit] = await Promise.all([
     getCustomCssHealth(record.customCss, "workspace"),
     canWriteWorkspaceCustomCss(getV3AuthorizationActor(authentication), context),
-    getCustomCssPlanAllowed(context.organizationId),
   ]);
 
   return {
@@ -62,7 +58,6 @@ const serializeResource = async (
     status: health.status,
     ...(health.status === "withheld" ? { errors: capCustomCssIssues(health.errors) } : {}),
     canEdit,
-    planAllowed,
   };
 };
 
@@ -142,10 +137,6 @@ export async function patchV3WorkspaceCustomCss({
     });
 
     if (!outcome.ok) {
-      if (outcome.code === "plan_required") {
-        log.warn({ statusCode: 403 }, "Workspace custom CSS change needs the Scale plan");
-        return problemCustomCssPlanRequired(requestId, CUSTOM_CSS_PLAN_REQUIRED_MESSAGE, instance);
-      }
       log.warn({ statusCode: 422, errorCount: outcome.errors.length }, "Workspace custom CSS rejected");
       return problemCustomCssInvalid(requestId, {
         invalid_params: customCssErrorsToInvalidParams(outcome.errors),

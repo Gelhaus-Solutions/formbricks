@@ -1,9 +1,8 @@
 import "server-only";
 import type { TCustomCssError, TCustomCssWarning } from "@formbricks/types/custom-css";
-import { CUSTOM_CSS_PLAN_REQUIRED_MESSAGE } from "@/modules/custom-css/lib/access";
 import type { TCustomCssWriteOutcome } from "@/modules/custom-css/lib/service";
 import { capInvalidParams } from "./invalid-params";
-import { type InvalidParam, problemCustomCssInvalid, problemCustomCssPlanRequired } from "./response";
+import { type InvalidParam, problemCustomCssInvalid } from "./response";
 
 /** Bound on the processor's located errors a single response carries. */
 export const V3_CUSTOM_CSS_MAX_REPORTED_ISSUES = 50;
@@ -33,14 +32,6 @@ export const customCssErrorsToInvalidParams = (
 
 export const capCustomCssIssues = <T>(issues: T[]): T[] => issues.slice(0, V3_CUSTOM_CSS_MAX_REPORTED_ISSUES);
 
-/** Thrown by the v3 survey write helpers so the operations can map it to the `custom_css_plan_required` 403. */
-export class V3CustomCssPlanRequiredError extends Error {
-  constructor() {
-    super(CUSTOM_CSS_PLAN_REQUIRED_MESSAGE);
-    this.name = "V3CustomCssPlanRequiredError";
-  }
-}
-
 /** Thrown by the v3 survey write helpers so the operations can map it to the custom CSS 422. */
 export class V3CustomCssInvalidError extends Error {
   constructor(readonly errors: TCustomCssError[]) {
@@ -52,19 +43,13 @@ export class V3CustomCssInvalidError extends Error {
 /** A failed write outcome as the error the survey write helpers throw. */
 export const toV3CustomCssError = (
   outcome: Extract<TCustomCssWriteOutcome, { ok: false }>
-): V3CustomCssPlanRequiredError | V3CustomCssInvalidError =>
-  outcome.code === "plan_required"
-    ? new V3CustomCssPlanRequiredError()
-    : new V3CustomCssInvalidError(outcome.errors);
+): V3CustomCssInvalidError => new V3CustomCssInvalidError(outcome.errors);
 
 /** The problem response for a custom CSS failure, or `null` when `error` is something else. */
 export const mapV3CustomCssError = (
   error: unknown,
   { requestId, instance }: { requestId: string; instance: string }
 ): Response | null => {
-  if (error instanceof V3CustomCssPlanRequiredError) {
-    return problemCustomCssPlanRequired(requestId, error.message, instance);
-  }
   if (error instanceof V3CustomCssInvalidError) {
     return problemCustomCssInvalid(requestId, {
       invalid_params: customCssErrorsToInvalidParams(error.errors),

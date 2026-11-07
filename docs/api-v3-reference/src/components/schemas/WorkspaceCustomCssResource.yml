@@ -8,7 +8,6 @@ required:
   - previous
   - status
   - canEdit
-  - planAllowed
 properties:
   workspaceId:
     type: string
@@ -45,9 +44,4 @@ properties:
     description: >-
       Whether this caller may PATCH it: organization owners and managers for signed-in users, a
       `manage` grant on this workspace for API keys.
-  planAllowed:
-    type: boolean
-    description: >-
-      Whether the organization's plan allows additions and edits (Scale on Formbricks Cloud; every
-      self-hosted plan). Removing CSS is always allowed.
 additionalProperties: false

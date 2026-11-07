@@ -64,7 +64,6 @@ export const V3_PROBLEM_CODES = [
   "bad_gateway",
   "bad_request",
   "conflict",
-  "custom_css_plan_required",
   "forbidden",
   "internal_server_error",
   "invalid_workflow_state",
@@ -307,17 +306,6 @@ export function problemUnprocessableContent(
     code: options?.code ?? "unprocessable_content",
     instance: options?.instance,
     invalid_params: options?.invalid_params,
-  });
-}
-
-/**
- * ENG-2949: adding or editing custom CSS needs the Scale plan on Formbricks Cloud. Independent of the
- * resource, so it reveals nothing about it; removing CSS never answers this.
- */
-export function problemCustomCssPlanRequired(requestId: string, detail: string, instance?: string): Response {
-  return problemResponse(403, "Forbidden", detail, requestId, {
-    code: "custom_css_plan_required",
-    instance,
   });
 }
 

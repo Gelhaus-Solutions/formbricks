@@ -1039,14 +1039,13 @@ Output uses the same survey resource shape as `GET /api/v3/surveys/{surveyId}` a
 keys, each a string or `null`; `null` clears it, and on a patch an omitted `customCss` is kept. Compiled
 output is computed by the server, and a payload carrying `compiled` or `processorVersion` is rejected. A
 successful write that processed CSS returns the removed constructs as a top-level `warnings` array beside
-`data`; adding or editing CSS on a Cloud organization without the Scale plan is a `403`
-`custom_css_plan_required`, clearing it never is. `get_survey` returns the source in `customCss`.
+`data`. `get_survey` returns the source in `customCss`.
 
 ### get_workspace_custom_css
 
 Reads a workspace's shared survey CSS: `customCss` and `previous` (the one recoverable revision) as
 source, `status` (`ok`, `stale` — recompiled from source because the processor changed — or `withheld`,
-when that source no longer passes and respondents get none of it), and `canEdit` / `planAllowed` for the
+when that source no longer passes and respondents get none of it), and `canEdit` for the
 caller. Read-only and idempotent; `surveys:read` plus read access to the workspace.
 
 Input:
@@ -1066,8 +1065,8 @@ becomes `previous`, restored by sending its source back.
 
 The scope is `surveys:write` because this is shared survey CSS, but the scope is only the first gate:
 the operation still requires an **organization owner or manager** (OAuth or session user) or an API key
-with **`manage`** on the workspace — a `write` grant is refused — and, on Cloud, the Scale plan to add or
-edit. Both refusals, like a scope refusal, are audited.
+with **`manage`** on the workspace; a `write` grant is refused. That refusal, like a scope refusal, is
+audited.
 
 Input:
 

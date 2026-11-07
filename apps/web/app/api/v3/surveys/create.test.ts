@@ -2,11 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@formbricks/database";
 import { TooManyRequestsError } from "@formbricks/types/errors";
 import type { TSurvey } from "@formbricks/types/surveys/types";
-import {
-  type TV3SurveyWriteReport,
-  V3CustomCssInvalidError,
-  V3CustomCssPlanRequiredError,
-} from "@/app/api/v3/lib/custom-css";
+import { type TV3SurveyWriteReport, V3CustomCssInvalidError } from "@/app/api/v3/lib/custom-css";
 import { getActionClasses } from "@/lib/actionClass/service";
 import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
 import { DEFAULT_ENDING_CARD_BUTTON_LINK } from "@/lib/survey/default-ending-card";
@@ -15,7 +11,6 @@ import { resolveSurveyCreationFacts } from "@/lib/survey/visibility/creation";
 import { assertWorkspaceSurveyLimit } from "@/lib/survey/visibility/limit";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { getCustomCssPlanAllowed } from "@/modules/custom-css/lib/access";
 import { processCustomCss } from "@/modules/custom-css/processor";
 import { getExternalUrlsPermission } from "@/modules/survey/lib/permission";
 import { V3SurveyCreatePermissionError, V3SurveyInputValidationError, createV3Survey } from "./create";
@@ -25,7 +20,7 @@ import { resolveV3ContactsEntitlement } from "./targeting";
 
 vi.mock("server-only", () => ({}));
 
-// ENG-3641: the processor contract and the plan gate; the save rules between them run for real.
+// ENG-3641: the processor contract; the save rules around it run for real.
 vi.mock("@/modules/custom-css/processor", () => ({
   CUSTOM_CSS_PROCESSOR_VERSION: 3,
   processCustomCss: vi.fn(),
@@ -34,10 +29,6 @@ vi.mock("@/modules/custom-css/processor", () => ({
     const dark = input?.dark?.trim() ? input.dark : null;
     return light === null && dark === null ? null : { light, dark };
   },
-}));
-vi.mock("@/modules/custom-css/lib/access", () => ({
-  CUSTOM_CSS_PLAN_REQUIRED_MESSAGE: "Adding or editing custom CSS requires the Scale plan.",
-  getCustomCssPlanAllowed: vi.fn(),
 }));
 vi.mock("@/lib/cache", () => ({ cache: { del: vi.fn() } }));
 vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: vi.fn() }));
@@ -899,7 +890,6 @@ describe("createV3Survey custom CSS (ENG-3641)", () => {
     vi.mocked(getExternalUrlsPermission).mockResolvedValue(true);
     vi.mocked(getActionClasses).mockResolvedValue([]);
     vi.mocked(resolveSurveyCreationFacts).mockResolvedValue(WORKSPACE_FACTS);
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(true);
     vi.mocked(processCustomCss).mockReturnValue({
       ok: true,
       compiled: { light: "@layer fb-survey{x}", dark: null },
@@ -914,7 +904,6 @@ describe("createV3Survey custom CSS (ENG-3641)", () => {
 
     await createV3Survey(body, null, "req_css", "org_1", { report });
 
-    expect(getCustomCssPlanAllowed).toHaveBeenCalledWith("org_1");
     expect(processCustomCss).toHaveBeenCalledWith({ scope: "survey", input: { light: "a{}", dark: null } });
     expect(createSurvey).toHaveBeenCalledWith(
       workspaceId,
@@ -932,18 +921,6 @@ describe("createV3Survey custom CSS (ENG-3641)", () => {
     expect(report.customCssWarnings).toEqual([warning]);
   });
 
-  test("an organization without the plan cannot create a survey with CSS, and nothing is written", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-    const body = ZV3CreateSurveyBody.parse({ ...rawCreateBody, customCss: { light: "a{}", dark: null } });
-
-    await expect(createV3Survey(body, null, "req_css", "org_1")).rejects.toBeInstanceOf(
-      V3CustomCssPlanRequiredError
-    );
-    expect(processCustomCss).not.toHaveBeenCalled();
-    expect(createSurvey).not.toHaveBeenCalled();
-    expect(prisma.language.upsert).not.toHaveBeenCalled();
-  });
-
   test("CSS the processor rejects fails the create before any write", async () => {
     vi.mocked(processCustomCss).mockReturnValue({
       ok: false,
@@ -957,8 +934,7 @@ describe("createV3Survey custom CSS (ENG-3641)", () => {
     expect(createSurvey).not.toHaveBeenCalled();
   });
 
-  test("no CSS, or empty CSS, needs neither the plan nor the processor", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
+  test("no CSS, or empty CSS, never reaches the processor", async () => {
     const report: TV3SurveyWriteReport = {};
 
     await createV3Survey(createBody, null, "req_css", "org_1", { report });
@@ -969,7 +945,6 @@ describe("createV3Survey custom CSS (ENG-3641)", () => {
       "org_1"
     );
 
-    expect(getCustomCssPlanAllowed).not.toHaveBeenCalled();
     expect(processCustomCss).not.toHaveBeenCalled();
     expect(vi.mocked(createSurvey).mock.calls[0][2]).toMatchObject({ customCss: null });
     expect(report.customCssWarnings).toBeUndefined();

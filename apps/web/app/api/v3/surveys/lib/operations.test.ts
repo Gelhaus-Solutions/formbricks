@@ -7,7 +7,7 @@ import {
 } from "@formbricks/types/errors";
 import { queueV3AuditLog } from "@/app/api/v3/lib/audit";
 import { requireV3WorkspaceAccess } from "@/app/api/v3/lib/auth";
-import { V3CustomCssInvalidError, V3CustomCssPlanRequiredError } from "@/app/api/v3/lib/custom-css";
+import { V3CustomCssInvalidError } from "@/app/api/v3/lib/custom-css";
 import { problemForbidden } from "@/app/api/v3/lib/response";
 import type { TV3AuditLog, TV3Authentication } from "@/app/api/v3/lib/types";
 import { recordSurveyListPredicateMismatch } from "@/lib/authorization/metrics";
@@ -2219,20 +2219,6 @@ describe("custom CSS (ENG-3641)", () => {
   });
 
   describe("writes", () => {
-    test("create maps a plan refusal to 403 custom_css_plan_required", async () => {
-      vi.mocked(createV3Survey).mockRejectedValue(new V3CustomCssPlanRequiredError());
-
-      const response = await createV3SurveyResponse({
-        body: parsedCreateBody,
-        authentication,
-        requestId,
-        instance,
-      });
-
-      expect(response.status).toBe(403);
-      expect(await readJson(response)).toMatchObject({ code: "custom_css_plan_required" });
-    });
-
     test("create maps rejected CSS to 422 with the processor's errors in details", async () => {
       vi.mocked(createV3Survey).mockRejectedValue(new V3CustomCssInvalidError([cssError]));
 
@@ -2269,7 +2255,7 @@ describe("custom CSS (ENG-3641)", () => {
       expect(await readJson(response)).toEqual({ data: serializedSurvey, warnings: [cssWarning] });
     });
 
-    test("patch returns the warnings beside data, and maps a plan refusal to 403", async () => {
+    test("patch returns the warnings beside data, and maps rejected CSS to 422", async () => {
       vi.mocked(serializeV3SurveyResource).mockReturnValue(serializedSurvey as never);
       vi.mocked(patchV3Survey).mockImplementation(async (...args: unknown[]) => {
         (args[7] as { customCssWarnings?: unknown[] }).customCssWarnings = [cssWarning];
@@ -2285,16 +2271,16 @@ describe("custom CSS (ENG-3641)", () => {
       });
       expect(await readJson(ok)).toEqual({ data: serializedSurvey, warnings: [cssWarning] });
 
-      vi.mocked(patchV3Survey).mockRejectedValue(new V3CustomCssPlanRequiredError());
+      vi.mocked(patchV3Survey).mockRejectedValue(new V3CustomCssInvalidError([cssError]));
       const refused = await patchV3SurveyResponse({
         surveyId: "survey_1",
-        body: { customCss: { light: "b{}", dark: null } },
+        body: { customCss: { light: "b{", dark: null } },
         authentication,
         requestId,
         instance,
       });
-      expect(refused.status).toBe(403);
-      expect(await readJson(refused)).toMatchObject({ code: "custom_css_plan_required" });
+      expect(refused.status).toBe(422);
+      expect(await readJson(refused)).toMatchObject({ code: "unprocessable_content" });
     });
   });
 });

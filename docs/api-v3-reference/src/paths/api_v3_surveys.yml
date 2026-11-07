@@ -466,9 +466,7 @@ post:
       description: >-
         Forbidden — no write access, missing external URL permission, missing
         Contacts entitlement for app-survey targeting, or workspace does not
-        exist (404 not used; avoids existence leak). Survey custom CSS on an
-        organization without the Scale plan (Formbricks Cloud) is refused with
-        `code: custom_css_plan_required`.
+        exist (404 not used; avoids existence leak).
       content:
         application/problem+json:
           schema:

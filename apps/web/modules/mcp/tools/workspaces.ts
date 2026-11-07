@@ -75,7 +75,7 @@ export function registerWorkspaceTools(server: McpServer): void {
     {
       title: "Get workspace custom CSS",
       description:
-        "Read a workspace's shared survey CSS source (light and dark), its one recoverable previous revision, whether stored CSS is being delivered (status), and whether you may edit it (canEdit, planAllowed).",
+        "Read a workspace's shared survey CSS source (light and dark), its one recoverable previous revision, whether stored CSS is being delivered (status), and whether you may edit it (canEdit).",
       inputSchema: ZMcpGetWorkspaceCustomCssInput,
       outputSchema: ZMcpWorkspaceCustomCssOutput,
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
@@ -104,7 +104,7 @@ export function registerWorkspaceTools(server: McpServer): void {
         "Save or clear the shared survey CSS that applies to every survey in a workspace.",
         "`customCss` replaces both fields: `{ light, dark }` source, each a CSS string or null; null clears both.",
         "Run validate_survey with operation customCss first to preview warnings. Removed constructs come back as warnings; invalid CSS is rejected and the saved CSS is kept.",
-        "Needs an organization owner or manager (or an API key with manage access), and the Scale plan on Cloud to add or edit; clearing never needs the plan.",
+        "Needs an organization owner or manager (or an API key with manage access).",
         "The replaced CSS stays recoverable as `previous` until the next change.",
       ].join(" "),
       inputSchema: ZMcpPatchWorkspaceCustomCssInput,

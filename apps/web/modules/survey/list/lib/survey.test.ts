@@ -567,7 +567,7 @@ describe("copySurveyToOtherWorkspace", () => {
     };
     const processedCss = { ...sourceCss, light: { source: ".a{}", compiled: "NEW" }, processorVersion: 2 };
 
-    test("carries the source's CSS as source, processed for the destination organization", async () => {
+    test("carries the source's CSS as source, processed for the destination", async () => {
       mockSourceSurvey({ customCss: sourceCss });
       vi.mocked(resolveCopiedSurveyCustomCss).mockResolvedValueOnce({ customCss: processedCss });
 
@@ -576,7 +576,6 @@ describe("copySurveyToOtherWorkspace", () => {
       // Charged to the user copying it, on the budget every other custom CSS write spends.
       expect(resolveCopiedSurveyCustomCss).toHaveBeenCalledWith({
         source: sourceCss,
-        destinationOrganizationId: "org_123",
         principal: userId,
       });
       const { data } = vi.mocked(prisma.survey.create).mock.calls[0][0];
@@ -586,18 +585,18 @@ describe("copySurveyToOtherWorkspace", () => {
       expect(prisma.survey.create).toHaveBeenCalledTimes(1);
     });
 
-    test("a destination without the plan still gets the copy: without the CSS, and with a notice", async () => {
+    test("CSS that no longer passes still gets the copy: without the CSS, and with a notice", async () => {
       mockSourceSurvey({ customCss: sourceCss });
       vi.mocked(resolveCopiedSurveyCustomCss).mockResolvedValueOnce({
         customCss: null,
-        notice: "plan_required",
+        notice: "invalid_css",
       });
 
       const result = await copySurveyToOtherWorkspace(sourceWorkspaceId, surveyId, targetWorkspaceId, userId);
 
       expect(prisma.survey.create).toHaveBeenCalled();
       expect(vi.mocked(prisma.survey.create).mock.calls[0][0].data).not.toHaveProperty("customCss");
-      expect(result).toMatchObject({ id: "new_cuid2_id", customCssNotice: "plan_required" });
+      expect(result).toMatchObject({ id: "new_cuid2_id", customCssNotice: "invalid_css" });
     });
 
     test("a spent custom CSS budget refuses the copy before anything is written", async () => {
@@ -616,12 +615,12 @@ describe("copySurveyToOtherWorkspace", () => {
       mockSourceSurvey({ customCss: sourceCss });
       vi.mocked(resolveCopiedSurveyCustomCss).mockResolvedValueOnce({
         customCss: null,
-        notice: "plan_required",
+        notice: "invalid_css",
       });
 
       const result = await copySurveyToOtherWorkspace(sourceWorkspaceId, surveyId, sourceWorkspaceId, userId);
 
-      expect(result).toMatchObject({ customCssNotice: "plan_required" });
+      expect(result).toMatchObject({ customCssNotice: "invalid_css" });
     });
   });
 

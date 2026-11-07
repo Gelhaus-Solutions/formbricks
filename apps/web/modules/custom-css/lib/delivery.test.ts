@@ -31,8 +31,6 @@ vi.mock("@/modules/custom-css/processor", () => ({
   normalizeCustomCssInput: (input: unknown) => input,
 }));
 
-vi.mock("./access", () => ({ CUSTOM_CSS_PLAN_REQUIRED_MESSAGE: "", getCustomCssPlanAllowed: vi.fn() }));
-
 const stored = (version: number, light = "a{}", dark: string | null = null): TCustomCssStored => ({
   light: { source: light, compiled: `OLD(${light})` },
   dark: dark === null ? null : { source: dark, compiled: `OLD(${dark})` },

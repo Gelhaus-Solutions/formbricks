@@ -13,7 +13,7 @@ import {
   type TCustomCssWarning,
   ZCustomCssStored,
 } from "@formbricks/types/custom-css";
-import { InvalidInputError, OperationNotAllowedError, ResourceNotFoundError } from "@formbricks/types/errors";
+import { InvalidInputError, ResourceNotFoundError } from "@formbricks/types/errors";
 import { cache } from "@/lib/cache";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
@@ -22,13 +22,11 @@ import {
   normalizeCustomCssInput,
   processCustomCss,
 } from "@/modules/custom-css/processor";
-import { CUSTOM_CSS_PLAN_REQUIRED_MESSAGE, getCustomCssPlanAllowed } from "./access";
 import { toCustomCssSource } from "./source";
 
 export type TCustomCssWriteOutcome =
   | { ok: true; stored: TCustomCssStored | null; warnings: TCustomCssWarning[]; changed: boolean }
-  | { ok: false; code: "invalid_css"; errors: TCustomCssError[] }
-  | { ok: false; code: "plan_required" };
+  | { ok: false; code: "invalid_css"; errors: TCustomCssError[] };
 
 /**
  * A workspace save also returns, when it wrote, the revision it replaced as read under the row lock, so
@@ -39,9 +37,6 @@ export type TWorkspaceCustomCssWriteOutcome = TCustomCssWriteOutcome & { replace
 /** What a write does to the stored CSS, judged on normalized source only — never on compiled output. */
 export type TCustomCssChange = "unchanged" | "removal" | "edit";
 
-/** An organization id, or a way to fetch it only when the plan actually has to be checked. */
-type TOrganizationIdSource = string | (() => Promise<string>);
-
 export { toCustomCssSource };
 
 const normalizedFields = (input: TCustomCssInput | null | undefined) => {
@@ -51,8 +46,7 @@ const normalizedFields = (input: TCustomCssInput | null | undefined) => {
 
 /**
  * Classify a write against what is stored. `removal` clears one or both fields without adding or editing
- * anything, which a downgraded Cloud organization may still do; anything that adds or edits source is
- * an `edit` and needs the plan.
+ * anything and is never reprocessed; anything that adds or edits source is an `edit`.
  */
 export const classifyCustomCssChange = (
   existing: TCustomCssStored | null | undefined,
@@ -93,9 +87,6 @@ const removeFields = (
   // compiled under, so delivery still treats it as stale if the processor has moved on since.
   return { light, dark, processorVersion: existing.processorVersion };
 };
-
-const resolveOrganizationId = async (source: TOrganizationIdSource): Promise<string> =>
-  typeof source === "string" ? source : await source();
 
 /**
  * The source to process: the fields exactly as the creator typed them, so the processor's line and column
@@ -140,8 +131,8 @@ const runProcessor = (scope: TCustomCssScope, source: TCustomCssInput, root?: TC
 };
 
 /**
- * Dry run for previews and validation (ENG-3641): the same processor every save uses, with no plan check,
- * no write, no timestamp and no cache invalidation. Empty input is valid and compiles to nothing.
+ * Dry run for previews and validation (ENG-3641): the same processor every save uses, with no write, no
+ * timestamp and no cache invalidation. Empty input is valid and compiles to nothing.
  * Synchronous, like the processor.
  */
 export const previewCustomCss = (
@@ -161,17 +152,16 @@ export const previewCustomCss = (
 };
 
 /**
- * The one decision every custom CSS write path makes (ENG-2949). Pure apart from the plan lookup and
- * the processor; persisting the result is the caller's job.
+ * The one decision every custom CSS write path makes (ENG-2949). Pure apart from the budget and the
+ * processor; persisting the result is the caller's job.
  *
- * - Unchanged normalized source: the existing value back, with no plan check and no reprocessing.
- * - Removal of one field or all CSS: allowed on every plan, without reprocessing.
- * - Addition or edit: the Scale plan on Cloud, then one unit of `principal`'s custom CSS budget, then
- *   the shared processor. Nothing a caller supplied beyond the two source strings is ever trusted.
+ * - Unchanged normalized source: the existing value back, with no reprocessing.
+ * - Removal of one field or all CSS: without reprocessing.
+ * - Addition or edit: one unit of `principal`'s custom CSS budget, then the shared processor. Nothing a
+ *   caller supplied beyond the two source strings is ever trusted.
  */
 export const resolveCustomCssWrite = async (args: {
   scope: TCustomCssScope;
-  organizationId: TOrganizationIdSource;
   existing: TCustomCssStored | null | undefined;
   input: TCustomCssInput | null;
   /**
@@ -190,11 +180,6 @@ export const resolveCustomCssWrite = async (args: {
 
   if (change === "removal") {
     return { ok: true, stored: removeFields(existing, input), warnings: [], changed: true };
-  }
-
-  const organizationId = await resolveOrganizationId(args.organizationId);
-  if (!(await getCustomCssPlanAllowed(organizationId))) {
-    return { ok: false, code: "plan_required" };
   }
 
   // The source the creator typed is what gets stored; normalization only decides which fields are empty.
@@ -218,13 +203,6 @@ export const resolveCustomCssWrite = async (args: {
 
   return { ok: true, stored, warnings: result.warnings, changed: true };
 };
-
-/** Thrown by internal write paths whose callers expect exceptions rather than an outcome object. */
-export class CustomCssPlanRequiredError extends OperationNotAllowedError {
-  constructor() {
-    super(CUSTOM_CSS_PLAN_REQUIRED_MESSAGE);
-  }
-}
 
 /** Invalid CSS on an internal write path. `errors` carries the processor's located reasons. */
 export class CustomCssInvalidError extends InvalidInputError {
@@ -266,9 +244,6 @@ export const resolveCustomCssWriteOrThrow = async (
   const outcome = await resolveCustomCssWrite(args);
   if (outcome.ok) {
     return outcome;
-  }
-  if (outcome.code === "plan_required") {
-    throw new CustomCssPlanRequiredError();
   }
   throw new CustomCssInvalidError(outcome.errors);
 };
@@ -433,8 +408,8 @@ const commitWorkspaceCustomCss = async <TOutcome extends TCustomCssWriteOutcome 
  * The processor is synchronous and CPU-bound, so it runs before the row is locked: the save reads the
  * stored value, resolves the write against it, then locks the row in a short transaction and persists
  * only if the stored revision is still the one it resolved against ({@link isSameStoredCustomCss}). A
- * concurrent change can make that decision stale — edit or removal, so whether the plan applies, and
- * what becomes `customCssPrevious` — so the save re-resolves against the newer value, once. A third
+ * concurrent change can make that decision stale (edit or removal, so whether it is processed and
+ * charged, and what becomes `customCssPrevious`), so the save re-resolves against the newer value, once. A third
  * contender is settled under the lock, so every save still ends in one serialized decision. Failures
  * and unchanged source write nothing, so the previous revision stays live.
  *
@@ -453,7 +428,7 @@ export const updateWorkspaceCustomCss = async (args: {
   const resolve = (existing: TCustomCssStored | null) => {
     const principal = uncharged;
     if (classifyCustomCssChange(existing, input) === "edit") uncharged = null;
-    return resolveCustomCssWrite({ scope: "workspace", organizationId, existing, input, principal });
+    return resolveCustomCssWrite({ scope: "workspace", existing, input, principal });
   };
   const finish = async (
     outcome: TCustomCssWriteOutcome,
@@ -500,18 +475,17 @@ export const updateWorkspaceCustomCss = async (args: {
 export type TCopiedSurveyCustomCss = {
   customCss: TCustomCssStored | null;
   /** Set when the source survey had CSS that the copy could not carry. */
-  notice?: "plan_required" | "invalid_css";
+  notice?: "invalid_css";
 };
 
 /**
  * Survey CSS for a copy or duplicate (ENG-2949): the source survey's CSS *source*, processed afresh for
- * the destination under the destination organization's plan. A destination that may not add CSS gets
- * the copy without it, plus a notice; the source survey is never touched. Processing is charged to
- * `principal` like any other edit, and a spent budget refuses the copy rather than dropping its CSS.
+ * the destination. CSS that no longer passes the processor is left out of the copy, with a notice; the
+ * source survey is never touched. Processing is charged to `principal` like any other edit, and a spent
+ * budget refuses the copy rather than dropping its CSS.
  */
 export const resolveCopiedSurveyCustomCss = async (args: {
   source: unknown;
-  destinationOrganizationId: string;
   principal?: string | null;
 }): Promise<TCopiedSurveyCustomCss> => {
   const input = toCustomCssSource(parseStored(args.source, "survey.customCss (copy source)"));
@@ -521,7 +495,6 @@ export const resolveCopiedSurveyCustomCss = async (args: {
 
   const outcome = await resolveCustomCssWrite({
     scope: "survey",
-    organizationId: args.destinationOrganizationId,
     existing: null,
     input,
     principal: args.principal,

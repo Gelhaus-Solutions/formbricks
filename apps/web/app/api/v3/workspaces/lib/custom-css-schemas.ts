@@ -32,8 +32,6 @@ export const ZV3WorkspaceCustomCssResource = z
     errors: z.array(ZCustomCssError).optional(),
     /** Whether this caller may PATCH it: owner/manager for users, `manage` on the workspace for API keys. */
     canEdit: z.boolean(),
-    /** Whether the organization's plan allows additions and edits. Removal is always allowed. */
-    planAllowed: z.boolean(),
   })
   .strict();
 

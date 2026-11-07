@@ -8,7 +8,6 @@ import { can } from "@/lib/authorization";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { getCustomCssHealth } from "@/modules/custom-css/lib/delivery";
 import { getWorkspaceCustomCssRecord, updateWorkspaceCustomCss } from "@/modules/custom-css/lib/service";
-import { getCustomCssPermission } from "@/modules/features/lib/flags";
 import { getV3WorkspaceCustomCss, patchV3WorkspaceCustomCss } from "./custom-css";
 
 vi.mock("server-only", () => ({}));
@@ -31,7 +30,6 @@ vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: vi.fn() })
 
 // The real role rules in `access.ts` run against a mocked authorization engine and plan.
 vi.mock("@/lib/authorization", () => ({ can: vi.fn() }));
-vi.mock("@/modules/features/lib/flags", () => ({ getCustomCssPermission: vi.fn() }));
 vi.mock("@/modules/custom-css/lib/delivery", () => ({ getCustomCssHealth: vi.fn() }));
 vi.mock("@/modules/custom-css/lib/service", async () => {
   const { toCustomCssSource } = await vi.importActual<typeof import("@/modules/custom-css/lib/source")>(
@@ -75,7 +73,6 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(requireV3WorkspaceAccess).mockResolvedValue(context);
   vi.mocked(can).mockImplementation(grant as never);
-  vi.mocked(getCustomCssPermission).mockResolvedValue(true);
   vi.mocked(getCustomCssHealth).mockResolvedValue({ status: "ok" });
   vi.mocked(getWorkspaceCustomCssRecord).mockResolvedValue({ customCss: stored("a{}"), previous: null });
   vi.mocked(updateWorkspaceCustomCss).mockResolvedValue({
@@ -114,7 +111,6 @@ describe("getV3WorkspaceCustomCss", () => {
         previous: { light: "old{}", dark: null },
         status: "ok",
         canEdit: false,
-        planAllowed: true,
       },
     });
   });
@@ -276,15 +272,6 @@ describe("patchV3WorkspaceCustomCss", () => {
     );
   });
 
-  test("a plan refusal is a 403 with custom_css_plan_required", async () => {
-    vi.mocked(updateWorkspaceCustomCss).mockResolvedValue({ ok: false, code: "plan_required" });
-
-    const response = await patch(owner, { customCss: { light: "b{}", dark: null } });
-
-    expect(response.status).toBe(403);
-    expect(await readJson(response)).toMatchObject({ code: "custom_css_plan_required" });
-  });
-
   test("rejected CSS is a 422 with located errors, and the saved CSS is left as it was", async () => {
     const error = { ...warning, code: "syntax_error" as const, line: 4, column: 2, reason: "Unexpected" };
     vi.mocked(updateWorkspaceCustomCss).mockResolvedValue({
@@ -369,8 +356,7 @@ describe("patchV3WorkspaceCustomCss", () => {
     expect(skipV3AuditLog).toHaveBeenCalledWith(auditLog);
   });
 
-  test("clearing is allowed without the plan", async () => {
-    vi.mocked(getCustomCssPermission).mockResolvedValue(false);
+  test("clearing saves null", async () => {
     vi.mocked(updateWorkspaceCustomCss).mockResolvedValue({
       ok: true,
       stored: null,

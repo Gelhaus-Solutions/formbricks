@@ -1,20 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@formbricks/database";
 import type { TCustomCssInput, TCustomCssStored } from "@formbricks/types/custom-css";
-import {
-  InvalidInputError,
-  OperationNotAllowedError,
-  ResourceNotFoundError,
-  TooManyRequestsError,
-} from "@formbricks/types/errors";
+import { InvalidInputError, ResourceNotFoundError, TooManyRequestsError } from "@formbricks/types/errors";
 import { cache } from "@/lib/cache";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import { processCustomCss } from "@/modules/custom-css/processor";
-import { getCustomCssPlanAllowed } from "./access";
 import {
   CustomCssInvalidError,
-  CustomCssPlanRequiredError,
   classifyCustomCssChange,
   getWorkspaceCustomCssRecord,
   isSameStoredCustomCss,
@@ -49,11 +42,6 @@ vi.mock("@/modules/custom-css/processor", () => ({
     const dark = input.dark?.trim() ? input.dark : null;
     return light === null && dark === null ? null : { light, dark };
   },
-}));
-
-vi.mock("./access", () => ({
-  CUSTOM_CSS_PLAN_REQUIRED_MESSAGE: "Adding or editing custom CSS requires the Scale plan.",
-  getCustomCssPlanAllowed: vi.fn(),
 }));
 
 const stored = (light: string | null, dark: string | null, processorVersion = 7): TCustomCssStored => ({
@@ -93,7 +81,6 @@ const syntaxError = {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(applyRateLimit).mockReset();
-  vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(true);
   vi.mocked(processCustomCss).mockImplementation((({ input }: { input: TCustomCssInput }) =>
     processedOk(input)) as never);
   vi.mocked(cache.del).mockResolvedValue({ ok: true, data: undefined });
@@ -118,36 +105,22 @@ describe("classifyCustomCssChange", () => {
 });
 
 describe("resolveCustomCssWrite", () => {
-  test("unchanged source needs no plan and no processing, even on a downgraded organization", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
+  test("unchanged source needs no processing", async () => {
     const existing = stored("a{}", null);
 
     const outcome = await resolveCustomCssWrite({
       scope: "survey",
-      organizationId: "org_1",
       existing,
       input: { light: "a{}", dark: null },
     });
 
     expect(outcome).toEqual({ ok: true, stored: existing, warnings: [], changed: false });
-    expect(getCustomCssPlanAllowed).not.toHaveBeenCalled();
     expect(processCustomCss).not.toHaveBeenCalled();
   });
 
-  test("does not even resolve the organization when nothing changed", async () => {
-    const organizationId = vi.fn(async () => "org_1");
-
-    await resolveCustomCssWrite({ scope: "survey", organizationId, existing: null, input: null });
-
-    expect(organizationId).not.toHaveBeenCalled();
-  });
-
-  test("removal is allowed without the plan and keeps the remaining field's output and version", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
+  test("removal keeps the remaining field's output and version, without processing", async () => {
     const clearLight = await resolveCustomCssWrite({
       scope: "survey",
-      organizationId: "org_1",
       existing: stored("a{}", "b{}", 3),
       input: { light: null, dark: "b{}" },
     });
@@ -160,53 +133,21 @@ describe("resolveCustomCssWrite", () => {
 
     const clearAll = await resolveCustomCssWrite({
       scope: "survey",
-      organizationId: "org_1",
       existing: stored("a{}", "b{}"),
       input: null,
     });
     expect(clearAll).toEqual({ ok: true, stored: null, warnings: [], changed: true });
 
-    expect(getCustomCssPlanAllowed).not.toHaveBeenCalled();
     expect(processCustomCss).not.toHaveBeenCalled();
-  });
-
-  test("an addition without the plan is refused before any processing", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
-    const outcome = await resolveCustomCssWrite({
-      scope: "workspace",
-      organizationId: "org_1",
-      existing: null,
-      input: { light: "a{}", dark: null },
-    });
-
-    expect(outcome).toEqual({ ok: false, code: "plan_required" });
-    expect(getCustomCssPlanAllowed).toHaveBeenCalledWith("org_1");
-    expect(processCustomCss).not.toHaveBeenCalled();
-  });
-
-  test("a downgraded organization cannot edit, even while clearing the other field", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
-    const outcome = await resolveCustomCssWrite({
-      scope: "survey",
-      organizationId: "org_1",
-      existing: stored("a{}", "b{}"),
-      input: { light: "a{color:red}", dark: null },
-    });
-
-    expect(outcome).toEqual({ ok: false, code: "plan_required" });
   });
 
   test("an edit stores the processor's output and version with the typed source", async () => {
     const outcome = await resolveCustomCssWrite({
       scope: "survey",
-      organizationId: async () => "org_lazy",
       existing: stored("a{}", null, 1),
       input: { light: "  a{color:red}  ", dark: "" },
     });
 
-    expect(getCustomCssPlanAllowed).toHaveBeenCalledWith("org_lazy");
     expect(processCustomCss).toHaveBeenCalledWith({
       scope: "survey",
       input: { light: "  a{color:red}  ", dark: null },
@@ -228,7 +169,6 @@ describe("resolveCustomCssWrite", () => {
 
     const outcome = await resolveCustomCssWrite({
       scope: "survey",
-      organizationId: "org_1",
       existing: stored("a{}", null),
       input: { light: "a{", dark: null },
     });
@@ -243,7 +183,6 @@ describe("resolveCustomCssWrite", () => {
 
     const outcome = await resolveCustomCssWrite({
       scope: "survey",
-      organizationId: "org_1",
       existing: null,
       input: { light: "a{}", dark: null },
     });
@@ -257,7 +196,7 @@ describe("resolveCustomCssWrite", () => {
 });
 
 describe("resolveCustomCssWrite custom CSS budget", () => {
-  const edit = { scope: "survey" as const, organizationId: "org_1", existing: null, principal: "user_1" };
+  const edit = { scope: "survey" as const, existing: null, principal: "user_1" };
 
   test("an edit spends one unit of the principal's budget, before the processor runs", async () => {
     await resolveCustomCssWrite({ ...edit, input: { light: "a{}", dark: null } });
@@ -278,14 +217,12 @@ describe("resolveCustomCssWrite custom CSS budget", () => {
     expect(processCustomCss).not.toHaveBeenCalled();
   });
 
-  test("unchanged source, removals and plan refusals process nothing, so they spend nothing", async () => {
+  test("unchanged source and removals process nothing, so they spend nothing", async () => {
     const existing = stored("a{}", "b{}");
 
     await resolveCustomCssWrite({ ...edit, existing, input: { light: "a{}", dark: "b{}" } });
     await resolveCustomCssWrite({ ...edit, existing, input: { light: null, dark: "b{}" } });
     await resolveCustomCssWrite({ ...edit, existing, input: null });
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValueOnce(false);
-    await resolveCustomCssWrite({ ...edit, input: { light: "a{}", dark: null } });
 
     expect(applyRateLimit).not.toHaveBeenCalled();
   });
@@ -299,18 +236,12 @@ describe("resolveCustomCssWrite custom CSS budget", () => {
 });
 
 describe("resolveCustomCssWriteOrThrow", () => {
-  test("throws typed errors that internal callers surface as 403 / 400", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValueOnce(false);
+  test("throws a typed error that internal callers surface as a 400", async () => {
     const args = {
       scope: "survey" as const,
-      organizationId: "org_1",
       existing: null,
       input: { light: "a{}", dark: null },
     };
-
-    const planError = await resolveCustomCssWriteOrThrow(args).catch((error: unknown) => error);
-    expect(planError).toBeInstanceOf(CustomCssPlanRequiredError);
-    expect(planError).toBeInstanceOf(OperationNotAllowedError);
 
     vi.mocked(processCustomCss).mockReturnValueOnce({ ok: false, errors: [syntaxError] });
     const cssError = await resolveCustomCssWriteOrThrow(args).catch((error: unknown) => error);
@@ -346,9 +277,7 @@ describe("readCustomCssPayloadSource", () => {
 });
 
 describe("previewCustomCss", () => {
-  test("processes without a plan check, and empty input compiles to nothing", () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
+  test("processes, and empty input compiles to nothing", () => {
     expect(previewCustomCss("workspace", { light: " ", dark: null })).toEqual({
       ok: true,
       compiled: { light: null, dark: null },
@@ -358,7 +287,6 @@ describe("previewCustomCss", () => {
       ok: true,
       compiled: { light: "COMPILED(a{})", dark: null },
     });
-    expect(getCustomCssPlanAllowed).not.toHaveBeenCalled();
   });
 });
 
@@ -447,21 +375,6 @@ describe("updateWorkspaceCustomCss", () => {
     expect(processCustomCss).toHaveBeenCalledTimes(2);
     expect(tx.workspace.update).toHaveBeenCalledTimes(1);
     expect(tx.workspace.update.mock.calls[0][0].data.customCssPrevious).toEqual(concurrent);
-  });
-
-  test("a removal that a concurrent clear turned into an addition needs the plan again", async () => {
-    givenStored(stored("a{}", "d{}"), null, null);
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
-    const outcome = await updateWorkspaceCustomCss({
-      workspaceId: "ws_1",
-      organizationId: "org_1",
-      input: { light: "a{}", dark: null },
-    });
-
-    expect(outcome).toEqual({ ok: false, code: "plan_required" });
-    expect(tx.workspace.update).not.toHaveBeenCalled();
-    expect(cache.del).not.toHaveBeenCalled();
   });
 
   test("a change in compiled version alone also counts as a concurrent change", async () => {
@@ -558,7 +471,6 @@ describe("updateWorkspaceCustomCss", () => {
   test("clearing stores null and keeps what was cleared recoverable", async () => {
     const existing = stored("old{}", "dark{}");
     givenStored(existing);
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
 
     const outcome = await updateWorkspaceCustomCss({
       workspaceId: "ws_1",
@@ -582,7 +494,6 @@ describe("updateWorkspaceCustomCss", () => {
       input: { light: "restored{}", dark: null },
     });
 
-    expect(getCustomCssPlanAllowed).toHaveBeenCalledWith("org_1");
     expect(processCustomCss).toHaveBeenCalledWith({
       scope: "workspace",
       input: { light: "restored{}", dark: null },
@@ -675,19 +586,15 @@ describe("getWorkspaceCustomCssRecord", () => {
 
 describe("resolveCopiedSurveyCustomCss", () => {
   test("a survey without CSS copies without CSS", async () => {
-    await expect(
-      resolveCopiedSurveyCustomCss({ source: null, destinationOrganizationId: "org_1" })
-    ).resolves.toEqual({ customCss: null });
+    await expect(resolveCopiedSurveyCustomCss({ source: null })).resolves.toEqual({ customCss: null });
     expect(processCustomCss).not.toHaveBeenCalled();
   });
 
   test("reprocesses the source for the destination rather than copying compiled output", async () => {
     const result = await resolveCopiedSurveyCustomCss({
       source: stored("a{}", null, 1),
-      destinationOrganizationId: "org_dest",
     });
 
-    expect(getCustomCssPlanAllowed).toHaveBeenCalledWith("org_dest");
     expect(result).toEqual({
       customCss: { light: { source: "a{}", compiled: "COMPILED(a{})" }, dark: null, processorVersion: 7 },
     });
@@ -697,7 +604,6 @@ describe("resolveCopiedSurveyCustomCss", () => {
     const copy = () =>
       resolveCopiedSurveyCustomCss({
         source: stored("a{}", null),
-        destinationOrganizationId: "org_dest",
         principal: "user_1",
       });
 
@@ -708,19 +614,12 @@ describe("resolveCopiedSurveyCustomCss", () => {
     await expect(copy()).rejects.toBeInstanceOf(TooManyRequestsError);
   });
 
-  test("a destination without the plan gets no CSS and a notice", async () => {
-    vi.mocked(getCustomCssPlanAllowed).mockResolvedValue(false);
-
-    await expect(
-      resolveCopiedSurveyCustomCss({ source: stored("a{}", null), destinationOrganizationId: "org_dest" })
-    ).resolves.toEqual({ customCss: null, notice: "plan_required" });
-  });
-
   test("source that no longer passes the processor is dropped with a notice", async () => {
     vi.mocked(processCustomCss).mockReturnValue({ ok: false, errors: [syntaxError] });
 
-    await expect(
-      resolveCopiedSurveyCustomCss({ source: stored("a{", null), destinationOrganizationId: "org_dest" })
-    ).resolves.toEqual({ customCss: null, notice: "invalid_css" });
+    await expect(resolveCopiedSurveyCustomCss({ source: stored("a{", null) })).resolves.toEqual({
+      customCss: null,
+      notice: "invalid_css",
+    });
   });
 });

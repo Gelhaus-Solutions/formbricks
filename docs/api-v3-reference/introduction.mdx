@@ -171,9 +171,6 @@ compiles it on every write and never accepts compiled output.
   complexity limits are a `422` with `details.errors`, and the saved CSS stays in effect.
 - **Who may write.** Survey CSS: anyone who may edit that survey. Workspace CSS: organization owners and
   managers, or an API key with `manage` access to the workspace; `write` is not enough.
-- **Plan.** On Formbricks Cloud, adding or editing CSS needs the Scale plan (`403`
-  `custom_css_plan_required`). Clearing it never does, and a `PATCH` that sends the stored CSS back unchanged is
-  not an edit.
 - **Undo.** The workspace resource keeps one `previous` revision; send its source back to restore it.
 
 ## Feedback

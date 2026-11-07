@@ -1,20 +1,8 @@
 import "server-only";
 import { type TAuthorizationActor, can } from "@/lib/authorization";
-import { getCustomCssPermission } from "@/modules/features/lib/flags";
 
 export const WORKSPACE_CUSTOM_CSS_PERMISSION_MESSAGE =
   "Only organization owners and managers can change workspace custom CSS. API keys need manage access to the workspace.";
-
-export const CUSTOM_CSS_PLAN_REQUIRED_MESSAGE =
-  "Adding or editing custom CSS requires the Scale plan. Existing custom CSS keeps applying, and you can still remove it.";
-
-/**
- * Whether the organization's plan allows custom CSS additions and edits (ENG-2949, D15). Cloud: the
- * Scale entitlement `custom-css`. Self-hosted: every plan, no license. Removal never consults this, and
- * neither does an unrelated save that leaves the CSS untouched.
- */
-export const getCustomCssPlanAllowed = async (organizationId: string): Promise<boolean> =>
-  getCustomCssPermission(organizationId);
 
 /**
  * Workspace CSS reaches every survey in the workspace, so writing it is narrower than writing a survey:
