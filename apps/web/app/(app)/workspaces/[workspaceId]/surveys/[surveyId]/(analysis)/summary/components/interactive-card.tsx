@@ -4,7 +4,7 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { BaseCard } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/base-card";
 
 interface InteractiveCardProps {
-  readonly tab: "dropOffs" | "quotas" | "impressions";
+  readonly tab: "dropOffs" | "impressions";
   readonly label: string;
   readonly percentage: number | null;
   readonly value: React.ReactNode;

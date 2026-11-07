@@ -79,7 +79,6 @@ interface SurveyEditorProps {
   isSpamProtectionAllowed?: boolean;
   isFormbricksCloud: boolean;
   isUnsplashConfigured: boolean;
-  isQuotasAllowed: boolean;
   isCxMode: boolean;
   surveySchedulingConfig: TSurveySchedulingConfig;
   locale: TUserLocale;
@@ -118,7 +117,6 @@ export const SurveyEditor = ({
   isSpamProtectionAllowed = false,
   isFormbricksCloud,
   isUnsplashConfigured,
-  isQuotasAllowed,
   isCxMode = false,
   surveySchedulingConfig,
   locale,
@@ -412,15 +410,12 @@ export const SurveyEditor = ({
               actionClasses={actionClasses}
               contactAttributeKeys={contactAttributeKeys}
               segments={segments}
-              responseCount={responseCount}
               finishedResponseCount={finishedResponseCount}
               membershipRole={membershipRole}
               isUserTargetingAllowed={isUserTargetingAllowed}
               isSpamProtectionAllowed={isSpamProtectionAllowed}
               workspacePermission={workspacePermission}
               isFormbricksCloud={isFormbricksCloud}
-              isQuotasAllowed={isQuotasAllowed}
-              quotas={quotas}
               surveySchedulingConfig={surveySchedulingConfig}
               locale={locale}
               appSetupCompleted={localWorkspace.appSetupCompleted}

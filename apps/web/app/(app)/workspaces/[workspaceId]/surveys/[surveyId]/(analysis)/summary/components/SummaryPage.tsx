@@ -19,7 +19,6 @@ import { SummaryImpressions } from "@/app/(app)/workspaces/[workspaceId]/surveys
 import { getFormattedFilters } from "@/app/lib/surveys/surveys";
 import { getFormattedErrorMessage } from "@/lib/utils/error-message";
 import { replaceHeadlineRecall } from "@/lib/utils/recall";
-import { QuotasSummary } from "@/modules/ee/quotas/components/quotas-summary";
 import { SummaryList } from "./SummaryList";
 import { SummaryMetadata } from "./SummaryMetadata";
 
@@ -48,7 +47,6 @@ interface SummaryPageProps {
   surveyId: string;
   locale: TUserLocale;
   initialSurveySummary?: TSurveySummary;
-  isQuotasAllowed: boolean;
   isReadOnly: boolean;
 }
 
@@ -57,7 +55,6 @@ export const SummaryPage = ({
   surveyId,
   locale,
   initialSurveySummary,
-  isQuotasAllowed,
   isReadOnly,
 }: Readonly<SummaryPageProps>) => {
   const { t } = useTranslation();
@@ -66,7 +63,7 @@ export const SummaryPage = ({
     initialSurveySummary || defaultSurveySummary
   );
 
-  const [tab, setTab] = useState<"dropOffs" | "quotas" | "impressions" | undefined>(undefined);
+  const [tab, setTab] = useState<"dropOffs" | "impressions" | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(!initialSurveySummary);
 
   const { registerAnalysisRefreshHandler } = useResponseFilter();
@@ -201,7 +198,7 @@ export const SummaryPage = ({
       return;
     }
     // Commit the key BEFORE awaiting so an action-triggered route refresh that re-runs this effect
-    // finds it already set and skips — this is what breaks the loop.
+    // finds it already set and skips: this is what breaks the loop.
     lastFetchedFiltersKeyRef.current = filtersKey;
 
     const fetchFilteredSummary = async () => {
@@ -229,14 +226,7 @@ export const SummaryPage = ({
 
   return (
     <>
-      <SummaryMetadata
-        surveySummary={surveySummary.meta}
-        quotasCount={surveySummary.quotas?.length ?? 0}
-        isLoading={isLoading}
-        tab={tab}
-        setTab={setTab}
-        isQuotasAllowed={isQuotasAllowed}
-      />
+      <SummaryMetadata surveySummary={surveySummary.meta} isLoading={isLoading} tab={tab} setTab={setTab} />
       {tab === "impressions" && (
         <SummaryImpressions
           displays={displays}
@@ -249,7 +239,6 @@ export const SummaryPage = ({
         />
       )}
       {tab === "dropOffs" && <SummaryDropOffs dropOff={surveySummary.dropOff} survey={surveyMemoized} />}
-      {isQuotasAllowed && tab === "quotas" && <QuotasSummary quotas={surveySummary.quotas} />}
       <ResponseToolbar
         survey={surveyMemoized}
         filterState={filterState}

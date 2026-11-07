@@ -15,7 +15,6 @@ import { getLocalizedValue } from "@/lib/i18n/utils";
 import { buildServerEmbeddedValues } from "@/lib/surveyLogic/utils";
 import { getSurveyDateFormatMap } from "@/lib/utils/date-display";
 import { parseRecallInfo } from "@/lib/utils/recall";
-import { ResponseCardQuotas } from "@/modules/ee/quotas/components/single-response-card-quotas";
 import { getElementsFromBlocks } from "@/modules/survey/lib/client-utils";
 import { IdBadge } from "@/modules/ui/components/id-badge";
 import { isValidValue, splitRecallHighlights } from "../util";
@@ -40,11 +39,11 @@ export const SingleResponseCardBody = ({
 }: Readonly<SingleResponseCardBodyProps>) => {
   const elements = getElementsFromBlocks(survey.blocks);
   // ENG-1837: both blocks below render the survey's Embedded Data definitions, resolved through the
-  // tables — the only place they are stored since ENG-2404.
+  // tables, the only place they are stored since ENG-2404.
   const computedFields = getComputedEmbeddedFields(survey);
   const ingestedFields = getIngestedEmbeddedFields(survey);
   const dateFormats = getSurveyDateFormatMap(elements);
-  // ENG-2538: recall's lookup map, not `response.data` — a reserved token such as `#recall:country#`
+  // ENG-2538: recall's lookup map, not `response.data`: a reserved token such as `#recall:country#`
   // rendered its fallback on this card while resolving correctly in the live survey. Shared with
   // `ElementSkip`, which recalls the same headlines for skipped elements.
   const recallValues = buildServerEmbeddedValues(response, survey);
@@ -164,7 +163,6 @@ export const SingleResponseCardBody = ({
       {ingestedFields.length > 0 && (
         <HiddenFields hiddenFields={ingestedFields} responseData={response.data} />
       )}
-      <ResponseCardQuotas quotas={response.quotas} />
 
       {response.finished && (
         <div className="mt-4 flex items-center">

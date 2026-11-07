@@ -22,13 +22,13 @@ import { getCustomCssHealth, toDeliveredCustomCss } from "@/modules/custom-css/l
 import { getWorkspaceCustomCssRecord, parseStoredCustomCss } from "@/modules/custom-css/lib/service";
 import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
 import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
-import { getQuotas } from "@/modules/ee/quotas/lib/quotas";
 import {
   getIsContactsEnabled,
   getIsQuotasEnabled,
   getIsSpamProtectionEnabled,
   getIsWorkflowsEnabled,
 } from "@/modules/features/lib/flags";
+import { getQuotas } from "@/modules/quotas/lib/quotas";
 import { getTeamMemberDetails } from "@/modules/survey/editor/lib/team";
 import { getUserEmail } from "@/modules/survey/editor/lib/user";
 import { getWorkspaceLanguages } from "@/modules/survey/editor/lib/workspace";
@@ -201,7 +201,6 @@ export const SurveyEditorPage = async (props: {
       userEmail={userEmail}
       teamMemberDetails={teamMemberDetails}
       isStorageConfigured={isStorageAvailable()}
-      isQuotasAllowed={isQuotasAllowed}
       quotas={quotas}
       isExternalUrlsAllowed={isExternalUrlsAllowed}
       publicDomain={publicDomain}

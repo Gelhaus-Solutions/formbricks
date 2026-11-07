@@ -1,12 +1,10 @@
 import { type Dispatch, type SetStateAction } from "react";
 import { ActionClass, OrganizationRole } from "@formbricks/database/prisma-browser";
 import { TContactAttributeKey } from "@formbricks/types/contact-attribute-key";
-import { TSurveyQuota } from "@formbricks/types/quota";
 import { TSegment } from "@formbricks/types/segment";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { TUserLocale } from "@formbricks/types/user";
 import { TargetingCard } from "@/modules/ee/contacts/segments/components/targeting-card";
-import { QuotasCard } from "@/modules/ee/quotas/components/quotas-card";
 import { HowToSendCard } from "@/modules/survey/editor/components/how-to-send-card";
 import { RecontactOptionsCard } from "@/modules/survey/editor/components/recontact-options-card";
 import { ResponseOptionsCard } from "@/modules/survey/editor/components/response-options-card";
@@ -22,15 +20,12 @@ interface SettingsViewProps {
   actionClasses: ActionClass[];
   contactAttributeKeys: TContactAttributeKey[];
   segments: TSegment[];
-  responseCount: number;
   finishedResponseCount: number;
   membershipRole?: OrganizationRole;
   isUserTargetingAllowed?: boolean;
   isSpamProtectionAllowed: boolean;
   workspacePermission: TTeamPermission | null;
   isFormbricksCloud: boolean;
-  isQuotasAllowed: boolean;
-  quotas: TSurveyQuota[];
   surveySchedulingConfig: TSurveySchedulingConfig;
   locale: TUserLocale;
   appSetupCompleted: boolean;
@@ -45,15 +40,12 @@ export const SettingsView = ({
   actionClasses,
   contactAttributeKeys,
   segments,
-  responseCount,
   finishedResponseCount,
   membershipRole,
   isUserTargetingAllowed = false,
   isSpamProtectionAllowed,
-  isQuotasAllowed,
   workspacePermission,
   isFormbricksCloud,
-  quotas,
   surveySchedulingConfig,
   locale,
   appSetupCompleted,
@@ -102,14 +94,6 @@ export const SettingsView = ({
         membershipRole={membershipRole}
         workspacePermission={workspacePermission}
         hasError={hasTriggerError}
-      />
-      <QuotasCard
-        localSurvey={localSurvey}
-        isQuotasAllowed={isQuotasAllowed}
-        isFormbricksCloud={isFormbricksCloud}
-        quotas={quotas}
-        hasResponses={responseCount > 0}
-        enterpriseLicenseRequestFormUrl={enterpriseLicenseRequestFormUrl}
       />
 
       <ResponseOptionsCard

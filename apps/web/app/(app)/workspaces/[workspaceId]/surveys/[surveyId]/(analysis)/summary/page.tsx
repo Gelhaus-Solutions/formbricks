@@ -13,7 +13,7 @@ import { getUserVisibleSurveyWhere } from "@/lib/survey/visibility/actor-context
 import { getUser } from "@/lib/user/service";
 import { getTranslate } from "@/lingodotdev/server";
 import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
-import { getIsContactsEnabled, getIsQuotasEnabled } from "@/modules/features/lib/flags";
+import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { getOrganizationBilling } from "@/modules/survey/lib/survey";
 import { getSurveyAuth } from "@/modules/survey/lib/survey-auth";
 import { RestrictedSurveyBanner } from "@/modules/survey/visibility/components/restricted-survey-banner";
@@ -65,7 +65,6 @@ const SurveyPage = async (
   if (!organizationBilling) {
     throw new ResourceNotFoundError(t("common.organization"), organization.id);
   }
-  const isQuotasAllowed = await getIsQuotasEnabled(organization.id);
 
   const aiConfig = await getOrganizationAIConfig(organization.id);
   const aiUnavailableReason = getAISmartToolsUnavailableReason(aiConfig) ?? null;
@@ -110,7 +109,6 @@ const SurveyPage = async (
         surveyId={params.surveyId}
         locale={user.locale ?? DEFAULT_LOCALE}
         initialSurveySummary={initialSurveySummary}
-        isQuotasAllowed={isQuotasAllowed}
         isReadOnly={isReadOnly}
       />
 

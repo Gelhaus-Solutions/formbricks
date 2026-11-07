@@ -4,15 +4,12 @@ import { useTranslation } from "react-i18next";
 import { TSurveySummary } from "@formbricks/types/surveys/types";
 import { InteractiveCard } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/interactive-card";
 import { StatCard } from "@/app/(app)/workspaces/[workspaceId]/surveys/[surveyId]/(analysis)/summary/components/stat-card";
-import { cn } from "@/modules/ui/lib/utils";
 
 interface SummaryMetadataProps {
   readonly surveySummary: TSurveySummary["meta"];
-  readonly quotasCount: number;
   readonly isLoading: boolean;
-  readonly tab: "dropOffs" | "quotas" | "impressions" | undefined;
-  readonly setTab: React.Dispatch<React.SetStateAction<"dropOffs" | "quotas" | "impressions" | undefined>>;
-  readonly isQuotasAllowed: boolean;
+  readonly tab: "dropOffs" | "impressions" | undefined;
+  readonly setTab: React.Dispatch<React.SetStateAction<"dropOffs" | "impressions" | undefined>>;
 }
 
 const formatTime = (ttc: number) => {
@@ -30,14 +27,7 @@ const formatTime = (ttc: number) => {
   return formattedValue;
 };
 
-export const SummaryMetadata = ({
-  surveySummary,
-  quotasCount,
-  isLoading,
-  tab,
-  setTab,
-  isQuotasAllowed,
-}: SummaryMetadataProps) => {
+export const SummaryMetadata = ({ surveySummary, isLoading, tab, setTab }: SummaryMetadataProps) => {
   const {
     completedPercentage,
     completedResponses,
@@ -47,24 +37,18 @@ export const SummaryMetadata = ({
     startsPercentage,
     totalResponses,
     ttcAverage,
-    quotasCompleted,
-    quotasCompletedPercentage,
   } = surveySummary;
   const { t } = useTranslation();
   const dropoffCountValue = dropOffCount === 0 ? <span>-</span> : dropOffCount;
 
-  const handleTabChange = (val: "dropOffs" | "quotas" | "impressions") => {
+  const handleTabChange = (val: "dropOffs" | "impressions") => {
     const change = tab === val ? undefined : val;
     setTab(change);
   };
 
   return (
     <div>
-      <div
-        className={cn(
-          `grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-x-2 lg:grid-cols-3 2xl:grid-cols-5`,
-          isQuotasAllowed && quotasCount > 0 && "2xl:grid-cols-6"
-        )}>
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-x-2 lg:grid-cols-3 2xl:grid-cols-5">
         <InteractiveCard
           key="impressions"
           tab="impressions"
@@ -112,20 +96,6 @@ export const SummaryMetadata = ({
           })}
           isLoading={isLoading}
         />
-
-        {isQuotasAllowed && quotasCount > 0 && (
-          <InteractiveCard
-            key="quotas"
-            tab="quotas"
-            label={t("workspace.surveys.summary.quotas_completed")}
-            percentage={quotasCompletedPercentage}
-            value={quotasCompleted}
-            tooltipText={t("workspace.surveys.summary.quotas_completed_tooltip")}
-            isLoading={isLoading}
-            onClick={() => handleTabChange("quotas")}
-            isActive={tab === "quotas"}
-          />
-        )}
       </div>
     </div>
   );
