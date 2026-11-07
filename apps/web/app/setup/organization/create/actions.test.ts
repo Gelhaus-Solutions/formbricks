@@ -31,9 +31,6 @@ vi.mock("@/modules/core/rate-limit/helpers", () => ({ applyRateLimit: mocks.appl
 vi.mock("@/modules/audit-log/lib/handler", () => ({
   withAuditLogging: vi.fn((_eventName, _objectType, fn) => fn),
 }));
-vi.mock("@/modules/ee/billing/lib/organization-billing", () => ({
-  ensureCloudStripeSetupForOrganization: vi.fn(),
-}));
 vi.mock("@/modules/features/lib/flags", () => ({
   getIsMultiOrgEnabled: mocks.getIsMultiOrgEnabled,
 }));

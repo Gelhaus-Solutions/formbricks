@@ -22,7 +22,6 @@ import { isSurveyOutboundAllowed, surveyOutboundVisibilitySelect } from "@/lib/s
 import { isNewReleaseWorkEnabled } from "@/lib/upgrade/compatibility";
 import { queueAuditEventWithoutRequest } from "@/modules/audit-log/lib/handler";
 import { type TAuditStatus, UNKNOWN_DATA } from "@/modules/audit-log/types/audit-log";
-import { recordResponseCreatedMeterEvent } from "@/modules/ee/billing/lib/metering";
 import { sendResponseFinishedEmail } from "@/modules/email";
 import { captureSurveyResponsePostHogEvent } from "@/modules/response-pipeline/lib/posthog";
 import { sendFollowUpsForResponse } from "@/modules/survey/follow-ups/lib/follow-ups";
@@ -37,11 +36,6 @@ const DEFAULT_NOTIFICATION_LOCALE: TUserLocale = "en-US";
 const pipelineOrganizationSelect = {
   id: true,
   displayTimeZone: true,
-  billing: {
-    select: {
-      stripeCustomerId: true,
-    },
-  },
 } satisfies Prisma.OrganizationSelect;
 
 const pipelineSurveySelect = {
@@ -761,30 +755,12 @@ const runResponseCreatedSideEffects = async ({
   logContext,
   organizationId,
   survey,
-  stripeCustomerId,
 }: {
   data: TResponsePipelineJobData;
   logContext: ReturnType<typeof getPipelineLogContext>;
   organizationId: string;
   survey: TPipelineSurvey;
-  stripeCustomerId: string | null | undefined;
 }) => {
-  try {
-    await recordResponseCreatedMeterEvent({
-      stripeCustomerId,
-      responseId: data.response.id,
-      createdAt: data.response.createdAt,
-    });
-  } catch (error) {
-    logger.error(
-      {
-        ...logContext,
-        err: error,
-      },
-      "Response pipeline meter event failed"
-    );
-  }
-
   if (POSTHOG_KEY) {
     try {
       const responseCount = await getResponseCountBySurveyId(data.surveyId);
@@ -868,7 +844,6 @@ export const processResponsePipelineJob: JobHandler<TResponsePipelineJobData> = 
         logContext,
         organizationId: organization.id,
         survey,
-        stripeCustomerId: organization.billing?.stripeCustomerId,
       });
     }
   } catch (error) {

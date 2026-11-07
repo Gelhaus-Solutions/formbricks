@@ -32,7 +32,6 @@ const {
   mockPrismaUserFindMany,
   mockPrismaWebhookFindMany,
   mockQueueAuditEventWithoutRequest,
-  mockRecordResponseCreatedMeterEvent,
   mockSendFollowUpsForResponse,
   mockSendResponseFinishedEmail,
 } = vi.hoisted(() => {
@@ -57,7 +56,6 @@ const {
     mockPrismaUserFindMany: vi.fn(),
     mockPrismaWebhookFindMany: vi.fn(),
     mockQueueAuditEventWithoutRequest: vi.fn(),
-    mockRecordResponseCreatedMeterEvent: vi.fn(),
     mockSendFollowUpsForResponse: vi.fn(),
     mockSendResponseFinishedEmail: vi.fn(),
   };
@@ -131,10 +129,6 @@ vi.mock("@/modules/audit-log/lib/handler", () => ({
   queueAuditEventWithoutRequest: mockQueueAuditEventWithoutRequest,
 }));
 
-vi.mock("@/modules/ee/billing/lib/metering", () => ({
-  recordResponseCreatedMeterEvent: mockRecordResponseCreatedMeterEvent,
-}));
-
 vi.mock("@/modules/email", () => ({
   sendResponseFinishedEmail: mockSendResponseFinishedEmail,
 }));
@@ -192,9 +186,6 @@ const finalAttemptContext = {
 };
 
 const organization = {
-  billing: {
-    stripeCustomerId: "cus_123",
-  },
   displayTimeZone: null,
   id: "org_123",
 };
@@ -241,7 +232,6 @@ describe("processResponsePipelineJob", () => {
     mockHandleIntegrations.mockResolvedValue(undefined);
     mockEnqueueWebhookDeliveryJob.mockResolvedValue({ id: "whd-job_123-webhook_123" });
     mockQueueAuditEventWithoutRequest.mockResolvedValue(undefined);
-    mockRecordResponseCreatedMeterEvent.mockResolvedValue(undefined);
     mockSendResponseFinishedEmail.mockResolvedValue(undefined);
     mockSendFollowUpsForResponse.mockResolvedValue({ ok: true, data: [] });
     mockPrismaSurveyUpdate.mockResolvedValue(undefined);
@@ -310,7 +300,7 @@ describe("processResponsePipelineJob", () => {
     );
   });
 
-  test("processes responseCreated jobs with webhook fan-out, metering, and telemetry side effects", async () => {
+  test("processes responseCreated jobs with webhook fan-out", async () => {
     mockPrismaWebhookFindMany.mockResolvedValue([webhookRow]);
 
     await expect(processResponsePipelineJob(baseData, baseContext)).resolves.toBeUndefined();
@@ -344,11 +334,6 @@ describe("processResponsePipelineJob", () => {
       },
       { jobId: "whd-job_123-webhook_123" }
     );
-    expect(mockRecordResponseCreatedMeterEvent).toHaveBeenCalledWith({
-      createdAt: baseData.response.createdAt,
-      responseId: "response_123",
-      stripeCustomerId: "cus_123",
-    });
     expect(mockHandleIntegrations).not.toHaveBeenCalled();
   });
 
@@ -1046,17 +1031,12 @@ describe("processResponsePipelineJob", () => {
     expect(mockSendResponseFinishedEmail).not.toHaveBeenCalled();
   });
 
-  test("continues responseCreated side effects when the fan-out fails on the final attempt", async () => {
+  test("finishes responseCreated jobs when the fan-out fails on the final attempt", async () => {
     mockPrismaWebhookFindMany.mockResolvedValue([webhookRow]);
     mockEnqueueWebhookDeliveryJob.mockRejectedValue(new Error("redis unavailable"));
 
     await expect(processResponsePipelineJob(baseData, finalAttemptContext)).resolves.toBeUndefined();
 
-    expect(mockRecordResponseCreatedMeterEvent).toHaveBeenCalledWith({
-      createdAt: baseData.response.createdAt,
-      responseId: "response_123",
-      stripeCustomerId: "cus_123",
-    });
     expect(mockLoggerError).toHaveBeenCalledWith(
       expect.objectContaining({
         attempt: 3,
@@ -1065,28 +1045,6 @@ describe("processResponsePipelineJob", () => {
       }),
       "Response pipeline webhook delivery enqueue exhausted retries; continuing with remaining side effects"
     );
-  });
-
-  test("awaits the metering write before finishing responseCreated jobs", async () => {
-    let resolveMetering: (() => void) | undefined;
-    const meteringPromise = new Promise<void>((resolve) => {
-      resolveMetering = resolve;
-    });
-    mockRecordResponseCreatedMeterEvent.mockReturnValue(meteringPromise);
-
-    let settled = false;
-    const jobPromise = processResponsePipelineJob(baseData, baseContext).then(() => {
-      settled = true;
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(settled).toBe(false);
-
-    resolveMetering?.();
-    await jobPromise;
-
-    expect(settled).toBe(true);
   });
 
   test("fails fast when the workspace organization cannot be found", async () => {

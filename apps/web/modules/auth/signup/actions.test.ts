@@ -73,9 +73,6 @@ vi.mock("@/lib/posthog", () => ({
   identifyPostHogPerson: vi.fn(),
   getEmailDomain: (email: string) => email.split("@")[1]?.toLowerCase() || undefined,
 }));
-vi.mock("@/modules/ee/billing/lib/organization-billing", () => ({
-  ensureCloudStripeSetupForOrganization: vi.fn(),
-}));
 vi.mock("@/modules/features/lib/flags", () => ({ getIsMultiOrgEnabled: vi.fn() }));
 vi.mock("@/modules/email", () => ({ sendInviteAcceptedEmail: vi.fn() }));
 vi.mock("@/modules/workspaces/settings/lib/workspace", () => ({ createWorkspace: vi.fn() }));

@@ -1,10 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { logger } from "@formbricks/logger";
 import { OperationNotAllowedError } from "@formbricks/types/errors";
 import { TUserNotificationSettings } from "@formbricks/types/user";
-import { IS_FORMBRICKS_CLOUD } from "@/lib/constants";
 import { createMembership } from "@/lib/membership/service";
 import { createOrganization } from "@/lib/organization/service";
 import { capturePostHogEvent, getEmailDomain, groupIdentifyPostHog } from "@/lib/posthog";
@@ -14,7 +12,6 @@ import { DEFAULT_WORKSPACE_NAME } from "@/lib/workspace/constants";
 import { withAuditLogging } from "@/modules/audit-log/lib/handler";
 import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { ensureCloudStripeSetupForOrganization } from "@/modules/ee/billing/lib/organization-billing";
 import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { createWorkspace } from "@/modules/workspaces/settings/lib/workspace";
 
@@ -42,16 +39,6 @@ export const createOrganizationAction = authenticatedActionClient
         role: "owner",
         accepted: true,
       });
-
-      // Stripe setup must run AFTER membership is created so the owner email is available
-      if (IS_FORMBRICKS_CLOUD) {
-        ensureCloudStripeSetupForOrganization(newOrganization.id).catch((error) => {
-          logger.error(
-            { error, organizationId: newOrganization.id },
-            "Stripe setup failed after organization creation"
-          );
-        });
-      }
 
       // The organization was created just above and owns no workspaces, so there is no cap to enforce.
       const newWorkspace = await createWorkspace(

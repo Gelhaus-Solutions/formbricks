@@ -12,7 +12,7 @@ import {
   UnknownError,
 } from "@formbricks/types/errors";
 import { ZUser, ZUserLocale } from "@formbricks/types/user";
-import { IS_FORMBRICKS_CLOUD, IS_TURNSTILE_CONFIGURED, TURNSTILE_SECRET_KEY } from "@/lib/constants";
+import { IS_TURNSTILE_CONFIGURED, TURNSTILE_SECRET_KEY } from "@/lib/constants";
 import { toAppLocale } from "@/lib/i18n/app-locale";
 import { verifyInviteToken } from "@/lib/jwt";
 import { createMembership } from "@/lib/membership/service";
@@ -55,7 +55,6 @@ import { createTeamMembership } from "@/modules/auth/signup/lib/team";
 import { verifyTurnstileToken } from "@/modules/auth/signup/lib/utils";
 import { applyIPRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
-import { ensureCloudStripeSetupForOrganization } from "@/modules/ee/billing/lib/organization-billing";
 import { sendInviteAcceptedEmail } from "@/modules/email";
 import { getIsMultiOrgEnabled } from "@/modules/features/lib/flags";
 import { createWorkspace } from "@/modules/workspaces/settings/lib/workspace";
@@ -265,16 +264,6 @@ async function handleOrganizationCreation(ctx: ActionClientCtx, user: TCreatedUs
     role: "owner",
     accepted: true,
   });
-
-  // Stripe setup must run AFTER membership is created so the owner email is available
-  if (IS_FORMBRICKS_CLOUD) {
-    ensureCloudStripeSetupForOrganization(organization.id).catch((error) => {
-      logger.error(
-        { error, organizationId: organization.id },
-        "Stripe setup failed after organization creation"
-      );
-    });
-  }
 
   // The organization was created just above and owns no workspaces, so there is no cap to enforce.
   const workspace = await createWorkspace(
