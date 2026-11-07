@@ -28,16 +28,6 @@ formbricks:
   mcpOauthJwksUrl: ""
 
 ##########################################################
-# Enterprise Configuration
-##########################################################
-enterprise:
-  # Deprecated compatibility field. Templates do not consume it; omit it from new values files.
-  enabled: false
-  # Adds ENTERPRISE_LICENSE_KEY to the chart-generated app Secret when secret.enabled=true.
-  # With an existing Secret or ExternalSecret, provide ENTERPRISE_LICENSE_KEY there instead.
-  licenseKey: ""
-
-##########################################################
 # Database Migration Job Configuration Helm
 ##########################################################
 migration:
