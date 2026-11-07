@@ -50,14 +50,13 @@ Three things to know before reading the result:
   database, so it only matters locally: a second run without re-seeding turns those operations into
   documented 403s and quietly loses depth.
 
-- **Workflow endpoints need an enterprise license.** Thirteen of the 46 operations (every
-  `/workflows` path, the two `/workflows/runs` reads included, since they all authorize through
+- **Workflow and Contacts endpoints sit behind GForms feature flags.** Thirteen of the 46 operations
+  (every `/workflows` path, the two `/workflows/runs` reads included, since they all authorize through
   `buildWorkflowApiContext`), plus `contact-attribute-keys`, `contacts`,
-  `contacts/attribute-values` and `segments` (the Contacts entitlement), are entitlement-gated. Without
-  `ENTERPRISE_LICENSE_KEY` they answer a documented 403, so the run stays green but tests those
-  operations shallowly. A licence is necessary but not sufficient: it also has to _grant_ the
-  feature. CI's key grants `contacts` and not `workflows` (ENG-2553), so the 13 workflow operations
-  are shallow there too: the job's post-boot probe says which state you are in on every run.
+  `contacts/attribute-values` and `segments`, check the `workflows` and `contacts` flags in
+  `apps/web/modules/features/lib/flags.ts`. Both are off until their rebuilds land (GFORMS-20,
+  GFORMS-18), so those operations answer a documented 403: the run stays green but tests them
+  shallowly. The job's post-boot probe says which state you are in on every run.
 - **The four `/tags` operations are session-only** (`auth: "session"`, and the spec declares only
   `sessionAuth`), so an API key gets a documented 401 before any handler runs. They are checked
   against that 401, which is a real assertion that they stay session-only, but no tag fixtures

@@ -36,7 +36,7 @@ formbricks:
   webappUrl: https://surveys.example.com
 ```
 
-    Add any additional overrides you need for ingress, external services, secrets, or Enterprise license features.
+    Add any additional overrides you need for ingress, external services or secrets.
 
   </Step>
 
@@ -75,20 +75,6 @@ helm install formbricks oci://ghcr.io/formbricks/helm-charts/formbricks \
 
 The default chart path keeps `secret.enabled: true`, which lets the chart generate the required application
 secrets for you.
-
-### Adding An Enterprise License
-
-There is no separate `enterprise.enabled` switch. Enterprise features are unlocked by a valid
-`ENTERPRISE_LICENSE_KEY`. For a quick-start deployment that uses the chart-generated app Secret, set:
-
-```yaml
-enterprise:
-  licenseKey: your-enterprise-license-key
-```
-
-For production, keep the license out of a values file and provide `ENTERPRISE_LICENSE_KEY` through your existing
-Secret or ExternalSecret instead. The `enterprise.licenseKey` chart value only writes to the generated app Secret
-when `secret.enabled: true`.
 
 ### Using Managed PostgreSQL And Redis
 
