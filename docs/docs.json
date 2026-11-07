@@ -318,12 +318,10 @@
               "self-hosting/advanced/v6-maintenance-upgrade",
               "self-hosting/advanced/migrating-surveys",
               "self-hosting/advanced/license",
-              "self-hosting/advanced/license-activation",
               {
-                "group": "Enterprise Features",
+                "group": "Features",
                 "icon": "building",
                 "pages": [
-                  "self-hosting/advanced/enterprise-features/hide-powered-by-formbricks",
                   "self-hosting/advanced/enterprise-features/whitelabel-email-follow-ups",
                   "self-hosting/advanced/enterprise-features/audit-logging",
                   "self-hosting/advanced/enterprise-features/ai-features",
@@ -1185,6 +1183,14 @@
     {
       "destination": "/docs/self-hosting/overview",
       "source": "/docs/self-hosting/integrations"
+    },
+    {
+      "destination": "/docs/self-hosting/advanced/license",
+      "source": "/docs/self-hosting/advanced/enterprise-features/hide-powered-by-formbricks"
+    },
+    {
+      "destination": "/docs/self-hosting/advanced/license",
+      "source": "/docs/self-hosting/advanced/license-activation"
     },
     {
       "destination": "/docs/self-hosting/advanced/license",

@@ -8,9 +8,9 @@ icon: file-shield
 Audit logs record **who** did **what**, **when**, **from where**, and **with what outcome** across your Formbricks instance.
 
 <Note>
-  Audit logging is an Enterprise feature. Formbricks writes audit events only while `AUDIT_LOG_ENABLED=1` is set
-  **and** your [Enterprise license](/self-hosting/advanced/license) is active and includes audit logs. Either one
-  alone writes nothing.
+  Audit logging is not in GForms yet: it is being rebuilt (GFORMS-11, see
+  [License](/self-hosting/advanced/license)). Until then no audit events are written, even with
+  `AUDIT_LOG_ENABLED=1`.
 </Note>
 
 ## Benefits Of Audit Logging
@@ -21,8 +21,7 @@ Audit logs record **who** did **what**, **when**, **from where**, and **with wha
 
 ## Enabling Audit Logging
 
-1. Activate an [Enterprise license](/self-hosting/advanced/license) that includes audit logs.
-2. Set the following environment variables in your deployment (Docker Compose, Kubernetes, etc.):
+1. Set the following environment variables in your deployment (Docker Compose, Kubernetes, etc.):
 
 ```bash title=".env"
 # --- Audit logging ---
@@ -33,9 +32,8 @@ AUDIT_LOG_GET_USER_IP=1
 TRUSTED_PROXY_HOP_COUNT=1
 ```
 
-3. Redeploy your containers.
-4. Confirm you can see audit logs in the output of your containers. If none appear, check that the license is
-   active and includes audit logs.
+2. Redeploy your containers.
+3. Confirm you can see audit logs in the output of your containers.
 
 <Warning>
   Audit logging follows the license like every other Enterprise feature. If a license check fails or reports the
