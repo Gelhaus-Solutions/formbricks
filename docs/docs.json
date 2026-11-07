@@ -89,7 +89,6 @@
                 "pages": [
                   "platform/features/user-management",
                   "platform/features/user-management/organizations-and-roles",
-                  "platform/features/user-management/teams-and-roles",
                   "platform/features/user-management/invite-members",
                   "platform/features/user-management/two-factor-auth"
                 ]
@@ -340,7 +339,6 @@
                 "pages": [
                   "self-hosting/advanced/enterprise-features/hide-powered-by-formbricks",
                   "self-hosting/advanced/enterprise-features/whitelabel-email-follow-ups",
-                  "self-hosting/advanced/enterprise-features/team-access",
                   "self-hosting/advanced/enterprise-features/oidc-sso",
                   "self-hosting/advanced/enterprise-features/saml-sso",
                   "self-hosting/advanced/enterprise-features/audit-logging",
@@ -1156,10 +1154,6 @@
     {
       "destination": "/docs/platform/features/user-management/organizations-and-roles",
       "source": "/docs/xm-and-surveys/core-features/user-management/organizations-and-roles"
-    },
-    {
-      "destination": "/docs/platform/features/user-management/teams-and-roles",
-      "source": "/docs/xm-and-surveys/core-features/user-management/teams-and-roles"
     },
     {
       "destination": "/docs/platform/features/user-management/invite-members",
