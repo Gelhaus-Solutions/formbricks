@@ -16,7 +16,14 @@ import { TResponse } from "@formbricks/types/responses";
 import { TSurveyElementTypeEnum } from "@formbricks/types/surveys/elements";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { TUserLocale } from "@formbricks/types/user";
-import { DEFAULT_LOCALE, IMPRINT_ADDRESS, IMPRINT_URL, PRIVACY_URL, TERMS_URL } from "@/lib/constants";
+import {
+  DEFAULT_LOCALE,
+  FB_LOGO_URL,
+  IMPRINT_ADDRESS,
+  IMPRINT_URL,
+  PRIVACY_URL,
+  TERMS_URL,
+} from "@/lib/constants";
 import { getElementResponseMapping } from "@/lib/responses";
 import { buildServerEmbeddedValues } from "@/lib/surveyLogic/utils";
 import { parseRecallInfo } from "@/lib/utils/recall";
@@ -26,12 +33,12 @@ import { resolveStorageUrl } from "@/modules/storage/utils";
 
 /**
  * Sanitize a recall-templated body the same way the survey Follow-Ups email does. Recall tags are
- * expanded against the response first, then only a narrow HTML allowlist survives — so
+ * expanded against the response first, then only a narrow HTML allowlist survives, so
  * respondent-controlled recall values cannot inject markup or non-http(s) schemes.
  *
  * Recall values are escaped as they are substituted (`escapeValues`). The allowlist below legitimately
  * permits `<a href>` for author-written body HTML, so the sanitizer cannot tell that markup apart from
- * markup a respondent smuggled in through an open-text answer — without escaping, an anonymous
+ * markup a respondent smuggled in through an open-text answer; without escaping, an anonymous
  * respondent could place an arbitrary clickable link into a Formbricks-branded email sent to the
  * survey owner.
  *
@@ -133,10 +140,10 @@ const buildHiddenFields = (
 ): ProcessedHiddenField[] => {
   if (!attachResponseData || !includeHiddenFields) return [];
 
-  // ENG-3233: shown by name, read by storage key. `id` stays the storage key — it is the React key
+  // ENG-3233: shown by name, read by storage key. `id` stays the storage key: it is the React key
   // in the template, and only the key is unique per survey.
   //
-  // ENG-3266: the same widening as the analysis surfaces — a `number` field stores a JSON number,
+  // ENG-3266: the same widening as the analysis surfaces: a `number` field stores a JSON number,
   // which the old `typeof === "string"` gate dropped, so a follow-up email omitted a row the export
   // wrote. Read once and flat-map rather than filter-then-map: reading the slot twice is what made
   // the `as string` cast necessary, and the cast is what let the two reads drift apart.
@@ -150,7 +157,7 @@ const buildHiddenFields = (
 /**
  * Builds the branded HTML for a survey-response email (Follow-Ups template): recall-expanded +
  * sanitized body, plus the optional response-data / variables / hidden-fields blocks. Pure of any
- * transport concern — the caller performs the actual send. Shared by survey Follow-Ups and the
+ * transport concern: the caller performs the actual send. Shared by survey Follow-Ups and the
  * workflow `send_email` action so both render identically.
  */
 export const buildSurveyResponseEmailHtml = async ({
@@ -172,7 +179,7 @@ export const buildSurveyResponseEmailHtml = async ({
   logoUrl?: string;
   locale?: TUserLocale;
 }): Promise<string> => {
-  // Worker context (no request scope) — pass explicit locale to skip headers()/cookies().
+  // Worker context (no request scope): pass explicit locale to skip headers()/cookies().
   // Falls back to DEFAULT_LOCALE when the respondent locale wasn't captured at submission.
   const t = await getTranslate(locale ?? DEFAULT_LOCALE);
 
@@ -182,7 +189,7 @@ export const buildSurveyResponseEmailHtml = async ({
     variables: buildVariables(survey, response, attachResponseData, includeVariables),
     hiddenFields: buildHiddenFields(survey, response, attachResponseData, includeHiddenFields),
     // The whitelabel logo is stored as a relative `/storage/...` path, which an email client cannot
-    // resolve — it has no origin to resolve against, so the `<img>` renders broken. Resolve it to an
+    // resolve: it has no origin to resolve against, so the `<img>` renders broken. Resolve it to an
     // absolute URL here, exactly like every other email sender does (see `@/modules/email`).
     logoUrl: logoUrl ? resolveStorageUrl(logoUrl) : undefined,
     t,
@@ -190,6 +197,7 @@ export const buildSurveyResponseEmailHtml = async ({
     termsUrl: TERMS_URL || undefined,
     imprintUrl: IMPRINT_URL || undefined,
     imprintAddress: IMPRINT_ADDRESS || undefined,
+    defaultLogoUrl: FB_LOGO_URL,
   });
 };
 

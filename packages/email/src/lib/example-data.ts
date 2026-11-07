@@ -7,23 +7,23 @@ import { embedSurveyPreviewEmailHtml } from "./fixtures/embed-survey-preview-ema
 
 export const exampleData = {
   verificationEmail: {
-    verifyLink: "https://app.formbricks.com/auth/verify?token=example-verification-token",
-    verificationRequestLink: "https://app.formbricks.com/auth/verification-requested",
+    verifyLink: "https://forms.example.com/auth/verify?token=example-verification-token",
+    verificationRequestLink: "https://forms.example.com/auth/verification-requested",
   },
 
   forgotPasswordEmail: {
-    verifyLink: "https://app.formbricks.com/auth/forgot-password/reset?token=example-reset-token",
+    verifyLink: "https://forms.example.com/auth/forgot-password/reset?token=example-reset-token",
     linkValidityInMinutes: 30,
   },
 
   deleteAccountEmail: {
     deleteLink:
-      "https://app.formbricks.com/api/auth/delete-user/callback?token=example-delete-token&callbackURL=/",
+      "https://forms.example.com/api/auth/delete-user/callback?token=example-delete-token&callbackURL=/",
     linkValidityInMinutes: 60,
   },
 
   newEmailVerification: {
-    verifyLink: "https://app.formbricks.com/verify-email-change?token=example-email-change-token",
+    verifyLink: "https://forms.example.com/verify-email-change?token=example-email-change-token",
   },
 
   passwordResetNotifyEmail: {
@@ -43,20 +43,20 @@ export const exampleData = {
     retentionMonths: "3",
     expiryDate: "February 3, 2027",
     truncated: false,
-    downloadLink: "https://app.formbricks.com/attachment-exports/cm8cmpnjj000108jfdr9exp01",
+    downloadLink: "https://forms.example.com/attachment-exports/cm8cmpnjj000108jfdr9exp01",
   },
 
   attachmentExportFailedEmail: {
     surveyName: "Mystery shopper visit",
     reason: "build_timeout" as const,
     maxFiles: "5,000",
-    responsesLink: "https://app.formbricks.com/workspaces/ws/surveys/survey/responses",
+    responsesLink: "https://forms.example.com/workspaces/ws/surveys/survey/responses",
   },
 
   memberRetentionNoticeEmail: {
     organizationName: "Acme",
     deactivateDate: "Dec 7, 2026",
-    loginLink: "https://app.formbricks.com/auth/login",
+    loginLink: "https://forms.example.com/auth/login",
   },
 
   surveyRetentionNoticeEmail: {
@@ -64,7 +64,7 @@ export const exampleData = {
     responseDeletions: [
       {
         name: "Customer Satisfaction Survey",
-        url: "https://app.formbricks.com/workspaces/example-workspace-id/surveys/example-survey-id/summary",
+        url: "https://forms.example.com/workspaces/example-workspace-id/surveys/example-survey-id/summary",
         count: "1,204",
         deleteDate: "Dec 7, 2026",
       },
@@ -72,19 +72,19 @@ export const exampleData = {
     archivedSurveys: [
       {
         name: "Website Feedback 2023",
-        url: "https://app.formbricks.com/workspaces/example-workspace-id/surveys/example-survey-id-2/summary",
+        url: "https://forms.example.com/workspaces/example-workspace-id/surveys/example-survey-id-2/summary",
         archiveDate: "Dec 7, 2026",
         deleteDate: "Jan 6, 2027",
       },
     ],
     settingsLink:
-      "https://app.formbricks.com/organizations/example-organization-id/settings/data-retention/exemptions",
+      "https://forms.example.com/organizations/example-organization-id/settings/data-retention/exemptions",
   },
 
   inviteEmail: {
     inviteeName: "Jane Smith",
     inviterName: "John Doe",
-    verifyLink: "https://app.formbricks.com/invite?token=example-invite-token",
+    verifyLink: "https://forms.example.com/invite?token=example-invite-token",
   },
 
   inviteAcceptedEmail: {
@@ -95,7 +95,7 @@ export const exampleData = {
   linkSurveyEmail: {
     surveyName: "Customer Satisfaction Survey",
     surveyLink:
-      "https://app.formbricks.com/s/example-survey-id?verify=example-token&suId=example-single-use-id",
+      "https://forms.example.com/s/example-survey-id?verify=example-token&suId=example-single-use-id",
   },
 
   embedSurveyPreviewEmail: {
@@ -170,7 +170,7 @@ export const exampleData = {
       language: "default",
       displayId: null,
     } as unknown as TResponse,
-    WEBAPP_URL: "https://app.formbricks.com",
+    WEBAPP_URL: "https://forms.example.com",
     workspaceId: "workspace-123",
     organization: {
       id: "org-123",
@@ -231,10 +231,11 @@ export const exampleData = {
   },
 
   legalProps: {
-    privacyUrl: "https://formbricks.com/privacy",
-    termsUrl: "https://formbricks.com/terms",
-    imprintUrl: "https://formbricks.com/imprint",
-    imprintAddress: "Formbricks GmbH, Example Street 123, 12345 Berlin, Germany",
+    privacyUrl: "https://example.com/privacy",
+    termsUrl: "https://example.com/terms",
+    imprintUrl: "https://example.com/imprint",
+    imprintAddress: "Example GmbH, Example Street 123, 12345 Berlin, Germany",
+    defaultLogoUrl: "https://forms.example.com/logo-transparent.png",
   },
 };
 

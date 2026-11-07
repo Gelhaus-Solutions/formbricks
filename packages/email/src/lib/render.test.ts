@@ -269,15 +269,29 @@ describe("legal footer", () => {
 });
 
 describe("custom branding", () => {
-  test("response-finished notification falls back to the Formbricks logo when no organization logo is set", async () => {
+  test("response-finished notification falls back to the instance logo when no organization logo is set", async () => {
+    const html = await renderResponseFinishedEmail({
+      ...exampleData.responseFinishedEmail,
+      elements: responseFinishedElements,
+      ...legal,
+      t,
+    });
+
+    expect(html).toContain('data-testid="default-logo-image"');
+    expect(html).toContain(`src="${legal.defaultLogoUrl}"`);
+    expect(html).not.toContain('data-testid="logo-image"');
+  });
+
+  test("an email without an instance logo shows none rather than one from another server", async () => {
     const html = await renderResponseFinishedEmail({
       ...exampleData.responseFinishedEmail,
       elements: responseFinishedElements,
       t,
     });
 
-    expect(html).toContain('data-testid="default-logo-image"');
+    expect(html).not.toContain('data-testid="default-logo-image"');
     expect(html).not.toContain('data-testid="logo-image"');
+    expect(html).not.toContain("formbricks.com");
   });
 
   test("response-finished notification renders the organization's custom logo when set", async () => {

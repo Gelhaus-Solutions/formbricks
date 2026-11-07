@@ -27,7 +27,15 @@ import type { TResponse } from "@formbricks/types/responses";
 import { TSurveyElementTypeEnum } from "@formbricks/types/surveys/elements";
 import type { TSurvey } from "@formbricks/types/surveys/types";
 import { TUserEmail, TUserLocale } from "@formbricks/types/user";
-import { IMPRINT_ADDRESS, IMPRINT_URL, MAIL_FROM, PRIVACY_URL, TERMS_URL, WEBAPP_URL } from "@/lib/constants";
+import {
+  FB_LOGO_URL,
+  IMPRINT_ADDRESS,
+  IMPRINT_URL,
+  MAIL_FROM,
+  PRIVACY_URL,
+  TERMS_URL,
+  WEBAPP_URL,
+} from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
 import { createEmailChangeToken, createInviteToken, createTokenForLinkSurvey } from "@/lib/jwt";
 import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
@@ -48,6 +56,7 @@ const legalProps: TEmailTemplateLegalProps = {
   termsUrl: TERMS_URL || undefined,
   imprintUrl: IMPRINT_URL || undefined,
   imprintAddress: IMPRINT_ADDRESS || undefined,
+  defaultLogoUrl: FB_LOGO_URL,
 };
 
 export type TResponseFinishedEmailSurvey = TElementResponseMappingSurvey &
