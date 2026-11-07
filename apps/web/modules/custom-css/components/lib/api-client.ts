@@ -27,7 +27,6 @@ const ZWorkspaceCustomCssResource = z.object({
   previous: ZSourcePair.nullable().catch(null),
   status: ZCustomCssHealthStatus.catch("ok"),
   canEdit: z.boolean(),
-  planAllowed: z.boolean(),
   /** Present only when `status` is `withheld`: why the saved source no longer passes. */
   errors: z.array(ZCustomCssError).optional(),
 });

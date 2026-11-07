@@ -37,7 +37,6 @@ const resource = {
   previous: null,
   status: "ok",
   canEdit: true,
-  planAllowed: true,
 };
 
 describe("validateCustomCss", () => {
@@ -159,14 +158,11 @@ describe("workspace custom CSS resource", () => {
   });
 
   test("PATCH rejection without CSS errors is a plain V3ApiError", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(problemResponse(403, { code: "custom_css_plan_required" }))
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(problemResponse(403, { code: "forbidden" })));
 
     const error = await updateWorkspaceCustomCss({ workspaceId: "ws_1", customCss: null }).catch((e) => e);
     expect(error).toBeInstanceOf(V3ApiError);
     expect(error).not.toBeInstanceOf(CustomCssApiError);
-    expect(error.code).toBe("custom_css_plan_required");
+    expect(error.code).toBe("forbidden");
   });
 });

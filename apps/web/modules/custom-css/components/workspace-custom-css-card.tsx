@@ -14,7 +14,6 @@ import { Alert, AlertDescription } from "@/modules/ui/components/alert";
 import { Button } from "@/modules/ui/components/button";
 import { useBeforeUnloadPrompt } from "@/modules/ui/hooks/use-before-unload-prompt";
 import { CustomCssCard } from "./custom-css-card";
-import { CustomCssPlanNotice } from "./custom-css-plan-notice";
 import { useWorkspaceCustomCssEditor } from "./hooks/use-workspace-custom-css";
 import { normalizeCustomCssInput, toCustomCssDraft } from "./lib/draft";
 import { getCustomCssEditMode, getWorkspaceCssSaveStep } from "./lib/edit-mode";
@@ -70,10 +69,7 @@ export const WorkspaceCustomCssCard = ({
   }, [previewCss, onPreviewCssChange]);
 
   // The page loader and the resource answer the same questions; either one saying no is a no.
-  const mode = getCustomCssEditMode({
-    canEdit: access.canEdit && (resource?.canEdit ?? true),
-    planAllowed: access.planAllowed && (resource?.planAllowed ?? true),
-  });
+  const mode = getCustomCssEditMode({ canEdit: access.canEdit && (resource?.canEdit ?? true) });
   const isDirty = editor.changeKind !== "unchanged";
   // In-app navigation keeps the draft for the next visit (see `unsaved-draft.ts`); a reload, a closed
   // tab or a full navigation would lose it, so those ask first.
@@ -120,14 +116,7 @@ export const WorkspaceCustomCssCard = ({
         </AlertDescription>
       </Alert>
     );
-  } else if (mode === "clear-only") {
-    notice = <CustomCssPlanNotice billingHref={access.billingHref} hasSavedCss />;
   }
-  // Nothing saved and no plan for it: there is nothing to show or clear, only the upgrade.
-  const lockedContent =
-    mode === "clear-only" && !resource?.customCss ? (
-      <CustomCssPlanNotice billingHref={access.billingHref} hasSavedCss={false} />
-    ) : undefined;
 
   if (editor.isLoading || editor.loadError) {
     return (
@@ -180,7 +169,6 @@ export const WorkspaceCustomCssCard = ({
       hasHeadScriptStyles={access.hasHeadScriptStyles}
       notice={notice}
       footer={footer}
-      lockedContent={lockedContent}
       open={open}
       setOpen={setOpen}
       isSettingsPage

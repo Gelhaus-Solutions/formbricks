@@ -10,7 +10,6 @@ import { getTranslate } from "@/lingodotdev/server";
 import { CustomCssQueryClientProvider } from "@/modules/custom-css/components/custom-css-query-client-provider";
 import { hasStylesInHeadScripts } from "@/modules/custom-css/components/lib/hints";
 import { type TWorkspaceCustomCssAccess } from "@/modules/custom-css/components/types";
-import { getCustomCssPlanAllowed } from "@/modules/custom-css/lib/access";
 import { Alert, AlertDescription } from "@/modules/ui/components/alert";
 import { PageContentWrapper } from "@/modules/ui/components/page-content-wrapper";
 import { PageHeader } from "@/modules/ui/components/page-header";
@@ -25,7 +24,7 @@ export const WorkspaceLookSettingsPage = async (props: {
   const params = await props.params;
   const t = await getTranslate();
 
-  const { canManage, isOwner, isManager, organization } = await getWorkspaceAuth(params.workspaceId);
+  const { canManage, isOwner, isManager } = await getWorkspaceAuth(params.workspaceId);
   // Every card on this page saves through an action that asserts `workspace.manage`.
   const isReadOnly = !canManage;
 
@@ -35,18 +34,14 @@ export const WorkspaceLookSettingsPage = async (props: {
     return notFound();
   }
 
-  const isCustomCssPlanAllowed = await getCustomCssPlanAllowed(organization.id);
   const publicDomain = getPublicDomain();
   const isStorageConfigured = isStorageAvailable();
 
   // Mirrors the server's checks for `PATCH …/custom-css` (ENG-2949), which stay authoritative.
   const customCssAccess: TWorkspaceCustomCssAccess = {
     canEdit: isOwner || isManager,
-    planAllowed: isCustomCssPlanAllowed,
     // Head scripts exist only on self-hosted, and the check is a plain string match (ENG-3415).
     hasHeadScriptStyles: !IS_FORMBRICKS_CLOUD && hasStylesInHeadScripts(workspace.customHeadScripts),
-    // GForms has no billing page to upgrade on (GFORMS-7).
-    billingHref: null,
   };
 
   return (

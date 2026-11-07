@@ -14,7 +14,6 @@ import { getTranslate } from "@/lingodotdev/server";
 import { getCustomCssSource } from "@/modules/custom-css/components/lib/draft";
 import { hasStylesInHeadScripts } from "@/modules/custom-css/components/lib/hints";
 import { type TSurveyCustomCssEditorConfig } from "@/modules/custom-css/components/types";
-import { getCustomCssPlanAllowed } from "@/modules/custom-css/lib/access";
 import { getCustomCssHealth, toDeliveredCustomCss } from "@/modules/custom-css/lib/delivery";
 import { getWorkspaceCustomCssRecord, parseStoredCustomCss } from "@/modules/custom-css/lib/service";
 import {
@@ -97,7 +96,6 @@ export const SurveyEditorPage = async (props: {
     isQuotasAllowed,
     isExternalUrlsAllowed,
     isWorkflowsAllowed,
-    isCustomCssPlanAllowed,
   ] = await Promise.all([
     getSurveyFollowUpsPermission(workspaceWithTeamIds.organizationId),
     getIsSpamProtectionEnabled(workspaceWithTeamIds.organizationId),
@@ -105,7 +103,6 @@ export const SurveyEditorPage = async (props: {
     getExternalUrlsPermission(workspaceWithTeamIds.organizationId),
     // Drives the Follow-ups deprecation: the tab only survives where Workflows cannot replace it.
     getIsWorkflowsEnabled(workspaceWithTeamIds.organizationId),
-    getCustomCssPlanAllowed(workspaceWithTeamIds.organizationId),
   ]);
 
   const quotas = isQuotasAllowed && survey ? await getQuotas(survey.id) : [];
@@ -137,8 +134,6 @@ export const SurveyEditorPage = async (props: {
     storedWorkspaceCustomCss: (await getWorkspaceCustomCssRecord(workspaceWithTeamIds.id)).customCss,
     survey,
     workspaceHeadScripts: workspaceWithTeamIds.customHeadScripts,
-    organizationId: workspaceWithTeamIds.organizationId,
-    planAllowed: isCustomCssPlanAllowed,
   });
 
   return (
@@ -179,15 +174,13 @@ export const SurveyEditorPage = async (props: {
 /**
  * What the survey's Custom CSS card needs (ENG-3553), mirroring the server's own rules: the inherited
  * workspace CSS as source (read-only) and as delivered compiled output (for the preview), the health
- * of both saved values, the plan gate, and (self-hosted only) whether either set of Custom Head
+ * of both saved values, and (self-hosted only) whether either set of Custom Head
  * Scripts already adds page styles. Survey edit permission is the editor's own: reaching it is it.
  */
 const getSurveyCustomCssEditorConfig = async (params: {
   storedWorkspaceCustomCss: unknown;
   survey: TSurvey;
   workspaceHeadScripts: string | null;
-  organizationId: string;
-  planAllowed: boolean;
 }): Promise<TSurveyCustomCssEditorConfig> => {
   const workspaceCustomCss = parseStoredCustomCss(params.storedWorkspaceCustomCss);
   const [workspaceCompiled, workspaceHealth, surveyHealth] = await Promise.all([
@@ -197,9 +190,6 @@ const getSurveyCustomCssEditorConfig = async (params: {
   ]);
 
   return {
-    planAllowed: params.planAllowed,
-    // GForms has no billing page to upgrade on (GFORMS-7).
-    billingHref: null,
     hasHeadScriptStyles:
       !IS_FORMBRICKS_CLOUD &&
       (hasStylesInHeadScripts(params.workspaceHeadScripts) ||

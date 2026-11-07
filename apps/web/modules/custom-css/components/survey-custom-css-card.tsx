@@ -4,7 +4,6 @@ import { type Dispatch, type SetStateAction } from "react";
 import { type TCustomCssAppearance, type TCustomCssStored } from "@formbricks/types/custom-css";
 import { type TSurvey } from "@formbricks/types/surveys/types";
 import { CustomCssCard } from "./custom-css-card";
-import { CustomCssPlanNotice } from "./custom-css-plan-notice";
 import { InheritedWorkspaceCss } from "./inherited-workspace-css";
 import {
   type TCustomCssDraft,
@@ -52,7 +51,7 @@ export const SurveyCustomCssCard = ({
   open,
   setOpen,
 }: Readonly<SurveyCustomCssCardProps>) => {
-  const mode = getCustomCssEditMode({ canEdit: true, planAllowed: config.planAllowed });
+  const mode = getCustomCssEditMode({ canEdit: true });
   const draft = toCustomCssDraft(getCustomCssSource(localSurvey.customCss));
 
   const handleDraftChange = (next: TCustomCssDraft) => {
@@ -62,8 +61,6 @@ export const SurveyCustomCssCard = ({
     }));
   };
 
-  const hasSavedCss = getCustomCssSource(savedCustomCss) !== null;
-  const isPlanLocked = mode === "clear-only";
   const inherited = (
     <InheritedWorkspaceCss
       source={config.workspace.source}
@@ -82,20 +79,6 @@ export const SurveyCustomCssCard = ({
       mode={mode}
       savedStatus={config.surveyStatus}
       hasHeadScriptStyles={config.hasHeadScriptStyles}
-      notice={
-        isPlanLocked && hasSavedCss ? (
-          <CustomCssPlanNotice billingHref={config.billingHref} hasSavedCss />
-        ) : undefined
-      }
-      lockedContent={
-        // Nothing of its own to show or clear: the inherited CSS still applies, so it stays visible.
-        isPlanLocked && !hasSavedCss ? (
-          <div className="flex flex-col gap-4 p-6 pt-2">
-            {inherited}
-            <CustomCssPlanNotice billingHref={config.billingHref} hasSavedCss={false} />
-          </div>
-        ) : undefined
-      }
       inherited={inherited}
       disabled={disabled}
       open={open}

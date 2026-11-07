@@ -33,14 +33,12 @@ interface CustomCssCardProps {
   savedStatus?: TCustomCssHealthStatus;
   /** Self-hosted only: Custom Head Scripts in scope carry page styles (ENG-3415). */
   hasHeadScriptStyles?: boolean;
-  /** Role or plan explanation shown above the field. */
+  /** Role explanation shown above the field. */
   notice?: ReactNode;
   /** The survey editor's read-only inherited workspace CSS. */
   inherited?: ReactNode;
   /** Shown under the field, e.g. the workspace card's "Restore previous version". */
   footer?: ReactNode;
-  /** Replaces the fields entirely, e.g. the upgrade prompt when the plan has no CSS to show. */
-  lockedContent?: ReactNode;
   /** Greyed out and closed, like the survey editor's other styling cards without custom styling. */
   disabled?: boolean;
   open: boolean;
@@ -65,7 +63,6 @@ export const CustomCssCard = ({
   notice,
   inherited,
   footer,
-  lockedContent,
   disabled = false,
   open,
   setOpen,
@@ -176,124 +173,111 @@ export const CustomCssCard = ({
 
       <Collapsible.CollapsibleContent className="flex flex-col overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
         <hr className="py-1 text-slate-600" />
-        {lockedContent ?? (
-          <div className="flex flex-col gap-4 p-6 pt-2">
-            {savedStatus === "withheld" && (
-              <Alert variant="warning" size="small" role="status">
-                <AlertDescription className="whitespace-normal">
-                  {t("workspace.custom_css.withheld_warning")}
-                </AlertDescription>
-              </Alert>
-            )}
-            {savedStatus === "stale" && (
-              <Alert variant="info" size="small" role="status">
-                <AlertDescription className="whitespace-normal">
-                  {t("workspace.custom_css.stale_info")}
-                </AlertDescription>
-              </Alert>
-            )}
-            {hasHeadScriptStyles && (
-              <Alert variant="warning" size="small" role="status">
-                <AlertDescription className="whitespace-normal">
-                  {t("workspace.custom_css.head_scripts_warning")}
-                </AlertDescription>
-              </Alert>
-            )}
-            {appearance === "dark" && shouldShowDarkPreviewHint(draft) && (
-              <Alert variant="info" size="small" role="status">
-                <AlertDescription className="whitespace-normal">
-                  {t("workspace.custom_css.dark_preview_hint")}
-                </AlertDescription>
-              </Alert>
-            )}
-            {notice}
-            {inherited}
+        <div className="flex flex-col gap-4 p-6 pt-2">
+          {savedStatus === "withheld" && (
+            <Alert variant="warning" size="small" role="status">
+              <AlertDescription className="whitespace-normal">
+                {t("workspace.custom_css.withheld_warning")}
+              </AlertDescription>
+            </Alert>
+          )}
+          {savedStatus === "stale" && (
+            <Alert variant="info" size="small" role="status">
+              <AlertDescription className="whitespace-normal">
+                {t("workspace.custom_css.stale_info")}
+              </AlertDescription>
+            </Alert>
+          )}
+          {hasHeadScriptStyles && (
+            <Alert variant="warning" size="small" role="status">
+              <AlertDescription className="whitespace-normal">
+                {t("workspace.custom_css.head_scripts_warning")}
+              </AlertDescription>
+            </Alert>
+          )}
+          {appearance === "dark" && shouldShowDarkPreviewHint(draft) && (
+            <Alert variant="info" size="small" role="status">
+              <AlertDescription className="whitespace-normal">
+                {t("workspace.custom_css.dark_preview_hint")}
+              </AlertDescription>
+            </Alert>
+          )}
+          {notice}
+          {inherited}
 
-            <div className="flex flex-col gap-2">
-              <div>
-                <Label htmlFor={fieldId} className="block text-slate-800">
-                  {fieldLabel}
-                </Label>
-                <p id={helpId} className="text-xs text-slate-500">
-                  {appearance === "dark"
-                    ? t("workspace.custom_css.dark_css_help")
-                    : t("workspace.custom_css.base_css_help")}
-                  {scope === "survey" && ` ${t("workspace.custom_css.survey_precedence")}`}
-                </p>
-              </div>
-              <CssCodeField
-                id={fieldId}
-                handleRef={fieldRef}
-                keyboardHint={{ id: keyboardHintId, text: t("workspace.custom_css.keyboard_hint") }}
-                value={value}
-                onChange={canType ? setField : undefined}
-                marks={getCodeLineMarks(appearance, validation.errors, validation.warnings)}
-                invalid={hasFieldError || isOverLimit}
-                placeholder={canType ? '[data-fb-part="headline"] { color: #10283a; }' : undefined}
-                rows={12}
-                aria-describedby={describedBy}
-              />
-              {uploadError && (
-                <p id={uploadErrorId} role="alert" className="text-xs text-red-700">
-                  {uploadError}
-                </p>
-              )}
+          <div className="flex flex-col gap-2">
+            <div>
+              <Label htmlFor={fieldId} className="block text-slate-800">
+                {fieldLabel}
+              </Label>
+              <p id={helpId} className="text-xs text-slate-500">
+                {appearance === "dark"
+                  ? t("workspace.custom_css.dark_css_help")
+                  : t("workspace.custom_css.base_css_help")}
+                {scope === "survey" && ` ${t("workspace.custom_css.survey_precedence")}`}
+              </p>
             </div>
-
-            <CustomCssIssues
-              statusId={statusId}
-              issuesId={issuesId}
-              validation={validation}
-              byteSize={byteSize}
-              byteLimit={byteLimit}
+            <CssCodeField
+              id={fieldId}
+              handleRef={fieldRef}
+              keyboardHint={{ id: keyboardHintId, text: t("workspace.custom_css.keyboard_hint") }}
+              value={value}
+              onChange={canType ? setField : undefined}
+              marks={getCodeLineMarks(appearance, validation.errors, validation.warnings)}
+              invalid={hasFieldError || isOverLimit}
+              placeholder={canType ? '[data-fb-part="headline"] { color: #10283a; }' : undefined}
+              rows={12}
+              aria-describedby={describedBy}
             />
+            {uploadError && (
+              <p id={uploadErrorId} role="alert" className="text-xs text-red-700">
+                {uploadError}
+              </p>
+            )}
+          </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                {canType && (
-                  <>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept={CUSTOM_CSS_FILE_ACCEPT}
-                      className="hidden"
-                      tabIndex={-1}
-                      aria-hidden
-                      onChange={handleFileChange}
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => fileInputRef.current?.click()}>
-                      <UploadIcon aria-hidden />
-                      {t("workspace.custom_css.upload")}
-                    </Button>
-                  </>
-                )}
-                {mode === "clear-only" && (
-                  // Without the plan the field cannot be typed in, so this is the only way to remove CSS.
+          <CustomCssIssues
+            statusId={statusId}
+            issuesId={issuesId}
+            validation={validation}
+            byteSize={byteSize}
+            byteLimit={byteLimit}
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {canType && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={CUSTOM_CSS_FILE_ACCEPT}
+                    className="hidden"
+                    tabIndex={-1}
+                    aria-hidden
+                    onChange={handleFileChange}
+                  />
                   <Button
                     type="button"
                     size="sm"
-                    variant="ghost"
-                    disabled={draft.light === "" && draft.dark === ""}
-                    onClick={() => onDraftChange({ light: "", dark: "" })}>
-                    {t("workspace.custom_css.clear_all")}
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}>
+                    <UploadIcon aria-hidden />
+                    {t("workspace.custom_css.upload")}
                   </Button>
-                )}
-              </div>
-              <Button type="button" size="sm" variant="ghost" asChild>
-                <Link href={CUSTOM_CSS_DOCS_URL} target="_blank" rel="noopener noreferrer">
-                  {t("common.learn_more")}
-                  <ExternalLinkIcon aria-hidden />
-                </Link>
-              </Button>
+                </>
+              )}
             </div>
-
-            {footer}
+            <Button type="button" size="sm" variant="ghost" asChild>
+              <Link href={CUSTOM_CSS_DOCS_URL} target="_blank" rel="noopener noreferrer">
+                {t("common.learn_more")}
+                <ExternalLinkIcon aria-hidden />
+              </Link>
+            </Button>
           </div>
-        )}
+
+          {footer}
+        </div>
       </Collapsible.CollapsibleContent>
     </Collapsible.Root>
   );

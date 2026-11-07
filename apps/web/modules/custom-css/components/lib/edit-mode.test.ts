@@ -2,11 +2,9 @@ import { describe, expect, test } from "vitest";
 import { getCustomCssEditMode, getWorkspaceCssSaveStep } from "./edit-mode";
 
 describe("getCustomCssEditMode", () => {
-  test("role decides first, then the plan", () => {
-    expect(getCustomCssEditMode({ canEdit: false, planAllowed: true })).toBe("read-only");
-    expect(getCustomCssEditMode({ canEdit: false, planAllowed: false })).toBe("read-only");
-    expect(getCustomCssEditMode({ canEdit: true, planAllowed: false })).toBe("clear-only");
-    expect(getCustomCssEditMode({ canEdit: true, planAllowed: true })).toBe("full");
+  test("the role decides", () => {
+    expect(getCustomCssEditMode({ canEdit: false })).toBe("read-only");
+    expect(getCustomCssEditMode({ canEdit: true })).toBe("full");
   });
 });
 
@@ -30,12 +28,5 @@ describe("getWorkspaceCssSaveStep", () => {
     expect(getWorkspaceCssSaveStep({ mode: "read-only", changeKind: "removal", status: "empty" })).toBe(
       "skip"
     );
-  });
-
-  test("after a downgrade, saves a removal and nothing else", () => {
-    expect(getWorkspaceCssSaveStep({ mode: "clear-only", changeKind: "removal", status: "empty" })).toBe(
-      "submit"
-    );
-    expect(getWorkspaceCssSaveStep({ mode: "clear-only", changeKind: "edit", status: "valid" })).toBe("skip");
   });
 });

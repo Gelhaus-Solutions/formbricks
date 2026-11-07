@@ -8,19 +8,12 @@ import { type TCustomCssHealthStatus } from "./lib/api-client";
 export interface TWorkspaceCustomCssAccess {
   /** Organization owner or manager (D15). */
   canEdit: boolean;
-  /** Cloud: the Scale `custom-css` entitlement. Self-hosted: always true. */
-  planAllowed: boolean;
   /** Self-hosted only: the workspace's Custom Head Scripts carry page styles. */
   hasHeadScriptStyles: boolean;
-  /** Where the plan's upgrade lives; `null` on self-hosted, which has no plan gate. */
-  billingHref: string | null;
 }
 
 /** Computed by the survey editor page loader. */
 export interface TSurveyCustomCssEditorConfig {
-  /** Cloud: the Scale `custom-css` entitlement. Self-hosted: always true. */
-  planAllowed: boolean;
-  billingHref: string | null;
   /** Self-hosted only: the workspace's or survey's Custom Head Scripts carry page styles. */
   hasHeadScriptStyles: boolean;
   /** Health of the survey's saved CSS. */

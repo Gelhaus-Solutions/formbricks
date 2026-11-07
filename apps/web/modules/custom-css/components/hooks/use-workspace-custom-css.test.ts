@@ -21,7 +21,6 @@ const resource = (workspaceId: string, customCss: TCustomCssInput | null) => ({
   previous: null,
   status: "ok" as const,
   canEdit: true,
-  planAllowed: true,
 });
 
 /** Mounts the editor the way the Appearance page does, with a fresh query cache like a new visit. */
