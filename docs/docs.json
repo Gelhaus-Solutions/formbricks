@@ -135,7 +135,6 @@
                   "surveys/general-features/variables",
                   "surveys/general-features/hide-back-button",
                   "surveys/general-features/email-followups",
-                  "surveys/general-features/quota-management",
                   "surveys/general-features/spam-protection",
                   "surveys/general-features/tags",
                   "surveys/general-features/validation-rules",
@@ -831,10 +830,6 @@
     {
       "destination": "/docs/surveys/general-features/email-followups",
       "source": "/docs/xm-and-surveys/surveys/general-features/email-followups"
-    },
-    {
-      "destination": "/docs/surveys/general-features/quota-management",
-      "source": "/docs/xm-and-surveys/surveys/general-features/quota-management"
     },
     {
       "destination": "/docs/surveys/general-features/spam-protection",

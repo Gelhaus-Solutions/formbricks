@@ -6,13 +6,13 @@ icon: "right-left"
 ---
 
 This page is about moving **selected surveys and their response data** between two running Formbricks
-instances — a staging box to production, a self-hosted instance to Formbricks Cloud, one company's
+instances: a staging box to production, a self-hosted instance to Formbricks Cloud, one company's
 instance to another after a split. It uses nothing but the public management API, so the two instances
 can be on different versions, different databases, and different object storage.
 
 <Note>
   **Moving a whole instance? Do not use this page.** If you control both machines and want everything
-  — users, organizations, workspaces, contacts, displays, tags, file uploads, webhooks — then a
+  (users, organizations, workspaces, contacts, displays, tags, file uploads, webhooks), then a
   Postgres dump plus a copy of your S3 bucket is faster, complete, and keeps every ID intact:
 
   ```bash
@@ -39,24 +39,24 @@ is enough to keep every answer readable and correctly dated, but it is not a byt
   keyed by element ID and its `endingId` names an ending, so keeping those IDs is what makes a replayed
   response land on the right question instead of being rejected
 - App-survey display settings and triggers (see [App surveys](#app-surveys))
-- Every response's `data`, `variables`, `ttc`, `meta`, `language`, `endingId` and `singleUseId` — `ttc`
-  with [one caveat](#time-to-complete-needs-_total-stripped)
+- Every response's `data`, `variables`, `ttc`, `meta`, `language`, `endingId` and `singleUseId` (`ttc`
+  with [one caveat](#time-to-complete-needs-_total-stripped))
 - Each response's `createdAt` and `updatedAt`, so your charts keep their shape
 
 **Not carried over**
 
-- **The survey ID.** Every survey gets a fresh one, so every link URL changes — see
-  [Finish by hand](#step-4-finish-by-hand)
-- Response IDs — fresh ones are assigned
+- **The survey ID.** Every survey gets a fresh one, so every link URL changes (see
+  [Finish by hand](#step-4-finish-by-hand))
+- Response IDs: fresh ones are assigned
 - Styling and theme overrides, follow-up emails, quotas, single-use link settings, survey PIN,
   reCAPTCHA, custom head scripts, custom slug
 - Contact targeting (segments) on app surveys
-- Uploaded files, display records, response tags, contacts — see
-  [Known limitations](#known-limitations)
+- Uploaded files, display records, response tags, contacts (see
+  [Known limitations](#known-limitations))
 
 <Warning>
   **Importing responses fires the target's response pipeline.** Every `POST` to the responses endpoint
-  emits `responseCreated` and, for finished responses, `responseFinished` — which dispatches webhooks,
+  emits `responseCreated` and, for finished responses, `responseFinished`, which dispatches webhooks,
   integrations (Airtable, Google Sheets, Notion, Slack), workflows, and survey follow-up emails
   configured in the **target** workspace.
 
@@ -69,12 +69,12 @@ is enough to keep every answer readable and correctly dated, but it is not a byt
 
 <Steps>
   <Step title="Create an API key on each instance">
-    On both instances, create a key that covers the workspace you are moving from or to — see
-    [Generate API Key](/api-reference/generate-key). Read access is enough on the source; the target
+    On both instances, create a key that covers the workspace you are moving from or to (see
+    [Generate API Key](/api-reference/generate-key)). Read access is enough on the source; the target
     needs **write** or **manage**.
 
     <Warning>
-      **Pick the workspaces when you create the key — they cannot be changed later.** A key's
+      **Pick the workspaces when you create the key: they cannot be changed later.** A key's
       Workspace Access list and permission levels are fixed at creation; editing a key afterwards only
       renames it. There is no "all workspaces" option either, so a workspace created *after* the key is
       unreachable by it. In both cases the symptom is a `403` on every write while reads elsewhere keep
@@ -105,7 +105,7 @@ directory. It reads the survey and its responses straight from the source and wr
 target as it goes. The workspace-wide workflow starts at [Step 1](#step-1-export-the-source-workspace)
 below.
 
-Everything on this page still applies — the same fields are dropped, the same file-upload answers are
+Everything on this page still applies: the same fields are dropped, the same file-upload answers are
 refused, the same response pipeline fires on the target. The one difference is app-survey triggers:
 with no export directory to build an ID map from, this script matches the source's action classes to
 the target's **by name** and drops any trigger with no counterpart, falling back to `status: draft` so
@@ -139,7 +139,7 @@ fb() {
       429 | 000 | 5??)
         attempt=$((attempt + 1))
         [ "$attempt" -le 6 ] || break
-        echo "  HTTP ${code} on ${method} ${url} — retry ${attempt} in $((attempt * 10))s" >&2
+        echo "  HTTP ${code} on ${method} ${url}, retry ${attempt} in $((attempt * 10))s" >&2
         sleep $((attempt * 10))
         ;;
       *) break ;;
@@ -264,7 +264,7 @@ responses: 1 imported, 1 failed
 link:      https://new.formbricks.example.com/s/cmt8wewit0008s706rsqaqtf1
 ```
 
-Failures are printed per response on stderr and counted, but they do not stop the run — redirect
+Failures are printed per response on stderr and counted, but they do not stop the run. Redirect
 stderr to a file if you are moving enough responses that you will want to read them afterwards. For
 an app survey, the trigger line tells you whether the survey came out live or as a draft:
 
@@ -300,7 +300,7 @@ fb_get() {
       429 | 000 | 5??)
         attempt=$((attempt + 1))
         [ "$attempt" -le 6 ] || break
-        echo "  HTTP ${code} on ${url} — retry ${attempt} in $((attempt * 10))s" >&2
+        echo "  HTTP ${code} on ${url}, retry ${attempt} in $((attempt * 10))s" >&2
         sleep $((attempt * 10))
         ;;
       *) break ;;
@@ -322,7 +322,7 @@ while :; do
   [ -n "$cursor" ] || break
 done
 
-# 2. Action classes — app-survey triggers reference these by id. This v1 endpoint returns action
+# 2. Action classes: app-survey triggers reference these by id. This v1 endpoint returns action
 #    classes for EVERY workspace the key can reach, so filter to the one being exported; otherwise
 #    the import recreates another workspace's actions in the target.
 fb_get "${SOURCE_URL}/api/v1/management/action-classes" \
@@ -363,7 +363,7 @@ cmrsxxwej0009tm06aq5i4lx0  2 responses  Link survey
 exported 3 surveys to ./fb-export
 ```
 
-The `-g` flag on `curl` is not optional — the `filter[status][in]` parameter contains square brackets,
+The `-g` flag on `curl` is not optional: the `filter[status][in]` parameter contains square brackets,
 which curl otherwise reads as a globbing range.
 
 ## Step 2: Import into the target workspace
@@ -372,15 +372,15 @@ The endpoints used to create surveys are strict: they accept a survey **document
 you just read. The `jq` filter in the script does the translation, and each line of it exists because
 the API rejects the request without it:
 
-- `del(.id, .workspaceId, .createdAt, .updatedAt, .archivedAt)` — read-only fields. The document
+- `del(.id, .workspaceId, .createdAt, .updatedAt, .archivedAt)`: read-only fields. The document
   endpoint rejects unknown keys rather than ignoring them, so leaving them in returns
   `400` with `invalid_params`.
-- `.languages |= map({code, default, enabled})` — `GET` returns an extra `alias` per language that
+- `.languages |= map({code, default, enabled})`: `GET` returns an extra `alias` per language that
   `POST` rejects.
-- `.type = (if .type == "link" then "link" else "app" end)` — older instances still store the legacy
+- `.type = (if .type == "link" then "link" else "app" end)`: older instances still store the legacy
   `website` and `web` types; only `link` and `app` can be created.
-- `.metadata = (.metadata // {})` — `metadata` may be `null` on read but must be an object on write.
-- Trigger rewriting and the app-survey `status` fallback — see [App surveys](#app-surveys).
+- `.metadata = (.metadata // {})`: `metadata` may be `null` on read but must be an object on write.
+- Trigger rewriting and the app-survey `status` fallback: see [App surveys](#app-surveys).
 
 Block, element and ending IDs are **not** stripped. The API accepts them, and keeping them is the whole
 trick: a replayed response's `data` is keyed by element ID and its `endingId` points at an ending, so
@@ -410,7 +410,7 @@ fb_post() {
       429 | 000 | 5??)
         attempt=$((attempt + 1))
         [ "$attempt" -le 6 ] || break
-        echo "  HTTP ${code} on ${url} — retry ${attempt} in $((attempt * 10))s" >&2
+        echo "  HTTP ${code} on ${url}, retry ${attempt} in $((attempt * 10))s" >&2
         sleep $((attempt * 10))
         ;;
       *) break ;;
@@ -522,7 +522,7 @@ update links, QR codes, embed snippets and SDK calls that referenced the old IDs
 <Warning>
   The import is **not** idempotent. There is no natural unique key on a survey or a response, so a
   second run creates a second copy of everything rather than skipping what exists. If a run fails
-  partway, delete what it created in the target before retrying — or trim the input files down to what
+  partway, delete what it created in the target before retrying, or trim the input files down to what
   is missing.
 </Warning>
 
@@ -567,7 +567,7 @@ cms67qmmi000022c25w0ztniy  cmt8ontog000yj606jpfqxpeb         20        20 ok
 ```
 
 A `MISMATCH` line points at responses the target refused. `fb-import.sh` printed the reason for each on
-stderr — the usual cause is a file upload, see below.
+stderr; the usual cause is a file upload, see below.
 
 Then open one imported survey's summary page and confirm the answers are attributed to the right
 questions. If element IDs had been lost, the responses would have been rejected outright rather than
@@ -578,8 +578,8 @@ silently misfiled, so a summary that reads correctly is a good signal.
 - **Re-point everything that used the old survey ID.** Link survey URLs are
   `https://your-instance.com/s/<surveyId>`, so every shared link, QR code, email campaign and embed
   snippet needs the new ID from `survey-id-map.tsv`. Old links keep working on the source instance if
-  it is still running — if it is not, they break.
-- **Rebuild what the survey document does not carry**: styling, follow-up emails, quotas, single-use
+  it is still running; if it is not, they break.
+- **Rebuild what the survey document does not carry**: styling, follow-up emails, single-use
   link settings, survey PIN, reCAPTCHA, custom head scripts, custom slug.
 - **Re-create app-survey targeting** (see below), then re-enable webhooks, integrations and workflows.
 - **Update your SDK setup** if you are moving app surveys: `workspaceId` and `appUrl` in
@@ -608,7 +608,7 @@ The script therefore forces `status: "draft"` on any app survey that ended up wi
 list, rather than failing the whole survey.
 
 **Targeting** is dropped by the script (`del(.targeting)`). Segment filters reference contact-attribute
-keys, segments and — for `surveyInteraction` filters — other survey IDs, none of which exist under the
+keys, segments and (for `surveyInteraction` filters) other survey IDs, none of which exist under the
 same IDs in the target. Re-create targeting in the app after the import.
 
 <Warning>
@@ -621,7 +621,7 @@ same IDs in the target. Re-create targeting in the app after the import.
 ### Renamed choices reject their older responses
 
 This is the one that costs the most responses in practice. A choice answer is stored as the choice's
-**label**, not its id — so if anyone renamed or removed a choice after responses came in, the stored
+**label**, not its id, so if anyone renamed or removed a choice after responses came in, the stored
 answers no longer match the survey. The source instance keeps them either way; it never re-validates on
 read. The target does validate on create, and rejects them:
 
@@ -681,14 +681,14 @@ Your options, in order of how much they cost you:
 1. **Add the historical labels back as choices on the target survey**, import, then remove them again.
    Validation only runs on create, so the imported responses stay valid afterwards. This keeps every
    response at the price of two `PATCH` calls.
-2. **Rewrite the old label to the new one** in the export, if the mapping is unambiguous —
+2. **Rewrite the old label to the new one** in the export, if the mapping is unambiguous:
    `jq -c '.data.<elementId> = "I have a problem"'`. You are editing history, so only do this when the
    rename was cosmetic.
 3. **Accept the loss** and import the rest. The script reports each failure with its response id.
 
 <Note>
   An element with an **Other** option will list its free-text answers here too, because they match no
-  choice label by definition. Those import fine — ignore them.
+  choice label by definition. Those import fine; ignore them.
 </Note>
 
 ### File-upload answers are rejected
@@ -718,7 +718,7 @@ Both IDs change during the migration, so the target refuses the response:
 To carry these responses over you have to move the files first: download each one from the source,
 upload it to the target under the new survey and element, rewrite the URL in the response's `data`, and
 only then `POST` the response. If the files are not worth that, strip the file-upload element's key
-from `data` so the rest of the answer imports — you lose the attachment, not the response:
+from `data` so the rest of the answer imports. You lose the attachment, not the response:
 
 ```bash
 jq -c 'del(.data["<fileUploadElementId>"])' response.json
@@ -741,7 +741,7 @@ Either skip these (there is nothing in them) or recreate them in the app.
 ### Time-to-complete needs `_total` stripped
 
 A finished response's `ttc` (time to complete, in milliseconds) carries a `_total` key alongside the
-per-element timings. On create, the target **recomputes** `_total` by summing the values it was given —
+per-element timings. On create, the target **recomputes** `_total` by summing the values it was given,
 and if you passed the stored `_total` along, that sum includes it, so the imported response ends up with
 exactly double the real total. Nothing errors; the number is just silently wrong.
 
@@ -757,7 +757,7 @@ importer, check one finished response's `ttc._total` against the source before t
 ### Displays are not migrated
 
 The **Displays** figure on a survey summary, and the *Starts %* / *Completed %* / drop-off numbers
-derived from it, come from display records — impressions, not responses. Those are not exposed by the
+derived from it, come from display records (impressions, not responses). Those are not exposed by the
 management API, so an imported survey shows `-` for displays and 0% for the rates that divide by them.
 Response counts, completion counts and every per-question summary are correct.
 
@@ -770,7 +770,7 @@ Contacts are workspace-scoped and are not migrated by these scripts. Responses t
 contact are imported unlinked. `fb-import.sh` passes the source contact's `userId` through as the
 response's `userId`: if a contact with that `userId` already exists in the target workspace, the
 response is attached to it and the target's own contact attributes are copied onto the response. If no
-such contact exists, the response is created anonymously — this is silent, not an error.
+such contact exists, the response is created anonymously; this is silent, not an error.
 
 ### Everything outside surveys and responses
 
@@ -783,12 +783,12 @@ their own management endpoints (`/api/v2/management/contacts`,
 
 | Response                                                                          | Cause                                                                       | Fix                                                                        |
 | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `400` `invalid_params` naming a field you did not touch                            | A read-only or unknown field left in the survey document — the endpoint rejects unknown keys rather than ignoring them | Check the `jq` filter is applied. The document accepts only `workspaceId`, `name`, `type`, `status`, `metadata`, `defaultLanguage`, `languages`, `welcomeCard`, `blocks`, `endings`, `hiddenFields`, `variables`, `distribution`, `targeting` |
+| `400` `invalid_params` naming a field you did not touch                            | A read-only or unknown field left in the survey document: the endpoint rejects unknown keys rather than ignoring them | Check the `jq` filter is applied. The document accepts only `workspaceId`, `name`, `type`, `status`, `metadata`, `defaultLanguage`, `languages`, `welcomeCard`, `blocks`, `endings`, `hiddenFields`, `variables`, `distribution`, `targeting` |
 | `400` `unsupported_locale`                                                         | A translation uses a locale that is not declared in `languages`             | Add the locale to `languages`, or drop the translation                     |
 | `400` `invalid_reference`                                                          | Logic jumps to a block or ending ID that is not in the same request         | Import the whole survey document at once, never block by block             |
-| `400` on a response, `field: "response"`                                           | The response does not validate against the target survey — usually a file upload, or element IDs that were not carried over | See [File-upload answers](#file-upload-answers-are-rejected); confirm the survey was imported with its original element IDs |
-| `404` `display not found` on a response                                            | A `displayId` from the source instance was sent along                       | Do not send `displayId` — the script omits it                              |
-| `403` on a create, while `TARGET_API_KEY` can still *list* surveys in the target      | `TARGET_API_KEY` has read but not write on the target workspace, or that workspace was created after the key. A successful source read proves nothing here — the two ends use different keys | Create a **new** key on the target instance with the target workspace selected and `write`/`manage`; a key's workspace access cannot be edited after creation. Confirm with `GET /api/v3/surveys?workspaceId=<target>` using `TARGET_API_KEY` |
+| `400` on a response, `field: "response"`                                           | The response does not validate against the target survey, usually a file upload, or element IDs that were not carried over | See [File-upload answers](#file-upload-answers-are-rejected); confirm the survey was imported with its original element IDs |
+| `404` `display not found` on a response                                            | A `displayId` from the source instance was sent along                       | Do not send `displayId`; the script omits it                               |
+| `403` on a create, while `TARGET_API_KEY` can still *list* surveys in the target      | `TARGET_API_KEY` has read but not write on the target workspace, or that workspace was created after the key. A successful source read proves nothing here: the two ends use different keys | Create a **new** key on the target instance with the target workspace selected and `write`/`manage`; a key's workspace access cannot be edited after creation. Confirm with `GET /api/v3/surveys?workspaceId=<target>` using `TARGET_API_KEY` |
 | `401`                                                                              | The key is revoked, or the endpoint needs Organization access the key lacks (`/api/v2/me`) | Check the key still exists; add the workspace under Workspace Access with `manage` |
 | `429`                                                                              | 100 requests/minute per API key                                             | Raise `THROTTLE`; the scripts already back off and retry six times         |
 
