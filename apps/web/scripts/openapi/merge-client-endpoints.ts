@@ -172,39 +172,6 @@ const v1ClientEndpoints = {
       ],
     },
   },
-  "/client/{environmentId}/user": {
-    post: {
-      security: [],
-      description:
-        "Endpoint for creating or identifying a user within the specified environment. If the user already exists, this will identify them and potentially update user attributes. If they don't exist, it will create a new user.",
-      requestBody: {
-        content: {
-          "application/json": {
-            schema: { example: { userId: "user123", attributes: {} }, type: "object" },
-          },
-        },
-      },
-      responses: {
-        "200": {
-          content: {
-            "application/json": {
-              example: { userId: "user123", state: "identified" },
-              schema: { type: "object" },
-            },
-          },
-          description: "OK",
-        },
-      },
-      summary: "Create or Identify User",
-      tags: ["Client API - User"],
-      servers: [
-        {
-          url: "https://app.formbricks.com/api/v2",
-          description: "Formbricks Client",
-        },
-      ],
-    },
-  },
   "/client/{environmentId}/storage": {
     post: {
       security: [],
