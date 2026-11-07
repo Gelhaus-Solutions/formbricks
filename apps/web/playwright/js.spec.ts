@@ -167,9 +167,8 @@ test.describe("JS Package Test", async () => {
     await expect(dialog.getByRole("heading", { level: 1 })).toHaveText("Survey Dialog");
     await expect(widget.getByText(PUBLIC_API_SURVEY_NAME_PLACEHOLDER)).toHaveCount(0);
 
-    await expect(
-      page.locator("#questionCard-0").getByRole("link", { name: "Powered by Formbricks" })
-    ).toBeVisible();
+    // GForms renders no "Powered by" badge (D6).
+    await expect(page.locator("#questionCard-0").getByRole("link", { name: /Powered by/ })).toHaveCount(0);
 
     // Fill the survey
     await page.getByRole("button", { name: "Happy to help!" }).click();

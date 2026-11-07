@@ -336,7 +336,7 @@ export async function PreviewEmailTemplate({
       });
 
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <Section className="w-full">
             <table
               border={0}
@@ -372,7 +372,7 @@ export async function PreviewEmailTemplate({
     }
     case TSurveyElementTypeEnum.Consent:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <Section className="mt-4 w-full">
             <div style={getInputShellStyle(styleTokens)}>
               <span
@@ -415,7 +415,7 @@ export async function PreviewEmailTemplate({
       const npsOptionHeight = firstQuestion.isColorCodingEnabled ? "47px" : "41px";
 
       return (
-        <PreviewEmailCard styleTokens={styleTokens} t={t}>
+        <PreviewEmailCard styleTokens={styleTokens}>
           <Section className="w-full">
             <PreviewElementHeader headline={headline} subheader={subheader} styleTokens={styleTokens} />
             <Container className="mx-0 mt-4 w-full max-w-none">
@@ -456,7 +456,7 @@ export async function PreviewEmailTemplate({
     case TSurveyElementTypeEnum.CTA: {
       const ctaElement = firstQuestion as TSurveyCTAElement;
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           {/* `isSafeLinkUrl`: the button URL is an editable survey field, and drafts are persisted
               without schema validation, so a stored value can carry a `javascript:` scheme. Rendering
               it into an `href` would ship that payload inside the email preview. */}
@@ -498,7 +498,7 @@ export async function PreviewEmailTemplate({
       }
 
       return (
-        <PreviewEmailCard styleTokens={styleTokens} t={t}>
+        <PreviewEmailCard styleTokens={styleTokens}>
           <Section className="w-full">
             <PreviewElementHeader headline={headline} subheader={subheader} styleTokens={styleTokens} />
             <Container className="mx-0 mt-4 w-full max-w-none">
@@ -545,7 +545,7 @@ export async function PreviewEmailTemplate({
     }
     case TSurveyElementTypeEnum.MultipleChoiceMulti:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <PreviewChoiceList
             choices={firstQuestion.choices}
             defaultLanguageCode={defaultLanguageCode}
@@ -557,7 +557,7 @@ export async function PreviewEmailTemplate({
       );
     case TSurveyElementTypeEnum.Ranking:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <PreviewChoiceList
             choices={firstQuestion.choices}
             defaultLanguageCode={defaultLanguageCode}
@@ -569,7 +569,7 @@ export async function PreviewEmailTemplate({
       );
     case TSurveyElementTypeEnum.MultipleChoiceSingle:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <PreviewChoiceList
             choices={firstQuestion.choices}
             defaultLanguageCode={defaultLanguageCode}
@@ -581,7 +581,7 @@ export async function PreviewEmailTemplate({
       );
     case TSurveyElementTypeEnum.PictureSelection:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <Section className="mx-0 mt-4">
             {firstQuestion.choices.map((choice) => (
               <Link
@@ -597,7 +597,7 @@ export async function PreviewEmailTemplate({
       );
     case TSurveyElementTypeEnum.Cal:
       return (
-        <PreviewEmailCard styleTokens={styleTokens} t={t}>
+        <PreviewEmailCard styleTokens={styleTokens}>
           <Container>
             <PreviewElementHeader headline={headline} subheader={subheader} styleTokens={styleTokens} />
             <Section className="mt-4 text-center">
@@ -614,7 +614,7 @@ export async function PreviewEmailTemplate({
       );
     case TSurveyElementTypeEnum.Date:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <Section className="w-full">
             <PreviewInputLink
               href={previewSurveyUrl}
@@ -627,7 +627,7 @@ export async function PreviewEmailTemplate({
       );
     case TSurveyElementTypeEnum.Matrix:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <Container className="mx-0">
             <Section className="w-full table-auto">
               <Row>
@@ -694,7 +694,7 @@ export async function PreviewEmailTemplate({
       const addressFields = getAddressPreviewFields(firstQuestion, defaultLanguageCode);
 
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <PreviewFieldList fields={addressFields} href={previewSurveyUrl} styleTokens={styleTokens} />
         </PreviewQuestionCard>
       );
@@ -703,14 +703,14 @@ export async function PreviewEmailTemplate({
       const contactFields = getContactPreviewFields(firstQuestion, defaultLanguageCode);
 
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <PreviewFieldList fields={contactFields} href={previewSurveyUrl} styleTokens={styleTokens} />
         </PreviewQuestionCard>
       );
     }
     case TSurveyElementTypeEnum.FileUpload:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <Section className="w-full">
             <PreviewInputLink
               href={previewSurveyUrl}
@@ -727,7 +727,7 @@ export async function PreviewEmailTemplate({
       );
     case TSurveyElementTypeEnum.Signature:
       return (
-        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader} t={t}>
+        <PreviewQuestionCard headline={headline} styleTokens={styleTokens} subheader={subheader}>
           <Section className="w-full">
             <PreviewInputLink
               href={previewSurveyUrl}
@@ -750,16 +750,14 @@ function PreviewQuestionCard({
   headline,
   styleTokens,
   subheader,
-  t,
 }: Readonly<{
   children: React.ReactNode;
   headline: string;
   styleTokens: PreviewEmailStyleTokens;
   subheader?: string;
-  t: TFunction;
 }>): React.JSX.Element {
   return (
-    <PreviewEmailCard styleTokens={styleTokens} t={t}>
+    <PreviewEmailCard styleTokens={styleTokens}>
       <PreviewElementHeader
         className="mr-8"
         headline={headline}
@@ -774,18 +772,11 @@ function PreviewQuestionCard({
 function PreviewEmailCard({
   children,
   styleTokens,
-  t,
 }: Readonly<{
   children: React.ReactNode;
   styleTokens: PreviewEmailStyleTokens;
-  t: TFunction;
 }>): React.JSX.Element {
-  return (
-    <EmailTemplateWrapper styleTokens={styleTokens}>
-      {children}
-      <EmailFooter fontFamily={styleTokens.fontFamily} signatureColor={styleTokens.signatureColor} t={t} />
-    </EmailTemplateWrapper>
-  );
+  return <EmailTemplateWrapper styleTokens={styleTokens}>{children}</EmailTemplateWrapper>;
 }
 
 function PreviewChoiceList({
@@ -1062,23 +1053,5 @@ function EmailTemplateWrapper({
         {children}
       </Section>
     </Tailwind>
-  );
-}
-
-function EmailFooter({
-  fontFamily,
-  signatureColor,
-  t,
-}: Readonly<{ fontFamily: string; signatureColor: string; t: TFunction }>): React.JSX.Element {
-  return (
-    <Container className="mx-auto mt-8 text-center">
-      <Link
-        className="text-signature-color text-xs"
-        href="https://formbricks.com?utm_source=formbricks-app&utm_medium=email&utm_campaign=powered_by_badge"
-        style={{ ...getForcedColorStyle(signatureColor), fontFamily }}
-        target={PREVIEW_LINK_TARGET}>
-        {t("common.powered_by_formbricks")}
-      </Link>
-    </Container>
   );
 }
