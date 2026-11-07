@@ -509,6 +509,13 @@ jobs:
             -e AI_AZURE_API_KEY="azure-base-url-secret-sentinel" \
             -e AI_AZURE_BASE_URL="azure-base-url-secret-sentinel"
 
+          run_invalid_case \
+            "missing Anthropic API key" \
+            "AI_ANTHROPIC_API_KEY" \
+            "" \
+            -e AI_PROVIDER="anthropic" \
+            -e AI_MODEL="claude-opus-5-5"
+
       - name: Validate Docker Compose Migration Environment
         shell: bash
         env:
