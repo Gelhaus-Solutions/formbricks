@@ -28,7 +28,6 @@ import { reportStaleServerActionError } from "@/lib/utils/stale-server-action";
 import { getV3ApiErrorMessage } from "@/modules/api/lib/v3-client";
 import type { TCustomCssValidationStatus } from "@/modules/custom-css/components/lib/validation";
 import { type TWorkspaceWithoutCustomCss } from "@/modules/custom-css/lib/types";
-import { createSegmentAction } from "@/modules/ee/contacts/segments/actions";
 import { describeCodeIssueAtPath, describeLockRefusal } from "@/modules/survey/editor/lib/code-messages";
 import {
   getSurveyToAutosave,
@@ -80,7 +79,7 @@ interface SurveyMenuBarProps {
   setIsCautionDialogOpen: (open: boolean) => void;
   isStorageConfigured: boolean;
   /**
-   * ENG-3395: the restricted-surveys gate — the server-side flags, with the controls turned off for
+   * ENG-3395: the restricted-surveys gate: the server-side flags, with the controls turned off for
    * the rest of the session when the server reports visibility as not enabled. Owned by the editor,
    * which the Follow-ups tab reads as well.
    */
@@ -290,8 +289,8 @@ export const SurveyMenuBar = ({
   /**
    * **What every payload below sends for Embedded Data (ENG-2628).**
    *
-   * `localSurvey.embeddedFields` is the editor's Embedded Data state — the Variables and Hidden
-   * Fields cards write it — and on the wire it is the COMPLETE desired set for both sources. The
+   * `localSurvey.embeddedFields` is the editor's Embedded Data state (the Variables and Hidden
+   * Fields cards write it), and on the wire it is the COMPLETE desired set for both sources. The
    * server writes the rows from it and derives `variables` / `hiddenFields` back off those rows on
    * every read (`toLegacyEmbeddedFields`), so the two legacy keys travelling in the same payload are
    * ignored: they are forwarded exactly as they arrived at mount, and nothing here recomputes them.
@@ -302,7 +301,7 @@ export const SurveyMenuBar = ({
    *
    * The save return does not always replace the working copy, and the dirty check is what closes
    * that gap. `handleSurveySave` / `handleSurveySaveDraft` both `setLocalSurvey(response)`, so there
-   * the freshly written rows — with their `id`, `key`, `locked` and minted storage keys — land back
+   * the freshly written rows (with their `id`, `key`, `locked` and minted storage keys) land back
    * in state. The interval auto-save below deliberately does **not**: it updates its refs only, to
    * avoid re-rendering the editor while the author is typing. So the working copy legitimately keeps
    * a card-built row with no `id` and the mount-time legacy keys, and `hasUnsavedSurveyChanges`
@@ -325,31 +324,11 @@ export const SurveyMenuBar = ({
     }
   };
 
-  const handleTemporarySegment = async () => {
-    if (localSurvey.segment && localSurvey.type === "app" && localSurvey.segment?.id === "temp") {
-      const { filters } = localSurvey.segment;
-
-      // create a new private segment
-      const newSegment = await createSegmentAction({
-        workspaceId: localSurvey.workspaceId,
-        filters,
-        isPrivate: true,
-        surveyId: localSurvey.id,
-        title: localSurvey.id,
-      });
-
-      return newSegment?.data;
-    }
-  };
-
-  const handleSegmentUpdate = async (): Promise<TSegment | null> => {
-    if (localSurvey.segment && localSurvey.segment.id === "temp") {
-      const segment = await handleTemporarySegment();
-      return segment ?? null;
-    }
-
-    return localSurvey.segment;
-  };
+  // The placeholder segment an app survey gets in the editor is saved as no segment, as autosave does.
+  // GForms keeps no contacts until the contacts rebuild (GFORMS-18), so no visitor can be in a segment
+  // and an empty private segment would target exactly what no segment does.
+  const handleSegmentUpdate = async (): Promise<TSegment | null> =>
+    localSurvey.segment?.id === "temp" ? null : localSurvey.segment;
 
   const validateSurveyWithZod = (): boolean => {
     const localSurveyValidation = ZSurvey.safeParse(localSurvey);
@@ -558,19 +537,19 @@ export const SurveyMenuBar = ({
           // The server deletes a private segment when a survey switches from app to link, so the
           // working copy has to take that back. Skipping it is not a cosmetic loss: the stale id
           // goes back out on the next save, `assertSurveySegmentBelongsToWorkspace` throws
-          // `ResourceNotFoundError`, and the catch below swallows it — so this block never runs
+          // `ResourceNotFoundError`, and the catch below swallows it, so this block never runs
           // again and the editor cannot be saved or published until the page is reloaded.
           //
           // Through the updater rather than against `localSurveyRef` (ENG-3266), which is written in
           // a passive effect and so still names the sent object for as long as it takes React to
-          // flush one — a window the response can land in, where the ref would overwrite whatever
+          // flush one: a window the response can land in, where the ref would overwrite whatever
           // the author changed mid-flight. `current` is the state itself, so the spread carries
           // those edits and replaces only the key the server owns.
           //
           // The one edit the spread could still lose is an edit to `segment` itself: `TargetingCard`
           // writes it on every change and is mounted for app surveys, so an author refining their
-          // targeting while a tick is in flight would get `savedData.segment` — the segment as it
-          // was when the request went out — written back over the newer one. So the guard is on
+          // targeting while a tick is in flight would get `savedData.segment` (the segment as it
+          // was when the request went out) written back over the newer one. So the guard is on
           // `segment` alone, against the value the working copy held when it was sent. Guarding on
           // the survey's object identity instead settles the same race by abandoning the adoption
           // after any unrelated keystroke, which is what left the editor unsaveable.
@@ -731,7 +710,7 @@ export const SurveyMenuBar = ({
 
       setIsSurveySaving(false);
       if (updatedSurveyResponse?.data) {
-        // isSecondPublish is a transient action flag, not part of the survey — strip it so it
+        // isSecondPublish is a transient action flag, not part of the survey; strip it so it
         // doesn't linger in editor state and get echoed back on the next update.
         const { isSecondPublish: _isSecondPublish, ...updatedSurvey } = updatedSurveyResponse.data;
         setLocalSurvey(updatedSurvey);
@@ -763,13 +742,13 @@ export const SurveyMenuBar = ({
     if (isSurveySaved) {
       // Navigate explicitly rather than router.back(): the editor is often reached without an
       // in-app history entry behind it (new tab, pasted/bookmarked URL, hard reload), and back()
-      // silently no-ops there — the survey saves but the editor never closes. The publish path
+      // silently no-ops there: the survey saves but the editor never closes. The publish path
       // already navigates to the summary this way.
       //
       // Both branches navigate, but not to the same place, because the two callers arrive here from
       // different pages. The "Save & Close" button renders only for a non-draft, and its editor is
       // reached from the summary. A draft gets here only through the unsaved-changes dialog, opened
-      // by the back arrow, and its editor is reached from the survey list — the list deliberately
+      // by the back arrow, and its editor is reached from the survey list: the list deliberately
       // never links a draft to /summary (see `linkHref` in `survey/list/components/survey-card.tsx`),
       // since a draft has no responses to summarise. So a draft closes to the list.
       router.push(

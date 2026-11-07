@@ -12,9 +12,7 @@ import {
   useState,
 } from "react";
 import { ActionClass, Language, OrganizationRole } from "@formbricks/database/prisma-browser";
-import { TContactAttributeKey } from "@formbricks/types/contact-attribute-key";
 import { TSurveyQuota } from "@formbricks/types/quota";
-import { TSegment } from "@formbricks/types/segment";
 import {
   TSurvey,
   TSurveyEditorTabs,
@@ -69,13 +67,10 @@ interface SurveyEditorProps {
   survey: TSurvey;
   workspace: TEditorWorkspace;
   actionClasses: ActionClass[];
-  contactAttributeKeys: TContactAttributeKey[];
-  segments: TSegment[];
   responseCount: number;
   finishedResponseCount: number;
   membershipRole?: OrganizationRole;
   colors: string[];
-  isUserTargetingAllowed?: boolean;
   isSpamProtectionAllowed?: boolean;
   isFormbricksCloud: boolean;
   isUnsplashConfigured: boolean;
@@ -93,7 +88,6 @@ interface SurveyEditorProps {
   quotas: TSurveyQuota[];
   isExternalUrlsAllowed: boolean;
   publicDomain: string;
-  enterpriseLicenseRequestFormUrl: string;
   surveyVisibilityGate: TSurveyVisibilityUiGate;
   /** The effective visibility (a change in flight counts as restricted), not the stored flag. */
   visibility: TSurveyVisibility;
@@ -107,13 +101,10 @@ export const SurveyEditor = ({
   workspace,
   workspaceLanguages,
   actionClasses,
-  contactAttributeKeys,
-  segments,
   responseCount,
   finishedResponseCount,
   membershipRole,
   colors,
-  isUserTargetingAllowed = false,
   isSpamProtectionAllowed = false,
   isFormbricksCloud,
   isUnsplashConfigured,
@@ -130,7 +121,6 @@ export const SurveyEditor = ({
   quotas,
   isExternalUrlsAllowed,
   publicDomain,
-  enterpriseLicenseRequestFormUrl,
   surveyVisibilityGate,
   visibility,
   surveyAccess,
@@ -408,18 +398,13 @@ export const SurveyEditor = ({
               localSurvey={localSurvey}
               setLocalSurvey={setLocalSurveyNonNull}
               actionClasses={actionClasses}
-              contactAttributeKeys={contactAttributeKeys}
-              segments={segments}
               finishedResponseCount={finishedResponseCount}
               membershipRole={membershipRole}
-              isUserTargetingAllowed={isUserTargetingAllowed}
               isSpamProtectionAllowed={isSpamProtectionAllowed}
               workspacePermission={workspacePermission}
-              isFormbricksCloud={isFormbricksCloud}
               surveySchedulingConfig={surveySchedulingConfig}
               locale={locale}
               appSetupCompleted={localWorkspace.appSetupCompleted}
-              enterpriseLicenseRequestFormUrl={enterpriseLicenseRequestFormUrl}
               hasTriggerError={hasTriggerError}
             />
           )}

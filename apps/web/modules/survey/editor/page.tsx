@@ -5,14 +5,12 @@ import { ResourceNotFoundError } from "@formbricks/types/errors";
 import { type TSurvey } from "@formbricks/types/surveys/types";
 import {
   DEFAULT_LOCALE,
-  ENTERPRISE_LICENSE_REQUEST_FORM_URL,
   IS_FORMBRICKS_CLOUD,
   MAIL_FROM,
   SURVEY_BG_COLORS,
   UNSPLASH_ACCESS_KEY,
 } from "@/lib/constants";
 import { getPublicDomain } from "@/lib/getPublicUrl";
-import { getUserVisibleSurveyWhere } from "@/lib/survey/visibility/actor-context";
 import { getTranslate } from "@/lingodotdev/server";
 import { getCustomCssSource } from "@/modules/custom-css/components/lib/draft";
 import { hasStylesInHeadScripts } from "@/modules/custom-css/components/lib/hints";
@@ -20,10 +18,7 @@ import { type TSurveyCustomCssEditorConfig } from "@/modules/custom-css/componen
 import { getCustomCssPlanAllowed } from "@/modules/custom-css/lib/access";
 import { getCustomCssHealth, toDeliveredCustomCss } from "@/modules/custom-css/lib/delivery";
 import { getWorkspaceCustomCssRecord, parseStoredCustomCss } from "@/modules/custom-css/lib/service";
-import { getContactAttributeKeys } from "@/modules/ee/contacts/lib/contact-attribute-keys";
-import { getSegments } from "@/modules/ee/contacts/segments/lib/segments";
 import {
-  getIsContactsEnabled,
   getIsQuotasEnabled,
   getIsSpamProtectionEnabled,
   getIsWorkflowsEnabled,
@@ -75,38 +70,19 @@ export const SurveyEditorPage = async (props: {
   // Gated here rather than by a layout: the editor lives in its own route group
   // ((survey-editor)) with its own layout, so it does not inherit the guard on
   // (app)/workspaces/[workspaceId]/surveys/[surveyId]/layout.tsx.
-  const {
-    session,
-    isMember,
-    hasReadAccess,
-    currentUserMembership,
-    workspacePermission,
-    workspace,
-    organization,
-  } = await getSurveyAuth(params.workspaceId, params.surveyId);
+  const { session, isMember, hasReadAccess, currentUserMembership, workspacePermission, workspace } =
+    await getSurveyAuth(params.workspaceId, params.surveyId);
 
   const t = await getTranslate();
 
-  const [
-    survey,
-    workspaceWithTeamIds,
-    actionClasses,
-    contactAttributeKeys,
-    responseCount,
-    finishedResponseCount,
-    segments,
-  ] = await Promise.all([
-    getSurvey(params.surveyId),
-    getWorkspaceWithTeamIds(params.workspaceId),
-    getActionClasses(workspace.id),
-    getContactAttributeKeys(workspace.id),
-    getResponseCountBySurveyId(params.surveyId),
-    getFinishedResponseCountBySurveyId(params.surveyId),
-    // ENG-3282: segments reach the browser, so their survey references name only surveys this viewer sees.
-    getUserVisibleSurveyWhere(session.user.id, organization.id).then((where) =>
-      getSegments(workspace.id, where)
-    ),
-  ]);
+  const [survey, workspaceWithTeamIds, actionClasses, responseCount, finishedResponseCount] =
+    await Promise.all([
+      getSurvey(params.surveyId),
+      getWorkspaceWithTeamIds(params.workspaceId),
+      getActionClasses(workspace.id),
+      getResponseCountBySurveyId(params.surveyId),
+      getFinishedResponseCountBySurveyId(params.surveyId),
+    ]);
 
   if (!workspaceWithTeamIds) {
     return notFound();
@@ -128,7 +104,6 @@ export const SurveyEditorPage = async (props: {
     isSpamProtectionAllowed,
     isQuotasAllowed,
     isExternalUrlsAllowed,
-    isUserTargetingAllowed,
     isWorkflowsAllowed,
     isCustomCssPlanAllowed,
   ] = await Promise.all([
@@ -136,7 +111,6 @@ export const SurveyEditorPage = async (props: {
     getIsSpamProtectionEnabled(workspaceWithTeamIds.organizationId),
     getIsQuotasEnabled(workspaceWithTeamIds.organizationId),
     getExternalUrlsPermission(workspaceWithTeamIds.organizationId),
-    getIsContactsEnabled(workspaceWithTeamIds.organizationId),
     // Drives the Follow-ups deprecation: the tab only survives where Workflows cannot replace it.
     getIsWorkflowsEnabled(workspaceWithTeamIds.organizationId),
     getCustomCssPlanAllowed(workspaceWithTeamIds.organizationId),
@@ -153,7 +127,7 @@ export const SurveyEditorPage = async (props: {
     return notFound();
   }
 
-  if (!actionClasses || !contactAttributeKeys || !workspaceWithTeamIds || !userEmail) {
+  if (!actionClasses || !workspaceWithTeamIds || !userEmail) {
     return <ErrorComponent />;
   }
 
@@ -180,14 +154,11 @@ export const SurveyEditorPage = async (props: {
       survey={survey}
       workspace={workspaceWithTeamIds}
       actionClasses={actionClasses}
-      contactAttributeKeys={contactAttributeKeys}
       responseCount={responseCount}
       finishedResponseCount={finishedResponseCount}
       membershipRole={currentUserMembership.role}
       workspacePermission={workspacePermission}
       colors={SURVEY_BG_COLORS}
-      segments={segments}
-      isUserTargetingAllowed={isUserTargetingAllowed}
       isSpamProtectionAllowed={isSpamProtectionAllowed}
       workspaceLanguages={workspaceLanguages}
       isFormbricksCloud={IS_FORMBRICKS_CLOUD}
@@ -204,7 +175,6 @@ export const SurveyEditorPage = async (props: {
       quotas={quotas}
       isExternalUrlsAllowed={isExternalUrlsAllowed}
       publicDomain={publicDomain}
-      enterpriseLicenseRequestFormUrl={ENTERPRISE_LICENSE_REQUEST_FORM_URL}
       surveyVisibilityGate={surveyVisibilityGate}
       visibility={visibility}
       surveyAccess={surveyAccess}
