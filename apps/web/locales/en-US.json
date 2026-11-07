@@ -528,7 +528,6 @@
     "update": "Update",
     "updated": "Updated",
     "updated_at": "Updated at",
-    "upgrade_plan": "Upgrade plan",
     "upload_failed": "Upload failed. Please try again.",
     "upload_input_description": "Click or drag to upload files.",
     "url": "URL",
@@ -1769,7 +1768,6 @@
     "custom_css": {
       "base_css_help": "This CSS applies in light and dark mode.",
       "base_css_label": "Base CSS",
-      "clear_all": "Clear all CSS",
       "dark_css_help": "Dark CSS adds rules for dark mode. Base CSS still applies in dark mode, so only add what changes.",
       "dark_css_label": "Dark CSS",
       "dark_preview_hint": "Your base CSS sets text or background colors, and it applies in dark mode too. Check the dark preview and add dark CSS where colors are hard to read.",
@@ -1787,9 +1785,6 @@
       "issue_location": "line {line}, column {column}",
       "keyboard_hint": "Tab indents. Press Esc, then Tab, to leave the field.",
       "load_failed": "Custom CSS could not be loaded.",
-      "plan_required_description": "Your saved CSS keeps working. Upgrade to add or change CSS. You can still clear it.",
-      "plan_required_title": "Custom CSS is available on the Scale plan",
-      "plan_required_upsell": "Style every survey with your own CSS, in light and dark mode.",
       "read_only_role": "Only organization owners and managers can change workspace CSS.",
       "restore_previous": "Restore previous version",
       "restore_previous_loaded": "Previous version loaded. Save to apply it.",
@@ -2483,7 +2478,6 @@
       "copy_survey_target_workspaces_label": "Target workspaces",
       "copy_to": "Copy to…",
       "custom_css_not_copied_invalid": "Copied without its custom CSS: it no longer passes the current CSS rules. Fix it in the original survey and copy again.",
-      "custom_css_not_copied_plan": "Copied without its custom CSS: adding custom CSS requires the Scale plan.",
       "delete_survey_and_responses_warning": "Are you sure you want to delete this survey and all of its responses?",
       "edit": {
         "activate_translations": "Activate translations",
