@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { OperationNotAllowedError, TooManyRequestsError } from "@formbricks/types/errors";
+import { TooManyRequestsError } from "@formbricks/types/errors";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import { resetPasswordAction, updateUserAction } from "./actions";
 
@@ -59,36 +59,18 @@ beforeEach(() => {
 
 // The identity provider owns User.name and re-writes it on every sign-in, so the profile form renders
 // the input disabled. These cover the server boundary, which is what a crafted request actually meets.
-describe("updateUserAction: name is IdP-owned for SSO users", () => {
-  test("rejects a name change from an SSO user", async () => {
-    await expect(
-      (updateUserAction as unknown as (a: unknown) => Promise<unknown>)({
-        ctx: ctxFor("azuread"),
-        parsedInput: { name: "Jane Doe-Smith" },
-      })
-    ).rejects.toThrow(OperationNotAllowedError);
-    expect(mocks.updateUser).not.toHaveBeenCalled();
-  });
-
-  test("allows a name change from a credential user", async () => {
+describe("updateUserAction: name", () => {
+  // GForms has no SSO, so no identity provider owns the name any more: an account from the SSO era can
+  // rename itself like any other.
+  test.each(["email", "azuread"] as const)("lets a %s user change their name", async (identityProvider) => {
     await (updateUserAction as unknown as (a: unknown) => Promise<unknown>)({
-      ctx: ctxFor("email"),
+      ctx: ctxFor(identityProvider),
       parsedInput: { name: "Jane Doe-Smith" },
     });
     expect(mocks.updateUser).toHaveBeenCalledWith(
       "user-1",
       expect.objectContaining({ name: "Jane Doe-Smith" })
     );
-  });
-
-  test("lets an SSO user submit their unchanged name without erroring", async () => {
-    // The form omits untouched fields, but a client echoing the current value back is asking for no
-    // change; erroring on that would be a false positive.
-    await (updateUserAction as unknown as (a: unknown) => Promise<unknown>)({
-      ctx: ctxFor("azuread"),
-      parsedInput: { name: "Doe, Jane" },
-    });
-    expect(mocks.updateUser).toHaveBeenCalledWith("user-1", { name: "Doe, Jane" });
   });
 
   test("writes no locale: the dashboard ships English only", async () => {
