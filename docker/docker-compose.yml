@@ -79,12 +79,6 @@ x-environment: &environment
     # Set the minimum log level(debug, info, warn, error, fatal)
     # LOG_LEVEL: info
 
-    ############################################# OPTIONAL (ENTERPRISE EDITION) #############################################
-
-    # Enterprise License Key (More info at: https://formbricks.com/docs/self-hosting/license)
-    # Required to access Enterprise-only features
-    # ENTERPRISE_LICENSE_KEY:
-
     ############################################# OPTIONAL (EMAIL CONFIGURATION) #############################################
 
     # Email Configuration
@@ -164,29 +158,6 @@ x-environment: &environment
     # RECAPTCHA_SITE_KEY:
     # RECAPTCHA_SECRET_KEY:
 
-    # Set the below from GitHub if you want to enable GitHub OAuth
-    # GITHUB_ID:
-    # GITHUB_SECRET:
-
-    # Set the below from Google if you want to enable Google OAuth
-    # GOOGLE_CLIENT_ID:
-    # GOOGLE_CLIENT_SECRET:
-
-    # Set the below from Azure Active Directory Login if you want to enable Azure AD OAuth
-    # AZUREAD_CLIENT_ID:
-    # AZUREAD_CLIENT_SECRET:
-    # AZUREAD_TENANT_ID:
-
-    # Set the below to OpenID Connect Provider if you want to enable OIDC
-    # OIDC_CLIENT_ID:
-    # OIDC_CLIENT_SECRET:
-    # OIDC_ISSUER:
-    # OIDC_DISPLAY_NAME:
-    # OIDC_SIGNING_ALGORITHM:
-
-    # Set the below to SAML Provider if you want to enable SAML
-    # SAML_DATABASE_URL: "postgresql://<user>:<password>@postgres:5432/formbricks-saml?sslmode=disable"
-
     ########################################## OPTIONAL (THIRD PARTY INTEGRATIONS) ###########################################
 
     # Oauth credentials for Notion Integration
@@ -224,9 +195,6 @@ x-environment: &environment
     # Set the below to 1 to disable Rate Limiting across Formbricks
     # RATE_LIMITING_DISABLED: 1
 
-    # Set the below to 1 to disable telemetry reporting (ignored when EE license is active)
-    # TELEMETRY_DISABLED: 1
-
     # Set the below to send OpenTelemetry data via OTLP to your collector
     # OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318
     # OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
@@ -248,19 +216,6 @@ x-environment: &environment
     # AUDIT_LOG_GET_USER_IP: 1
 
     ############################################# OPTIONAL (OTHER) #############################################
-
-    # signup is disabled by default for self-hosted instances, users can only signup using an invite link, in order to allow signup from SSO(without invite), set the below to 1
-    # AUTH_SKIP_INVITE_FOR_SSO: 1
-    # Set the below to automatically assign new users to a specific team, insert an existing team id
-    # (Role Management is an Enterprise feature)
-    # AUTH_SSO_DEFAULT_TEAM_ID:
-
-    # Set the below to automatically assign every new SSO user to one organization, without requiring
-    # an invite. Insert an existing organization id, or a valid CUID2 to have it created on the first
-    # sign-up. AUTH_SSO_DEFAULT_ORGANIZATION_ROLE (owner, manager, member, billing) sets the role and
-    # defaults to manager; the sign-up that creates the organization is always owner.
-    # AUTH_SSO_DEFAULT_ORGANIZATION_ID:
-    # AUTH_SSO_DEFAULT_ORGANIZATION_ROLE:
 
     # Configure the minimum role for user management from UI(owner, manager, disabled)
     # USER_MANAGEMENT_MINIMUM_ROLE: "manager"
@@ -402,7 +357,6 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./saml-connection:/home/nextjs/apps/web/saml-connection
       # File uploads when no S3 bucket is configured (local-disk storage).
       - uploads:/home/nextjs/apps/web/uploads
     environment:

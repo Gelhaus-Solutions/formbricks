@@ -52,7 +52,6 @@ export default defineConfig(async (): Promise<ViteUserConfig> => {
           "src/prisma-browser": resolve(__dirname, "src/prisma-browser.ts"),
           "src/prisma-adapter": resolve(__dirname, "src/prisma-adapter.ts"),
           "scripts/apply-migrations": resolve(__dirname, "src/scripts/apply-migrations.ts"),
-          "scripts/create-saml-database": resolve(__dirname, "src/scripts/create-saml-database.ts"),
           "scripts/upgrade-session": resolve(__dirname, "src/scripts/upgrade-session.ts"),
           "scripts/migration-runner": resolve(__dirname, "src/scripts/migration-runner.ts"),
           // Side-effect free, unlike migration-runner: the Helm Hub migration wait requires it to skip the

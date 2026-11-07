@@ -83,7 +83,7 @@ describe("image startup validation", () => {
           printf '%s\n' "$1" >> "$TRACE"
           case "$1" in
             inspect) echo true ;;
-            logs) printf '%s\n' 'Environment variables validated successfully' 'Running database migrations' 'Running SAML database setup' ;;
+            logs) printf '%s\n' 'Environment variables validated successfully' 'Running database migrations' ;;
           esac
         }
         curl() { test "$SMOKE_HEALTHY" = true; }

@@ -431,7 +431,7 @@ jobs:
               exit 1
             fi
 
-            if grep -Eq "Running database migrations|Running SAML database setup|Prisma|Can't reach database" <<<"$output"; then
+            if grep -Eq "Running database migrations|Prisma|Can't reach database" <<<"$output"; then
               echo "Database work started before $case_name environment validation failed"
               echo "$output"
               exit 1
@@ -608,7 +608,6 @@ jobs:
           logs="$(docker logs formbricks-skip-test 2>&1)"
           grep -Fq "Environment variables validated successfully" <<<"$logs"
           grep -Fq "Skipping startup migrations" <<<"$logs"
-          grep -Fq "Running SAML database setup" <<<"$logs"
           grep -Fq "Starting Next.js server" <<<"$logs"
 
           if grep -Fq "Running database migrations" <<<"$logs"; then
@@ -764,7 +763,6 @@ jobs:
 
           assert_log_once "Environment variables validated successfully"
           assert_log_once "Running database migrations"
-          assert_log_once "Running SAML database setup"
 
           # Exercise browser hydration against the image, not a separate Next build.
           PGPASSWORD=test psql -h localhost -U test -d formbricks -v ON_ERROR_STOP=1 -f docker/fixtures/image-smoke.sql

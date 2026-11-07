@@ -23,8 +23,7 @@ packages/database/
 │       ├── apply-migrations.ts
 │       ├── create-migration.ts
 │       ├── generate-data-migration.ts
-│       ├── migration-runner.ts
-│       └── create-saml-database.ts
+│       └── migration-runner.ts
 ├── migration/                 # Custom migrations directory
 │   ├── [timestamp_name]/      # Schema migration folder
 │   │   └── migration.sql      # Schema migration file
@@ -273,7 +272,7 @@ WHERE migration_name = '20260909120000_response_keyset_index_tiebreakers';
   "db:push": "prisma db push --accept-data-loss --config ./prisma.config.ts",
   "db:seed": "Seed the database with sample data",
   "db:seed:clear": "Clear all data and re-seed",
-  "db:setup": "pnpm db:migrate:dev && pnpm db:create-saml-database:dev && pnpm db:seed",
+  "db:setup": "pnpm db:migrate:dev && pnpm db:seed",
   "dev": "vite build --watch",
   "generate": "prisma generate --config ./prisma.config.ts",
   "generate-data-migration": "Create new data migration",

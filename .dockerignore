@@ -58,7 +58,6 @@
 
 # Runtime state and generated files
 apps/web/uploads
-apps/web/saml-connection
 apps/web/certificates
 apps/web/public/js
 packages/database/generated

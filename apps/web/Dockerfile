@@ -373,14 +373,12 @@ EXPOSE 3000
 ENV HOSTNAME="0.0.0.0"
 USER nextjs
 
-# Prepare volumes for uploads and SAML connections
+# Prepare the uploads volume
 # Check the finished filesystem as the runtime user, after all dependency overlays.
 RUN mkdir -p /home/nextjs/apps/web/uploads/ && \
-    mkdir -p /home/nextjs/apps/web/saml-connection && \
     node verify-next-runtime.mjs "$FORMBRICKS_DEPLOYMENT_ID" "$FORMBRICKS_BUILD_VARIANT"
 
 VOLUME /home/nextjs/apps/web/uploads/
-VOLUME /home/nextjs/apps/web/saml-connection
 
 # Local-disk file storage when no S3 bucket is configured (GFORMS-36). Set here because the server runs from
 # /home/nextjs, where the default ./uploads would miss the volume above.

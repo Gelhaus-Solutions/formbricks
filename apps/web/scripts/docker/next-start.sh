@@ -58,9 +58,6 @@ else
   run_with_timeout 300 "database migration" node packages/database/dist/scripts/apply-migrations.js
 fi
 
-echo "🗃️ Running SAML database setup..."
-run_with_timeout 60 "SAML database setup" node packages/database/dist/scripts/create-saml-database.js
-
 echo "✅ Database setup completed"
 echo "🚀 Starting Next.js server..."
 exec node apps/web/online-server.js
