@@ -9,6 +9,9 @@ export const RESERVED_FUTURE_DEFAULT_ATTRIBUTE_KEYS: readonly string[] = [
   "last_name",
 ];
 
+/** The validation message for a reserved key. */
+export const RESERVED_FUTURE_DEFAULT_ATTRIBUTE_KEY_VALIDATION_MESSAGE = `Key is reserved for the v5.1 safe-identifier default attribute migration. Reserved keys: ${RESERVED_FUTURE_DEFAULT_ATTRIBUTE_KEYS.join(", ")}.`;
+
 export const isReservedFutureDefaultAttributeKey = (key: string): boolean =>
   RESERVED_FUTURE_DEFAULT_ATTRIBUTE_KEYS.includes(key);
 

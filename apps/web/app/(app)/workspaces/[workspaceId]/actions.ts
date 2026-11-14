@@ -97,24 +97,14 @@ export const createWorkspaceAction = authenticatedActionClient.inputSchema(ZCrea
   })
 );
 
-const ZGetOrganizationsForSwitcherAction = z.object({
-  organizationId: ZId, // Changed from workspaceId to avoid extra query
-});
-
 /**
  * Fetches organizations list for switcher dropdown.
  * Called on-demand when user opens the organization switcher.
  */
-export const getOrganizationsForSwitcherAction = authenticatedActionClient
-  .inputSchema(ZGetOrganizationsForSwitcherAction)
-  .action(async ({ ctx, parsedInput }) => {
-    await assertCan({ type: "user", id: ctx.user.id }, "organization.read", {
-      type: "organization",
-      id: parsedInput.organizationId,
-    });
-
-    return await getOrganizationsByUserId(ctx.user.id);
-  });
+export const getOrganizationsForSwitcherAction = authenticatedActionClient.action(async ({ ctx }) => {
+  // The caller's own organizations: scoped by the user alone, so it needs no gate.
+  return await getOrganizationsByUserId(ctx.user.id);
+});
 
 const ZGetWorkspacesForSwitcherAction = z.object({
   organizationId: ZId, // Changed from workspaceId to avoid extra query

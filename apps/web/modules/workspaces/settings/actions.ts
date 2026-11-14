@@ -2,10 +2,9 @@
 
 import { z } from "zod";
 import { ZId } from "@formbricks/types/common";
-import { OperationNotAllowedError, ResourceNotFoundError } from "@formbricks/types/errors";
+import { OperationNotAllowedError } from "@formbricks/types/errors";
 import { assertCan } from "@/lib/authorization";
 import { isWorkspaceDefaultSurveyLanguage } from "@/lib/i18n/default-survey-language";
-import { getOrganization } from "@/lib/organization/service";
 import { capturePostHogEvent } from "@/lib/posthog";
 import { authenticatedActionClient } from "@/lib/utils/action-client";
 import { getOrganizationIdFromWorkspaceId } from "@/lib/utils/helper";
@@ -33,29 +32,16 @@ export const updateWorkspaceAction = authenticatedActionClient.inputSchema(ZUpda
     });
     await applyRateLimit(rateLimitConfigs.actions.stateMutation, parsedInput.workspaceId);
 
+    const { inAppSurveyBranding, linkSurveyBranding } = parsedInput.data;
     if (
-      parsedInput.data.inAppSurveyBranding !== undefined ||
-      parsedInput.data.linkSurveyBranding !== undefined
+      (inAppSurveyBranding !== undefined || linkSurveyBranding !== undefined) &&
+      !(await getRemoveBrandingPermission(organizationId))
     ) {
-      const organization = await getOrganization(organizationId);
-
-      if (!organization) {
-        throw new ResourceNotFoundError("Organization", organizationId);
-      }
-
-      const canRemoveBranding = await getRemoveBrandingPermission(organizationId);
-
-      if (parsedInput.data.inAppSurveyBranding !== undefined) {
-        if (!canRemoveBranding) {
-          throw new OperationNotAllowedError("You are not allowed to remove in-app branding");
-        }
-      }
-
-      if (parsedInput.data.linkSurveyBranding !== undefined) {
-        if (!canRemoveBranding) {
-          throw new OperationNotAllowedError("You are not allowed to remove link survey branding");
-        }
-      }
+      throw new OperationNotAllowedError(
+        inAppSurveyBranding === undefined
+          ? "You are not allowed to remove link survey branding"
+          : "You are not allowed to remove in-app branding"
+      );
     }
 
     ctx.auditLoggingCtx.organizationId = organizationId;

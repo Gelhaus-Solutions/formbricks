@@ -156,6 +156,70 @@ consumer follows the same override and global-value precedence as the rendered S
 {{- include "postgresql.v1.database" .Subcharts.postgresql -}}
 {{- end }}
 
+{{- /*
+The Secret and keys the bundled server itself reads its passwords from (the subchart's
+POSTGRES_PASSWORD and POSTGRES_POSTGRES_PASSWORD), so a consumer that references them authenticates
+with whatever the server was initialised with, including under postgresql.auth.existingSecret and
+global.postgresql overrides. userPasswordKey already resolves to the admin key when the bundled
+username is `postgres`.
+*/ -}}
+{{- define "formbricks.postgresqlSecretName" -}}
+{{- include "postgresql.v1.secretName" .Subcharts.postgresql -}}
+{{- end }}
+
+{{- define "formbricks.postgresqlUserPasswordKey" -}}
+{{- /* Without existingSecret the subchart's userPasswordKey is always `password`, but its generated
+      Secret only carries that key for a custom user; `postgres` lives under the admin key. */ -}}
+{{- if eq (include "formbricks.postgresqlUsername" .) "postgres" -}}
+{{- include "formbricks.postgresqlAdminPasswordKey" . -}}
+{{- else -}}
+{{- include "postgresql.v1.userPasswordKey" .Subcharts.postgresql -}}
+{{- end -}}
+{{- end }}
+
+{{- define "formbricks.postgresqlAdminPasswordKey" -}}
+{{- include "postgresql.v1.adminPasswordKey" .Subcharts.postgresql -}}
+{{- end }}
+
+{{- /*
+Cube's connection to the bundled PostgreSQL, rendered ahead of cube.env so Cube reaches the database
+the app uses without extra values. Cube 1.8's Postgres driver reads only the discrete CUBEJS_DB_HOST,
+_PORT, _NAME, _USER and _PASS variables; it has no URL form.
+
+A name set in cube.env replaces the default for that name, so no env name renders twice. The bundled
+user and password are a pair, and both are left out when cube.env sets either of them or points
+CUBEJS_DB_HOST elsewhere: the chart never pairs the bundled password with a user or host you chose.
+Values supplied through cube.envFrom or the app Secret cannot override these, because Kubernetes gives
+env precedence over envFrom; set them in cube.env instead (a valueFrom map is accepted).
+*/ -}}
+{{- define "formbricks.cubeBundledDatabaseEnv" -}}
+{{- if .Values.postgresql.enabled -}}
+{{- $userEnv := .Values.cube.env | default dict -}}
+{{- $userCredentials := or (hasKey $userEnv "CUBEJS_DB_HOST") (hasKey $userEnv "CUBEJS_DB_USER") (hasKey $userEnv "CUBEJS_DB_PASS") -}}
+{{- if not (hasKey $userEnv "CUBEJS_DB_HOST") }}
+- name: CUBEJS_DB_HOST
+  value: {{ include "formbricks.postgresqlPrimaryHost" . | quote }}
+{{- end }}
+{{- if not (hasKey $userEnv "CUBEJS_DB_PORT") }}
+- name: CUBEJS_DB_PORT
+  value: {{ include "formbricks.postgresqlServicePort" . | quote }}
+{{- end }}
+{{- if not (hasKey $userEnv "CUBEJS_DB_NAME") }}
+- name: CUBEJS_DB_NAME
+  value: {{ include "formbricks.postgresqlDatabase" . | default "postgres" | quote }}
+{{- end }}
+{{- if not $userCredentials }}
+- name: CUBEJS_DB_USER
+  value: {{ include "formbricks.postgresqlUsername" . | quote }}
+- name: CUBEJS_DB_PASS
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "formbricks.postgresqlSecretName" . }}
+      key: {{ include "formbricks.postgresqlUserPasswordKey" . }}
+{{- end }}
+{{- end -}}
+{{- end }}
+
 {{- define "formbricks.postgresqlAppPasswordKey" -}}
 {{- if eq (include "formbricks.postgresqlUsername" .) "postgres" -}}
 {{- "POSTGRES_ADMIN_PASSWORD" -}}
@@ -507,6 +571,108 @@ Returns true when an env var is managed by hub.embeddings and should not be rend
 {{- define "formbricks.hubEmbeddingEnvManaged" -}}
 {{- $key := .key -}}
 {{- if has $key (list "EMBEDDING_PROVIDER" "EMBEDDING_MODEL" "EMBEDDING_BASE_URL" "EMBEDDING_PROVIDER_API_KEY" "EMBEDDING_MAX_CONCURRENT" "EMBEDDING_NORMALIZE" "EMBEDDING_BATCH_SIZE" "EMBEDDING_BATCH_MAX_WAIT_MS" "EMBEDDING_BATCH_MAX_IN_FLIGHT" "EMBEDDING_HTTP_DISABLE_KEEP_ALIVES") -}}
+true
+{{- end -}}
+{{- end }}
+
+{{/* External provider settings shared by Hub API and worker. */}}
+{{- define "formbricks.hubEmbeddingClientEnv" -}}
+{{- $root := .root -}}
+{{- $cfg := $root.Values.hub.embeddingClient -}}
+{{- if $cfg.enabled -}}
+{{- if $root.Values.hub.embeddings.enabled -}}
+{{- fail "hub.embeddingClient.enabled and hub.embeddings.enabled cannot both be true" -}}
+{{- end -}}
+{{- $provider := required "hub.embeddingClient.provider is required" $cfg.provider -}}
+{{- $model := required "hub.embeddingClient.model is required" $cfg.model -}}
+{{- if not (has $provider (list "openai" "google" "google-gemini")) -}}
+{{- fail "hub.embeddingClient.provider must be openai, google, or google-gemini" -}}
+{{- end -}}
+{{- $base := $cfg.baseUrl -}}
+{{- if .worker -}}
+{{- $base = default (default $base $cfg.apiBaseUrl) $cfg.workerBaseUrl -}}
+{{- else -}}
+{{- $base = default $base $cfg.apiBaseUrl -}}
+{{- end -}}
+{{- range $name, $value := dict "baseUrl" $cfg.baseUrl "apiBaseUrl" $cfg.apiBaseUrl "workerBaseUrl" $cfg.workerBaseUrl -}}
+{{- if $value -}}
+{{- $parsed := urlParse $value -}}
+{{- if or (not (has $parsed.scheme (list "http" "https"))) (not $parsed.hostname) $parsed.query $parsed.fragment $parsed.userinfo -}}
+{{- fail (printf "hub.embeddingClient.%s must be an absolute http(s) URL without user info, query or fragment" $name) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if and (ne $provider "openai") $base -}}
+{{- fail "hub.embeddingClient base URL is supported only for openai" -}}
+{{- end -}}
+- name: EMBEDDING_PROVIDER
+  value: {{ $provider | quote }}
+- name: EMBEDDING_MODEL
+  value: {{ $model | quote }}
+{{- if $cfg.responseModel }}
+- name: EMBEDDING_RESPONSE_MODEL
+  value: {{ $cfg.responseModel | quote }}
+{{- end }}
+{{- if $base }}
+- name: EMBEDDING_BASE_URL
+  value: {{ $base | quote }}
+{{- end }}
+{{- if ne $provider "google-gemini" }}
+- name: EMBEDDING_PROVIDER_API_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ required "hub.embeddingClient.auth.existingSecret is required" $cfg.auth.existingSecret | quote }}
+      key: {{ $cfg.auth.secretKey | quote }}
+{{- else }}
+- name: EMBEDDING_GOOGLE_CLOUD_PROJECT
+  value: {{ required "hub.embeddingClient.googleCloudProject is required" $cfg.googleCloudProject | quote }}
+- name: EMBEDDING_GOOGLE_CLOUD_LOCATION
+  value: {{ required "hub.embeddingClient.googleCloudLocation is required" $cfg.googleCloudLocation | quote }}
+{{- end }}
+{{- if .worker }}
+- name: EMBEDDING_MAX_CONCURRENT
+  value: {{ $cfg.maxConcurrent | quote }}
+- name: EMBEDDING_JOB_TIMEOUT_SECONDS
+  value: {{ $cfg.jobTimeoutSeconds | quote }}
+- name: EMBEDDING_BATCH_SIZE
+  value: {{ $cfg.batchSize | quote }}
+- name: EMBEDDING_BATCH_MAX_WAIT_MS
+  value: {{ $cfg.batchMaxWaitMs | quote }}
+- name: EMBEDDING_BATCH_MAX_IN_FLIGHT
+  value: {{ $cfg.batchMaxInFlight | quote }}
+{{- end }}
+- name: EMBEDDING_MAX_INPUT_BYTES
+  {{- if or (kindIs "invalid" $cfg.maxInputBytes) (and (kindIs "string" $cfg.maxInputBytes) (eq $cfg.maxInputBytes "")) }}
+  {{- fail "hub.embeddingClient.maxInputBytes is required" }}
+  {{- end }}
+  {{- $inputCap := toString $cfg.maxInputBytes }}
+  {{- if or (not (regexMatch "^(0|[1-9][0-9]*)$" $inputCap)) (and (ne $inputCap "0") (lt (int $inputCap) 4)) }}
+  {{- fail "hub.embeddingClient.maxInputBytes must be 0 or at least 4 bytes" }}
+  {{- end }}
+  value: {{ $cfg.maxInputBytes | quote }}
+- name: EMBEDDING_NORMALIZE
+  value: {{ $cfg.normalize | quote }}
+{{- end -}}
+{{- end }}
+
+{{- define "formbricks.hubEmbeddingClientEnvManaged" -}}
+{{- $cfg := .root.Values.hub.embeddingClient -}}
+{{- $managed := list "EMBEDDING_PROVIDER" "EMBEDDING_MODEL" "EMBEDDING_MAX_INPUT_BYTES" "EMBEDDING_NORMALIZE" -}}
+{{- $base := $cfg.baseUrl -}}
+{{- if .worker -}}
+  {{- $base = default (default $base $cfg.apiBaseUrl) $cfg.workerBaseUrl -}}
+  {{- $managed = concat $managed (list "EMBEDDING_MAX_CONCURRENT" "EMBEDDING_JOB_TIMEOUT_SECONDS" "EMBEDDING_BATCH_SIZE" "EMBEDDING_BATCH_MAX_WAIT_MS" "EMBEDDING_BATCH_MAX_IN_FLIGHT") -}}
+{{- else -}}
+  {{- $base = default $base $cfg.apiBaseUrl -}}
+{{- end -}}
+{{- if $base -}}{{- $managed = append $managed "EMBEDDING_BASE_URL" -}}{{- end -}}
+{{- if $cfg.responseModel -}}{{- $managed = append $managed "EMBEDDING_RESPONSE_MODEL" -}}{{- end -}}
+{{- if eq $cfg.provider "google-gemini" -}}
+  {{- $managed = concat $managed (list "EMBEDDING_GOOGLE_CLOUD_PROJECT" "EMBEDDING_GOOGLE_CLOUD_LOCATION") -}}
+{{- else -}}
+  {{- $managed = append $managed "EMBEDDING_PROVIDER_API_KEY" -}}
+{{- end -}}
+{{- if has .key $managed -}}
 true
 {{- end -}}
 {{- end }}

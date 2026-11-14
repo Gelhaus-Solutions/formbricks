@@ -97,16 +97,19 @@ export const getMembershipRoleByEmail = async (
 };
 
 /**
- * The role clamp of the management API: an owner may assign any role, a manager may only assign the
- * member role and may not change the role of an existing owner (no demoting owners). Anyone else,
- * including an unresolved creator, may not assign a role at all. This prevents privilege escalation
- * (e.g. a manager promoting a user to owner) through the management API.
+ * The role clamp of the management API: an owner gives Member, Manager or Owner, a manager gives Member
+ * and never touches an owner, and anyone else, including an unresolved creator, gives nothing. The
+ * Billing role went with Cloud billing (GFORMS-7) and the Dashboard viewer is never given here
+ * (ADR-0025). This prevents privilege escalation (e.g. a manager promoting a user to owner) through the
+ * management API.
  */
-export const canAssignOrganizationRole = (
+export const mayAssignOrganizationRole = async (
+  _organizationId: string,
   assignerRole: TOrganizationRole | null,
   targetRole: TOrganizationRole,
   targetCurrentRole?: TOrganizationRole | null
-): boolean => {
+): Promise<boolean> => {
+  if (targetRole === OrganizationRole.billing || targetRole === "dashboard_viewer") return false;
   if (assignerRole === OrganizationRole.owner) return true;
   if (targetCurrentRole === OrganizationRole.owner) return false;
   if (assignerRole === OrganizationRole.manager) return targetRole === OrganizationRole.member;

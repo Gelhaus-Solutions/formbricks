@@ -210,6 +210,64 @@ async function seedSurvey(
 }
 
 /**
+ * Typed Embedded Data on the read survey (ENG-6930): a workspace library field it links by key and a
+ * computed field of its own, so `GET /api/v3/surveys/{surveyId}` returns a populated `embeddedFields`
+ * (and the legacy pair derived from it) and the contract checks both entry shapes. The library key is
+ * the one the `linkLibraryField` example of `PATCH /api/v3/surveys/{surveyId}` names, so that example
+ * links a field that exists instead of answering its documented 400.
+ */
+async function seedEmbeddedData(surveyId: string): Promise<void> {
+  const library = {
+    key: "plan_tier",
+    name: "Plan tier",
+    source: "ingested" as const,
+    dataType: "string" as const,
+    defaultValue: "free",
+    locked: true,
+    surveyId: null,
+    workspaceId: SEED_IDS.WORKSPACE,
+  };
+  const local = {
+    key: null,
+    name: "score",
+    source: "computed" as const,
+    dataType: "number" as const,
+    defaultValue: 0,
+    locked: false,
+    surveyId,
+    workspaceId: SEED_IDS.WORKSPACE,
+  };
+
+  await prisma.embeddedData.upsert({
+    where: { id: CONTRACT_IDS.EMBEDDED_DATA_LIBRARY },
+    update: library,
+    create: { id: CONTRACT_IDS.EMBEDDED_DATA_LIBRARY, ...library },
+  });
+  await prisma.embeddedData.upsert({
+    where: { id: CONTRACT_IDS.EMBEDDED_DATA_LOCAL },
+    update: local,
+    create: { id: CONTRACT_IDS.EMBEDDED_DATA_LOCAL, ...local },
+  });
+
+  const links = [
+    { embeddedDataId: CONTRACT_IDS.EMBEDDED_DATA_LIBRARY, storageKey: "plan_tier", order: 0 },
+    // A computed field's storage key is its legacy variable id, so it has to be a cuid2.
+    {
+      embeddedDataId: CONTRACT_IDS.EMBEDDED_DATA_LOCAL,
+      storageKey: CONTRACT_IDS.EMBEDDED_DATA_LOCAL_KEY,
+      order: 1,
+    },
+  ];
+  for (const link of links) {
+    await prisma.surveyEmbeddedData.upsert({
+      where: { surveyId_embeddedDataId: { surveyId, embeddedDataId: link.embeddedDataId } },
+      update: { storageKey: link.storageKey, order: link.order },
+      create: { surveyId, workspaceId: SEED_IDS.WORKSPACE, ...link },
+    });
+  }
+}
+
+/**
  * Custom CSS on the read survey and the workspace (ENG-3641), so `GET /api/v3/surveys/{surveyId}` and
  * `GET /api/v3/workspaces/{workspaceId}/custom-css` return a populated `customCss` (and `previous`) rather
  * than `null`, and their schemas are validated against real values. Seeded under processor version 0
@@ -400,9 +458,10 @@ async function main(): Promise<void> {
   // Its own response, so marking and restoring cannot change what the read operations return.
   await seedResponse(CONTRACT_IDS.RESPONSE_OUTCOME, CONTRACT_IDS.SURVEY_READ);
   await seedCustomCss(CONTRACT_IDS.SURVEY_READ);
-  await seedSurvey(CONTRACT_IDS.SURVEY_PATCH, "Contract fixture: patch", false);
-  await seedSurvey(CONTRACT_IDS.SURVEY_DELETE, "Contract fixture: delete", false);
-  await seedSurvey(CONTRACT_IDS.SURVEY_ARCHIVE, "Contract fixture: archive", false);
+  await seedEmbeddedData(CONTRACT_IDS.SURVEY_READ);
+  await seedSurvey(CONTRACT_IDS.SURVEY_PATCH, "Contract fixture — patch", false);
+  await seedSurvey(CONTRACT_IDS.SURVEY_DELETE, "Contract fixture — delete", false);
+  await seedSurvey(CONTRACT_IDS.SURVEY_ARCHIVE, "Contract fixture — archive", false);
   await seedSurvey(
     CONTRACT_IDS.SURVEY_BLOCKS_EDIT,
     "Contract fixture: block edit",
@@ -484,6 +543,12 @@ async function main(): Promise<void> {
     },
     operations: {
       getResponseV3: { path: { responseId: CONTRACT_IDS.RESPONSE_READ } },
+      // `filterId` (the read default above) must name one of the request's own `filter[<id>]`, or every
+      // call is the documented 422. The hook replaces `filter` whenever the case carries it, as every
+      // case built from the spec's example does.
+      listDashboardFilterValuesV3: {
+        query: { filter: { [CONTRACT_IDS.DASHBOARD_FILTER]: "equals:FeedbackRecords.sourceType" } },
+      },
       // Real data, so the 200 `{ updated }` body is checked and not only the empty scope-filtered one.
       // The call is idempotent, so the generated `lowQuality` / `null` alternate without drifting.
       batchSetResponsesOutcomeV3: { body: { ids: [CONTRACT_IDS.RESPONSE_OUTCOME] } },

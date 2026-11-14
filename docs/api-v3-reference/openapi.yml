@@ -107,6 +107,11 @@ paths:
         is applied in the query and the cursor, never after the fact: `limit` keeps its meaning and
         `meta.nextCursor` being `null` remains the only end-of-collection signal.
 
+        `view=full` returns each survey's whole document alongside its summary fields, so an export does not
+        need one `GET /api/v3/surveys/{surveyId}` per survey. Pages are not snapshots: a survey created or
+        deleted while you page may be missed or skipped, so a full extraction should page with
+        `sortBy=createdAt` and reconcile on a later run.
+
         Session cookie, `x-api-key`, or a Bearer token.
       tags:
         - V3 Surveys
@@ -126,7 +131,7 @@ paths:
             minimum: 1
             maximum: 250
             default: 20
-          description: Page size (max 250)
+          description: Page size (max 250, or max 50 with `view=full`; above that → **400**)
         - in: query
           name: cursor
           schema:
@@ -216,6 +221,15 @@ paths:
               - name
               - relevance
           description: Sort order. Defaults to `updatedAt`. The `cursor` token is bound to the selected sort order.
+        - in: query
+          name: view
+          schema:
+            type: string
+            enum:
+              - summary
+              - full
+            default: summary
+          description: '`summary` (default) returns `SurveyListItem`s. `full` returns `SurveyFullListItem`s: the summary fields plus the survey document `GET /api/v3/surveys/{surveyId}` returns, in every configured language. With `full`, `limit` is at most 50, `meta.unsupportedSurveyIds` is present, and each request also counts against a separate limit of 30 full pages per minute per user or API key (**429** beyond it). Pagination, filters, sorting and permissions are the same in both views.'
       responses:
         '200':
           description: Surveys retrieved successfully
@@ -239,7 +253,10 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/SurveyListItem'
+                      anyOf:
+                        - $ref: '#/components/schemas/SurveyFullListItem'
+                        - $ref: '#/components/schemas/SurveyListItem'
+                    description: '`SurveyListItem`s, or `SurveyFullListItem`s with `view=full`.'
                   meta:
                     $ref: '#/components/schemas/SurveyListMeta'
         '400':
@@ -485,7 +502,7 @@ paths:
                     $ref: '#/components/schemas/CustomCssWarnings'
         '400':
           description: |
-            Bad Request — the document failed schema validation, i.e. any rule checkable from the request body alone, without consulting stored state. Covers: invalid JSON; unknown or unsupported fields (including `distribution`/`targeting` sent on a `link` survey, which are `app`-only); missing required fields; wrong types or out-of-range values; bad enum values; malformed multilingual maps; and intra-document field-combination rules — notably `displayLimit` is required (must be >= 1) when `displayOption` is `displaySome`. Cross-reference failures that need stored state to detect return **422** instead. Every offending field is itemized in `invalid_params`. Unknown or forbidden fields carry `code: unsupported_field` (e.g. `distribution` on a link survey); omissions carry `code: missing_required_field` (e.g. `displayLimit` when `displayOption` is `displaySome`). Bare type, range, enum, and malformed-locale-map violations report the field `name` with a human-readable `reason` and no machine `code`.
+            Bad Request — the document failed schema validation, i.e. any rule checkable from the request body alone, without consulting stored state. Covers: invalid JSON; unknown or unsupported fields (including `distribution`/`targeting` sent on a `link` survey, which are `app`-only); missing required fields; wrong types or out-of-range values; bad enum values; malformed multilingual maps; and intra-document field-combination rules — notably `displayLimit` is required (must be >= 1) when `displayOption` is `displaySome`. Cross-reference failures that need stored state to detect return **422** instead. Every offending field is itemized in `invalid_params`. Unknown or forbidden fields carry `code: unsupported_field` (e.g. `distribution` on a link survey); omissions carry `code: missing_required_field` (e.g. `displayLimit` when `displayOption` is `displaySome`). Bare type, range, enum, and malformed-locale-map violations report the field `name` with a human-readable `reason` and no machine `code`. Typed Embedded Data that cannot be taken as sent is refused here too, naming each path in `invalid_params`: `embeddedFields` and the legacy `variables` / `hiddenFields` sent together but describing different fields, an `embeddedFields` entry linking a `key` the workspace library does not have, or a field the legacy format could not store.
           content:
             application/problem+json:
               schema:
@@ -1035,8 +1052,19 @@ paths:
                               required: true
                       endings: []
                       hiddenFields:
-                        enabled: false
+                        enabled: true
+                        fieldIds:
+                          - plan_tier
                       variables: []
+                      embeddedFields:
+                        - storageKey: plan_tier
+                          key: plan_tier
+                          name: Plan tier
+                          source: ingested
+                          dataType: string
+                          defaultValue: free
+                          locked: true
+                      startLogic: []
                       customCss: null
                 filtered:
                   summary: Language-filtered projection with ?lang=de-DE
@@ -1085,6 +1113,8 @@ paths:
                       hiddenFields:
                         enabled: false
                       variables: []
+                      embeddedFields: []
+                      startLogic: []
                       customCss: null
         '400':
           description: Invalid survey id, unsupported query parameter, unknown language, or unsupported legacy survey shape
@@ -1142,6 +1172,14 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchSurveyRequest'
             examples:
+              linkLibraryField:
+                summary: Set the survey's Embedded Data, linking a library field by key
+                value:
+                  embeddedFields:
+                    - key: plan_tier
+                    - name: region
+                      source: ingested
+                      defaultValue: emea
               renameSurvey:
                 summary: Rename a survey
                 value:
@@ -1204,7 +1242,7 @@ paths:
                     $ref: '#/components/schemas/CustomCssWarnings'
         '400':
           description: |
-            Bad Request — the patch failed schema validation, i.e. any rule checkable from the request body alone, without consulting stored state. Covers: malformed JSON; an unsupported query parameter; unknown or unsupported fields (`distribution`/`targeting` are `app`-only — sending them when patching a `link` survey is rejected); wrong types or out-of-range values; bad enum values; malformed multilingual maps; and intra-document field-combination rules — notably `displayLimit` is required (must be >= 1) when `displayOption` is `displaySome`. Cross-reference failures that need stored state to detect return **422** instead. Every offending field is itemized in `invalid_params`. Unknown, forbidden, immutable, or wrongly-combined fields carry `code: unsupported_field` (e.g. `distribution`/`targeting` on a link survey; a changed server-owned field such as `type` is **422** `read_only_field`, not this); omissions carry `code: missing_required_field`. Bare type, range, enum, and malformed-locale-map violations report the field `name` with a human-readable `reason` and no machine `code`.
+            Bad Request — the patch failed schema validation, i.e. any rule checkable from the request body alone, without consulting stored state. Covers: malformed JSON; an unsupported query parameter; unknown or unsupported fields (`distribution`/`targeting` are `app`-only — sending them when patching a `link` survey is rejected); wrong types or out-of-range values; bad enum values; malformed multilingual maps; and intra-document field-combination rules — notably `displayLimit` is required (must be >= 1) when `displayOption` is `displaySome`. Cross-reference failures that need stored state to detect return **422** instead. Every offending field is itemized in `invalid_params`. Unknown, forbidden, immutable, or wrongly-combined fields carry `code: unsupported_field` (e.g. `distribution`/`targeting` on a link survey; a changed server-owned field such as `type` is **422** `read_only_field`, not this); omissions carry `code: missing_required_field`. Bare type, range, enum, and malformed-locale-map violations report the field `name` with a human-readable `reason` and no machine `code`. Typed Embedded Data that cannot be taken as sent is refused here too, naming each path in `invalid_params`: `embeddedFields` and the legacy `variables` / `hiddenFields` sent together but describing different fields, an `embeddedFields` entry linking a `key` the workspace library does not have, or a field the legacy format could not store.
           content:
             application/problem+json:
               schema:
@@ -2138,6 +2176,7 @@ paths:
                         endingId: cmpthankyou00000000000000
                         language: de
                         outcome: null
+                        notShown: null
                         durationSeconds: 107.9
                         resolution:
                           labelPolicy: currentSurveyDefinition
@@ -2819,6 +2858,7 @@ paths:
                       endingId: cmpthankyou00000000000000
                       language: de
                       outcome: null
+                      notShown: null
                       durationSeconds: 8.2
                       resolution:
                         labelPolicy: currentSurveyDefinition
@@ -2960,6 +3000,7 @@ paths:
                       endingId: null
                       language: null
                       outcome: null
+                      notShown: null
                       resolution:
                         labelPolicy: currentSurveyDefinition
                         labelsLanguage: null
@@ -7170,7 +7211,106 @@ components:
           type: number
           description: Default numeric value.
       additionalProperties: false
-    CreateSurveyTextVariable:
+    SurveyVisibilityChangeResult:
+      allOf:
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: string
+              description: Survey identifier.
+        - $ref: '#/components/schemas/SurveyVisibilityFields'
+        - type: object
+          required:
+            - version
+            - pending
+            - changedAt
+            - changedBy
+          properties:
+            version:
+              type: integer
+              minimum: 0
+              description: The survey's visibility version after this call. Unchanged by a no-op.
+            pending:
+              anyOf:
+                - $ref: '#/components/schemas/SurveyVisibility'
+                - type: 'null'
+              description: '`"restricted"` when the restriction is enforced but the graph is still catching up (the outbox will finish it); `null` otherwise. A grant never returns 200 with a pending value.'
+            changedAt:
+              type:
+                - string
+                - 'null'
+              format: date-time
+              description: When the current visibility was last set through this endpoint. `null` when it never was — the survey still has its creation visibility, which is the case for a no-op on a survey nobody has touched. Unchanged by a no-op otherwise.
+            changedBy:
+              anyOf:
+                - $ref: '#/components/schemas/SurveyVisibilityActor'
+                - type: 'null'
+              description: Who last set it. `null` exactly when `changedAt` is `null`.
+    VisibilityBlockedProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required:
+            - details
+          properties:
+            details:
+              type: object
+              required:
+                - blockers
+              properties:
+                blockers:
+                  type: array
+                  minItems: 1
+                  items:
+                    $ref: '#/components/schemas/SurveyVisibilityBlocker'
+                  description: The same list `GET …/visibility` returns as `blockers[]`.
+    ResponseNotShown:
+      type: object
+      additionalProperties: false
+      description: |
+        What the respondent was **not shown**: the parts of the survey a show-if, a hidden option or a question left with no options kept from them, by stable ids. The survey records it while the respondent answers, so it says what was decided at answer time; editing a show-if later never changes it. Anything not listed was shown, or never reached.
+
+        An answer to an item that ended up hidden (after the respondent went back or changed an earlier answer) is removed from the response, so a listed element has no answer in `answers[]`. Read the base of a question as "everyone who reached it, minus those it lists".
+      properties:
+        blocks:
+          type: array
+          items:
+            type: string
+          description: 'Blocks the survey passed over: their show-if failed, or every question on them was hidden. Every question of a listed block was not shown.'
+        elements:
+          type: array
+          items:
+            type: string
+          description: Questions hidden by their show-if, or skipped because none of their options were left.
+        options:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Question id → the ids of its options that were not shown.
+        rows:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Matrix question id → the ids of its rows that were not shown.
+        columns:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Matrix question id → the ids of its columns that were not shown.
+      example:
+        blocks:
+          - k2v8m1q0y3d7h5s9t4n6p0ra
+        elements:
+          - apple_reason
+    ResponseResolution:
       type: object
       required:
         - name
@@ -7866,56 +8006,22 @@ components:
         showLanguageSwitch:
           type:
             - boolean
-            - 'null'
-          default: null
-          description: Show respondents a language switch on multi-language surveys. `null` and `false` both mean off.
-        autoSelectLanguage:
-          type:
-            - boolean
-            - 'null'
-          default: null
-          description: Open link and app surveys in the respondent's browser language when it matches an enabled survey language; otherwise the default language is used. `null` and `false` both mean off.
-        welcomeCard:
-          allOf:
-            - $ref: '#/components/schemas/SurveyWelcomeCard'
-          default:
-            enabled: false
-        blocks:
-          type: array
-          minItems: 1
-          maxItems: 1000
-          items:
-            $ref: '#/components/schemas/CreateSurveyBlock'
-        endings:
-          type: array
-          default: []
-          maxItems: 100
-          items:
-            $ref: '#/components/schemas/SurveyEnding'
-        hiddenFields:
-          allOf:
-            - $ref: '#/components/schemas/SurveyHiddenFields'
-          default:
-            enabled: false
-        variables:
-          type: array
-          default: []
-          maxItems: 100
-          items:
-            $ref: '#/components/schemas/CreateSurveyVariable'
-        distribution:
-          allOf:
-            - $ref: '#/components/schemas/SurveyDistribution'
-          description: App-survey runtime/display settings. Only valid when `type` is `app`.
-        targeting:
-          allOf:
-            - $ref: '#/components/schemas/SurveyTargeting'
-          description: App-survey contact targeting. Only valid when `type` is `app`.
-        customCss:
-          anyOf:
-            - $ref: '#/components/schemas/CustomCssInput'
-            - type: 'null'
-          description: Optional survey custom CSS source. Processed by the server; constructs it removes come back as top-level `warnings` on the 201. CSS that cannot be processed is a 422 with `details.errors`. Processing counts against the custom CSS budget of 60 per minute per user or API key, shared with custom CSS validation; beyond it the create is a 429 and nothing is written.
+            - date
+          description: 'Declared type of `value`, so a consumer need not infer it. `computed` entries are `string`, `number` or `date`: a computed date (set by a Set value formula such as `now()`) holds an ISO 8601 UTC string.'
+        label:
+          type: string
+          description: Human-readable name for the key, in the resolved language where one exists.
+        value:
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+          description: |-
+            The value, matching `type`. `date` values are ISO-8601 strings.
+
+            Always a scalar. A legacy row can hold an array or an object under a declared field's key — the ingest contract refuses those now, but older rows have them — and such a value resolves to nothing rather than being coerced, so the entry is omitted here and reported in `unresolved[]` with the bytes intact. Nothing is silently dropped, and no `type` would describe an array anyway.
+
+            There is no `null` member: a declared key that resolves to nothing is **omitted** from the collection rather than carried with a null. So `embeddedData[]` enumerates what the response actually holds, not what the survey declares — a survey with twelve declared fields and two filled in yields two entries. A field with a default value is never unset, since the default is the fallback before the key is considered missing.
       additionalProperties: false
     SurveyLanguage:
       type: object
@@ -8020,9 +8126,21 @@ components:
         Text variable. Used by `calculate` logic actions with text operators such as `assign` or `concat`.
       required:
         - id
-        - name
-        - type
-        - value
+        - surveyId
+        - surveyName
+        - workspaceId
+        - createdAt
+        - updatedAt
+        - finished
+        - endingId
+        - language
+        - outcome
+        - notShown
+        - resolution
+        - answers
+        - embeddedData
+        - unresolved
+        - tags
       properties:
         id:
           type: string
@@ -9949,9 +10067,14 @@ components:
         - `meta.ipAddress`, and the derived `userAgent` / `country` / `device` family, are not accepted;
           see `ResponseMetaInput` for what is.
       required:
-        - surveyId
-        - finished
-        - data
+        - id
+        - workspaceId
+        - name
+        - creator
+        - filters
+        - widgets
+        - createdAt
+        - updatedAt
       properties:
         surveyId:
           type: string

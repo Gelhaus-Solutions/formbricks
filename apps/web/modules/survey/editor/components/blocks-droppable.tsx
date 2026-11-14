@@ -2,7 +2,6 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { type Dispatch, type SetStateAction, useMemo } from "react";
 import { TI18nString } from "@formbricks/types/i18n";
-import { TSurveyBlockLogic } from "@formbricks/types/surveys/blocks";
 import { TSurveyElement } from "@formbricks/types/surveys/elements";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { TUserLocale } from "@formbricks/types/user";
@@ -16,8 +15,6 @@ interface BlocksDroppableProps {
   workspace: TWorkspaceWithoutCustomCss;
   moveElement: (elementIdx: number, up: boolean) => void;
   updateElement: (elementIdx: number, updatedAttributes: any) => void;
-  updateBlockLogic: (elementIdx: number, logic: TSurveyBlockLogic[]) => void;
-  updateBlockLogicFallback: (elementIdx: number, logicFallback: string | undefined) => void;
   updateBlockName: (blockIdx: number, name: string) => void;
   updateBlockButtonLabel: (
     blockIndex: number,
@@ -32,8 +29,6 @@ interface BlocksDroppableProps {
   addElement: (element: any, index?: number) => void;
   isCxMode: boolean;
   locale: TUserLocale;
-  responseCount: number;
-  onAlertTrigger: () => void;
   isStorageConfigured: boolean;
   isExternalUrlsAllowed: boolean;
   duplicateBlock: (blockId: string) => void;
@@ -58,15 +53,11 @@ export const BlocksDroppable = ({
   workspace,
   setActiveElementId,
   updateElement,
-  updateBlockLogic,
-  updateBlockLogicFallback,
   updateBlockName,
   updateBlockButtonLabel,
   addElement,
   isCxMode,
   locale,
-  responseCount,
-  onAlertTrigger,
   isStorageConfigured = true,
   isExternalUrlsAllowed,
   duplicateBlock,
@@ -104,8 +95,6 @@ export const BlocksDroppable = ({
               blockIdx={blockIdx}
               moveElement={moveElement}
               updateElement={updateElement}
-              updateBlockLogic={updateBlockLogic}
-              updateBlockLogicFallback={updateBlockLogicFallback}
               updateBlockName={updateBlockName}
               updateBlockButtonLabel={updateBlockButtonLabel}
               duplicateElement={duplicateElement}
@@ -118,8 +107,6 @@ export const BlocksDroppable = ({
               addElement={addElement}
               isCxMode={isCxMode}
               locale={locale}
-              responseCount={responseCount}
-              onAlertTrigger={onAlertTrigger}
               isStorageConfigured={isStorageConfigured}
               isExternalUrlsAllowed={isExternalUrlsAllowed}
               duplicateBlock={duplicateBlock}

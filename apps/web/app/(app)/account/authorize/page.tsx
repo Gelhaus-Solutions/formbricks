@@ -1,7 +1,10 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { prisma } from "@formbricks/database";
+import { isOnlyDashboardViewer } from "@/lib/membership/dashboard-viewer";
 import { getTranslate } from "@/lingodotdev/server";
 import { auth } from "@/modules/auth/lib/auth";
+import { trimScopesForDashboardViewer } from "@/modules/auth/lib/dashboard-viewer-oauth-scopes";
 import {
   type TOAuthPublicClient,
   getHostFromUrl,
@@ -76,7 +79,13 @@ const Page = async ({ searchParams }: Readonly<{ searchParams: Promise<TSearchPa
   const scope = getSearchParam(resolvedSearchParams, "scope");
   const redirectUri = getSearchParam(resolvedSearchParams, "redirect_uri");
   const redirectHost = getHostFromUrl(redirectUri);
-  const requestedScopes = getRequestedScopes(scope);
+  const isViewer = session?.user ? await isOnlyDashboardViewer(prisma, session.user.id) : false;
+  // A Dashboard viewer can grant dashboards:read and nothing else (ENG-6889); the consent endpoint
+  // enforces the same subset, so the page only shows what will actually be granted.
+  const requestedScopes = isViewer
+    ? trimScopesForDashboardViewer(getRequestedScopes(scope))
+    : getRequestedScopes(scope);
+  const isViewerGrantEmpty = isViewer && !requestedScopes.includes("dashboards:read");
   const client = clientId ? await getPublicOAuthClient(clientId) : null;
 
   if (!clientId || !client) {
@@ -151,8 +160,22 @@ const Page = async ({ searchParams }: Readonly<{ searchParams: Promise<TSearchPa
           </Alert>
         )}
 
+        {isViewer && (
+          <Alert variant={isViewerGrantEmpty ? "error" : "info"} className="mt-6" role="status">
+            <AlertTitle>{t("auth.oauth.dashboard_viewer_scope_title")}</AlertTitle>
+            <AlertDescription>
+              {isViewerGrantEmpty
+                ? t("auth.oauth.dashboard_viewer_no_dashboard_scope")
+                : t("auth.oauth.dashboard_viewer_scope_description")}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="mt-6">
-          <OAuthConsentActions />
+          <OAuthConsentActions
+            grantedScope={isViewer ? requestedScopes.join(" ") : undefined}
+            isAllowDisabled={isViewerGrantEmpty}
+          />
         </div>
       </div>
     </div>

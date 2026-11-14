@@ -67,6 +67,7 @@
     "glob": "catalog:"
   },
   "devDependencies": {
+    "@formatjs/icu-messageformat-parser": "2.11.4",
     "@formbricks/config-eslint": "workspace:*",
     "@formbricks/config-typescript": "workspace:*",
     "@types/node": "catalog:",

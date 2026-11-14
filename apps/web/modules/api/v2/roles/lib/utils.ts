@@ -7,8 +7,9 @@ export const getRoles = (): Result<{ data: string[] }, ApiErrorResponseV2> => {
     const roles = Object.values(OrganizationRole);
 
     // The billing role went with Cloud billing (GFORMS-7): it stays in the enum for existing members but
-    // can no longer be given, so the API does not offer it.
-    const filteredRoles = roles.filter((role) => role !== "billing");
+    // can no longer be given, so the API does not offer it. Nor the Dashboard viewer: this API cannot
+    // assign it (ADR-0025).
+    const filteredRoles = roles.filter((role) => role !== "billing" && role !== "dashboard_viewer");
     return ok({
       data: filteredRoles,
     });

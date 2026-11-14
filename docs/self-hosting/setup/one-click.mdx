@@ -96,9 +96,7 @@ before updating apt and prints the path to its backup.
 
 ## Update
 
-To update Formbricks for a minor or patch release, first go to the directory that contains your
-`formbricks/` folder. Download the current stable updater there, replacing any older `formbricks.sh`, and
-then run it:
+<span id="add-spicedb-to-an-existing-one-click-installation" />
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/formbricks/formbricks/stable/docker/formbricks.sh \
@@ -207,7 +205,7 @@ New installations cap request bodies on `/api/auth/*` at 1 MiB in Traefik. An ov
 OAuth endpoint is refused by Traefik, and a slow one is read in full by Traefik first, so it does not tie up
 Formbricks while it arrives. No legitimate request to these routes comes close to that size. The cap applies to
 requests that go through Traefik, which is every outside request once port `3000` is published on `127.0.0.1` only
-(see [Update](#update)). The update command does not add the cap to an existing installation, so add it yourself
+(see [one-click update details](/self-hosting/upgrade/one-click-details)). The update command does not add the cap to an existing installation, so add it yourself
 if you want it.
 
 <Warning>
@@ -391,3 +389,7 @@ If you encounter any issues, consider the following steps:
   `./formbricks.sh logs` for the whole stack.
 
 If you have any questions or require help, feel free to reach out to us on [**GitHub Discussions**](https://github.com/formbricks/formbricks/discussions). 😃
+
+## Verify the installation
+
+Run the [deployment check](/self-hosting/setup/deployment-check) in a dedicated workspace before collecting real responses.

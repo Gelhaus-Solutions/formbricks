@@ -16,3 +16,20 @@ export const reduceQuotaLimits = async (
   _quotaIds: string[],
   _tx?: Prisma.TransactionClient
 ): Promise<void> => {};
+
+/** Whether a survey's blocks hold a matrix, the only element a quota condition can track by position. */
+export const hasMatrixElement = (blocks: readonly unknown[]): boolean =>
+  blocks.some(
+    (block) =>
+      typeof block === "object" &&
+      block !== null &&
+      Array.isArray((block as { elements?: unknown }).elements) &&
+      (block as { elements: { type?: unknown }[] }).elements.some((element) => element?.type === "matrix")
+  );
+
+/** Makes the quotas' matrix conditions follow a matrix row or column reorder (ENG-6934). */
+export const syncQuotaMatrixConditions = async (
+  _tx: Prisma.TransactionClient,
+  _surveyId: string,
+  _blocks: readonly unknown[]
+): Promise<void> => {};

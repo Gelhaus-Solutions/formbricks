@@ -1,7 +1,6 @@
 ---
 title: "Migrating Surveys"
-description:
-  "Copy surveys and their responses from one Formbricks instance to another with the management API."
+description: "Move surveys from one Formbricks instance to another as Formbricks files: export each survey, import it on the other side, and finish what the file leaves out."
 icon: "right-left"
 ---
 
@@ -15,15 +14,16 @@ can be on different versions, different databases, and different object storage.
   (users, organizations, workspaces, contacts, displays, tags, file uploads, webhooks), then a
   Postgres dump plus a copy of your S3 bucket is faster, complete, and keeps every ID intact:
 
-  ```bash
-  pg_dump "$OLD_DB_URL" -Fc -f formbricks.dump
-  pg_restore -d "$NEW_DB_URL" --no-owner formbricks.dump
-  ```
+| You want to move                                      | Use                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| Some surveys, without their responses                 | Formbricks files (this page)                                                |
+| Some surveys, with their responses                    | The management API scripts in [Migrating Survey Responses](/self-hosting/advanced/migrating-survey-responses) |
+| A whole instance: users, organizations, everything    | [Backup and restore](/self-hosting/operate/backup-restore)                  |
 
-  Restore into an instance running the **same Formbricks version** as the source, then upgrade it
-  following the [migration guide](/self-hosting/advanced/migration). The API route below exists for
-  the cases a dump cannot serve: you only want some surveys, the target already has data you must
-  keep, or you do not own the database on one of the two ends.
+<Note>
+  Moving or recovering a whole instance? Use [backup and restore](/self-hosting/operate/backup-restore).
+  Keep databases, permission state, storage, secrets and configuration together. A PostgreSQL dump and
+  an S3 copy alone are not a complete recovery plan.
 </Note>
 
 ## What carries over
@@ -43,7 +43,7 @@ is enough to keep every answer readable and correctly dated, but it is not a byt
   with [one caveat](#time-to-complete-needs-_total-stripped))
 - Each response's `createdAt` and `updatedAt`, so your charts keep their shape
 
-**Not carried over**
+It does not carry:
 
 - **The survey ID.** Every survey gets a fresh one, so every link URL changes (see
   [Finish by hand](#step-4-finish-by-hand))
@@ -86,15 +86,14 @@ is enough to keep every answer readable and correctly dated, but it is not a byt
     (`GET /api/v2/me` also lists them, but only for keys that additionally have Organization read
     access.)
   </Step>
-  <Step title="Install curl and jq">
-    The scripts below use nothing else. `jq` 1.6 or newer.
+  <Step title="Check your access">
+    On the source, you need to see the surveys; read-only access is enough. On the target, you need write
+    access to the workspace you import into.
   </Step>
-  <Step title="Plan around the rate limit">
-    Management API requests are limited to **100 per minute per API key**. Every survey and every
-    single response is one request, so 5,000 responses take at least 50 minutes. The scripts pace
-    themselves with a `THROTTLE` sleep and retry on `429`. If you own the target instance and want it
-    to go faster, set [`RATE_LIMITING_DISABLED=1`](/self-hosting/configuration/rate-limiting#disabling-rate-limiting)
-    there for the duration of the import and restart it, then turn it back on.
+  <Step title="Allow large uploads on the target">
+    If a reverse proxy sits in front of the target, let request bodies of up to 16 MB through to
+    `/api/internal/surveys/`. See [Self-hosting: proxy body
+    size](/surveys/import-export/overview#self-hosting-proxy-body-size).
   </Step>
 </Steps>
 
@@ -526,7 +525,7 @@ update links, QR codes, embed snippets and SDK calls that referenced the old IDs
   is missing.
 </Warning>
 
-## Step 3: Verify
+## Step 2: Import into the target
 
 Compare the exported count against what landed, survey by survey.
 
@@ -763,8 +762,7 @@ Response counts, completion counts and every per-question summary are correct.
 
 ### Response tags and contacts
 
-Response tags are readable via `GET /api/v1/management/responses` but no create endpoint accepts them,
-so they cannot be restored through the API.
+The survey and everything it needs are created together, or not at all. If an import fails, nothing is left behind, and you can fix the problem and try again.
 
 Contacts are workspace-scoped and are not migrated by these scripts. Responses that were tied to a
 contact are imported unlinked. `fb-import.sh` passes the source contact's `userId` through as the
@@ -772,14 +770,24 @@ response's `userId`: if a contact with that `userId` already exists in the targe
 response is attached to it and the target's own contact attributes are copied onto the response. If no
 such contact exists, the response is created anonymously; this is silent, not an error.
 
-### Everything outside surveys and responses
+- **Work through the import report** from the top.
+- **Rename the survey** if you don't want the "(imported)" suffix, then publish it.
+- **Re-point everything that used the old survey ID.** A link survey's URL is
+  `https://your-instance.com/s/<surveyId>`, so every shared link, QR code, email campaign and embed snippet
+  needs the new one. Old links keep working only while the source instance runs.
+- **Rebuild what the file leaves out:** styling, survey settings, follow-ups and quotas.
+- **Replace images and videos** if the source instance is going away.
+- **Check app surveys.** No-code actions the import created still match the source's pages; update them if
+  the target app lives on other URLs. Rebuild any targeting filters the report says were removed before
+  you publish: a live app survey without targeting is shown to everyone. Then point `Formbricks.setup()` at
+  the target: both `workspaceId` and `appUrl` still name the source.
 
 Users, teams, organization settings, contacts and their attributes, segments, webhooks, integrations,
 API keys, workflows and dashboards are out of scope here. Contact-attribute keys have their own
 management endpoint (`/api/v2/management/contact-attribute-keys`) if you need them; the rest is a
 `pg_dump` job.
 
-## Troubleshooting
+**Update** only works in the workspace a survey lives in. The survey you imported has a new ID on the target, so a file exported again from the source doesn't match it: importing that file creates another copy.
 
 | Response                                                                          | Cause                                                                       | Fix                                                                        |
 | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------- |

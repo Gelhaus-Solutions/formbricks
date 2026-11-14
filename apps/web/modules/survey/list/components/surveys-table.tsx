@@ -197,7 +197,6 @@ const getSurveyColumns = ({
         <SurveyDropDownMenu
           survey={row.original}
           publicDomain={publicDomain}
-          disabled={rowStates.get(row.original.id)?.isDropdownDisabled}
           isSurveyCreationDeletionDisabled={isReadOnly}
           isReadOnly={isReadOnly}
           deleteSurvey={deleteSurvey}

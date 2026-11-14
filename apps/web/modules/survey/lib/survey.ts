@@ -34,6 +34,7 @@ export const selectSurvey = {
   delay: true,
   displayPercentage: true,
   showConditions: true,
+  startLogic: true,
   autoComplete: true,
   publishOn: true,
   closeOn: true,
