@@ -1,4 +1,4 @@
-import { Output, asSchema, generateText } from "ai";
+import { NoObjectGeneratedError, Output, asSchema, generateText } from "ai";
 import { AIOutputTokenLimitError } from "./errors";
 import { getAiModel } from "./provider";
 import { getOpenAICompatibleProviderName } from "./providers/openai-compatible";
@@ -108,7 +108,21 @@ export const generateObject = async <T = unknown>(
     }),
   } as Parameters<typeof generateText>[0];
 
-  const result = await generateText(request);
+  let result: Awaited<ReturnType<typeof generateText>>;
+  try {
+    result = await generateText(request);
+  } catch (error) {
+    // Newer AI SDK releases parse the object inside generateText and throw NoObjectGeneratedError there
+    // when the generation stopped at the output limit; report it as the limit, as below.
+    if (NoObjectGeneratedError.isInstance(error) && error.finishReason === "length") {
+      throw new AIOutputTokenLimitError({
+        maxOutputTokens: textOptions.maxOutputTokens,
+        outputTokens: error.usage?.outputTokens,
+        reasoningTokens: error.usage?.outputTokenDetails.reasoningTokens,
+      });
+    }
+    throw error;
+  }
 
   // With `output: Output.object(...)`, the AI SDK only parses `result.output` when the generation
   // finished with "stop"; on "length" the getter throws a bare NoOutputGeneratedError. Throw a
