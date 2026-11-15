@@ -503,7 +503,6 @@ describe("Survey flow wiring", () => {
         workspaceId="ws1234567890123456789012"
         survey={survey}
         styling={{} as any}
-        isBrandingEnabled={false}
         languageCode="en"
         offlineSupport
         isSpamProtectionEnabled={props.isSpamProtectionEnabled ?? false}
