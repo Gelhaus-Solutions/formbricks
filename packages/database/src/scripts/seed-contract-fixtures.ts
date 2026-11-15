@@ -54,6 +54,9 @@ const CONTRACT_IDS = {
   ACTION_CLASS_READ: "clctactionclassread00001",
   RESPONSE_READ: "clctresponseread00000001",
   RESPONSE_OUTCOME: "clctresponseoutcome00001",
+  EMBEDDED_DATA_LIBRARY: "clctembeddeddatalib00001",
+  EMBEDDED_DATA_LOCAL: "clctembeddeddatalocal001",
+  EMBEDDED_DATA_LOCAL_KEY: "clctembeddeddatascore001",
   ATTRIBUTE_KEY_PLAN: "clctattributekeyplan0001",
   CONTACT_READ: "clctcontactread000000001",
   SEGMENT_READ: "clctsegmentread000000001",
@@ -543,12 +546,6 @@ async function main(): Promise<void> {
     },
     operations: {
       getResponseV3: { path: { responseId: CONTRACT_IDS.RESPONSE_READ } },
-      // `filterId` (the read default above) must name one of the request's own `filter[<id>]`, or every
-      // call is the documented 422. The hook replaces `filter` whenever the case carries it, as every
-      // case built from the spec's example does.
-      listDashboardFilterValuesV3: {
-        query: { filter: { [CONTRACT_IDS.DASHBOARD_FILTER]: "equals:FeedbackRecords.sourceType" } },
-      },
       // Real data, so the 200 `{ updated }` body is checked and not only the empty scope-filtered one.
       // The call is idempotent, so the generated `lowQuality` / `null` alternate without drifting.
       batchSetResponsesOutcomeV3: { body: { ids: [CONTRACT_IDS.RESPONSE_OUTCOME] } },
