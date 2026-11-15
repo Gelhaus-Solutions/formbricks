@@ -20,7 +20,7 @@ Compared with the upstream `cubejs/cube` image, it leaves out:
 
 ## Tag
 
-Every published image gets an immutable tag `<Cube version>-<revision>`, for example `1.8.20-1`, and moves
+Every published image gets an immutable tag `<Cube version>-<revision>`, for example `1.8.22-1`, and moves
 `latest`. The Cube version is the `@cubejs-backend/server` version pinned in `package.json`; the revision is
 the number in `REVISION`. [`image-tag.sh`](image-tag.sh) prints the current tag.
 

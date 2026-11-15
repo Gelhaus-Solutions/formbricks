@@ -369,7 +369,7 @@ services:
   # Playground) runs its refresh keys on an embedded Cube Store, which ghcr.io/gelhaus-solutions/gforms-cube leaves
   # out. cube.js refuses to start without CUBEJS_API_SECRET.
   cube:
-    image: cubejs/cube:v1.8.20
+    image: cubejs/cube:v1.8.22
     env_file:
       - path: apps/web/.env
         required: false
