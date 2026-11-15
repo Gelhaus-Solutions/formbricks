@@ -1,10 +1,11 @@
 import { type Browser, type Locator, type Page, expect } from "@playwright/test";
 import { prisma } from "@formbricks/database";
+import { isGFormsFeatureEnabled } from "@/modules/features/lib/flags";
 import { type UsersFixture, login } from "./fixtures/users";
 import { test } from "./lib/fixtures";
 
 // ENG-3395: restricted surveys, end to end. Relies on the survey readiness marker, which the E2E job
-// sets before the suite runs (`e2e.yml`, `authzed:backfill --scope=survey --apply --mark-ready`) — the
+// sets before the suite runs (`e2e.yml`, `authzed:backfill --scope=survey --apply --mark-ready`): the
 // state production runs in. Every other spec activates through `activateSurvey`, which answers the
 // same "Who can view this survey in your workspace?" dialog with "Visible to {workspace}"; this one keeps it restricted.
 
@@ -25,7 +26,7 @@ const surveyRow = (page: Page, surveyName: string): Locator =>
     .filter({ has: page.getByText(surveyName, { exact: true }) });
 
 // A second member of the owner's organization who reaches the workspace through a readWrite team
-// grant — the role that sees every workspace-visible survey and no restricted one (setup as in
+// grant: the role that sees every workspace-visible survey and no restricted one (setup as in
 // billing-role-access.spec.ts).
 const addTeamMember = async (users: UsersFixture, organizationId: string, workspaceId: string) => {
   const member = await users.create({ withoutWorkspace: true });
@@ -87,6 +88,8 @@ const createSurveyAsOwner = async (page: Page, workspaceId: string, name: string
 };
 
 test.describe("Restricted surveys", () => {
+  // GForms keeps access control off until GFORMS-12, so no survey starts restricted.
+  test.skip(!isGFormsFeatureEnabled("accessControl"), "access control is off (GFORMS-12)");
   test("a restricted survey stays with its owner until it is made visible to the workspace", async ({
     page,
     users,
