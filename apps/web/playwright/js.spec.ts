@@ -137,7 +137,7 @@ test.describe("JS Package Test", async () => {
       };
       const surveyCustomCss = data.surveys.find((survey) => survey.id === surveyId)?.customCss;
 
-      // Compiled `{ light?, dark? }` only — no source, no processor internals — and not repeated in the
+      // Compiled `{ light?, dark? }` only (no source, no processor internals), and not repeated in the
       // legacy `project` alias.
       expect(Object.keys(data.workspace.customCss ?? {})).toEqual(["light"]);
       expect(data.workspace.customCss?.light).toContain("fb-workspace");
@@ -172,10 +172,9 @@ test.describe("JS Package Test", async () => {
 
     // Fill the survey
     await page.getByRole("button", { name: "Happy to help!" }).click();
+    // GForms starts new surveys with auto-progress on: a single choice moves on by itself.
     await page.locator("#questionCard-1 label").filter({ hasText: "Somewhat disappointed" }).click();
-    await page.locator("#questionCard-1").getByRole("button", { name: "Next" }).click();
     await page.locator("#questionCard-2 label").filter({ hasText: "Founder" }).click();
-    await page.locator("#questionCard-2").getByRole("button", { name: "Next" }).click();
     await page
       .locator("#questionCard-3")
       .getByRole("textbox")
@@ -211,7 +210,7 @@ test.describe("JS Package Test", async () => {
 
     // The `responseId` on the events is the PERSISTED id (ENG-1846). This is the only level that
     // can prove it: the id is minted by the server, so `onResponseCreated`/`onFinished` can only
-    // carry it by firing from the response queue's creation ack — and the renderer that passes it
+    // carry it by firing from the response queue's creation ack, and the renderer that passes it
     // lives in a .tsx, which the repo does not unit-test. Asserted against the stored row rather
     // than for self-consistency, so a client-minted or dropped id fails here (ENG-1814: the
     // formbricks.on() surface, registered before setup(), is what captured them).
@@ -239,7 +238,7 @@ test.describe("JS Package Test", async () => {
       // comparisons below cannot silently compare undefined against undefined.
       if (!storedResponse) throw new Error("No response was persisted for the survey");
 
-      // Shown, first answer, completion, and — after the ending card auto-closes the modal —
+      // Shown, first answer, completion, and (after the ending card auto-closes the modal)
       // closed exactly once. One vocabulary, in order.
       expect(events.map((event) => event.event)).toEqual([
         "formbricks_survey_shown",
@@ -276,7 +275,7 @@ test.describe("JS Package Test", async () => {
     await expect(page.getByText("Make this end to end test").first()).toBeVisible();
 
     // Our own CSP (next.config.mjs) in the browser: next-config-csp.test.ts checks the header text, but
-    // only a browser shows what it blocks — like Sentry Replay's blob: worker (ENG-3194), or Zod's eval
+    // only a browser shows what it blocks, like Sentry Replay's blob: worker (ENG-3194), or Zod's eval
     // probe on every app page (ENG-3969).
     await test.step("an app page and a link survey raise no violation under our own CSP", async () => {
       await expectNoCspViolations(page, cspConsoleMessages);
@@ -377,7 +376,7 @@ test.describe("Show conditions and the visit (ENG-3926)", () => {
       // The panel is a separate bundle the SDK loads only with the flag; it renders into an open
       // shadow root, which Playwright locators pierce.
       await expect(page.getByText("Not shown: show conditions not met")).toBeVisible();
-      await expect(page.getByText("✗ Pages viewed ≥ 2 — read: 1")).toBeVisible();
+      await expect(page.getByText("✗ Pages viewed ≥ 2 (read: 1)")).toBeVisible();
       await expect(widget).toHaveCount(0);
     });
 
