@@ -360,6 +360,7 @@
     "not_authenticated": "You are not authenticated to perform this action.",
     "not_authorized": "Not authorized",
     "not_connected": "Not Connected",
+    "not_set": "Not set",
     "note": "Note",
     "notifications": "Notifications",
     "number": "Number",
@@ -1662,9 +1663,7 @@
     },
     "analysis": {
       "charts": {
-        "answer_to_question": "Answer to question",
         "custom_range": "Custom Range",
-        "dataset_fields_failed": "Could not load this dataset's fields",
         "date_preset_last_24_hours": "Last 24 hours",
         "date_preset_last_30_days": "Last 30 days",
         "date_preset_last_6_months": "Last 6 months",
@@ -1677,43 +1676,10 @@
         "date_preset_this_quarter": "This quarter",
         "date_preset_this_year": "This year",
         "date_preset_today": "Today",
-        "date_preset_yesterday": "Yesterday",
-        "embedded_data": "Embedded data",
-        "is_any_of": "is any of"
+        "date_preset_yesterday": "Yesterday"
       },
       "dashboards": {
-        "chart_cannot_be_filtered_by": "This chart can't be filtered by {label}",
-        "date_filter_all_time": "All time",
-        "date_filter_choose": "Choose date range",
-        "filter_embedded_field_label": "{field} · Embedded data",
-        "filter_limit_reached": "A dashboard holds up to {max} filters",
-        "filter_no_sentiment_yet": "No sentiment on this dashboard's charts",
-        "filter_no_value": "(No value)",
-        "filter_no_value_language": "Default",
-        "filter_no_values_in_view": "None for these filters or dates",
-        "filter_no_values_yet": "No values on this dashboard's charts yet",
-        "filter_picks_too_long": "These values are too long to filter by together. Pick fewer or shorter values.",
-        "filter_sentiment_score_placeholder": "−1 to 1",
-        "filter_unlocked": "Filter unlocked for everyone",
-        "filters_locked": "Filters locked for everyone who opens this dashboard",
-        "filters_unlocked": "Filters unlocked for everyone",
-        "lock_filters": "Lock for everyone",
-        "lock_filters_tooltip": "Apply these filters for everyone who opens this dashboard. Viewers cannot remove them.",
-        "locked_filter_hint": "Set by an editor for everyone who opens this dashboard",
-        "locked_filter_hint_editor": "Locked for everyone who opens this dashboard. Remove it to unlock.",
-        "locked_filters_failed": "Could not update the locked filters",
-        "locked_filters_stale": "This dashboard was changed meanwhile. It has been reloaded; try again.",
-        "locked_value_hint": "Locked for everyone by an editor",
-        "no_dashboards_read_only_description": "Ask an owner or manager to create one.",
-        "no_data_message_read_only": "No Data. There is currently no information to display. An owner or manager can add charts to this dashboard.",
-        "unlock_filters": "Unlock filters",
-        "unlock_filters_confirm_body": "The locked filters will be removed for everyone who opens this dashboard.",
-        "unlock_filters_confirm_title": "Unlock filters for everyone?",
-        "unlock_filters_tooltip": "Remove the locked filters for everyone who opens this dashboard.",
-        "viewer_no_access_subtitle": "Ask an owner or manager to add you to a team with access to a workspace.",
-        "viewer_no_access_title": "No dashboards shared with you yet",
-        "viewer_plan_unavailable_subtitle": "Your organization's plan no longer includes dashboards for Dashboard viewers. Ask an owner or manager to restore dashboard access.",
-        "viewer_plan_unavailable_title": "Dashboards are not available on this plan"
+        "date_filter_all_time": "All time"
       }
     },
     "api_keys": {
@@ -2336,9 +2302,7 @@
         "ai_smart_tools_enabled": "Smart functionality (AI)",
         "ai_smart_tools_enabled_description": "AI to help you achieve more in less time. Never touches data collected with GForms.",
         "bulk_invite_billing_not_supported": "The Billing role is only available on Formbricks Cloud: {emails}. Choose a different role for these rows.",
-        "bulk_invite_dashboard_viewer_not_available": "The Dashboard viewer role needs Access Control and Dashboards on your plan: {emails}. Choose a different role for these rows.",
         "bulk_invite_download_template": "Download CSV template",
-        "bulk_invite_role_not_allowed": "You can't give these rows their role: {emails}. Choose a different role for these rows.",
         "bulk_invite_rows_detected": "{count, plural, one {{count} row detected} other {{count} rows detected}}",
         "bulk_invite_rows_more": "{count, plural, one {+{count} more row} other {+{count} more rows}}",
         "bulk_invite_unknown_teams": "Unknown teams in CSV: {teams}. Create them first or remove them from the file.",
@@ -2434,8 +2398,6 @@
         "contributor": "Contributor",
         "create_first_team_message": "You need to create a team first.",
         "dashboard_viewer": "Dashboard viewer",
-        "dashboard_viewer_role_description": "Dashboard viewers only see the dashboards of workspaces their teams can access.",
-        "dashboard_viewer_role_info_message": "Dashboard viewers only see dashboards, and only in the workspaces their teams can access. Add them to a Team below.",
         "individual": "Individual",
         "invite_member": "Invite member",
         "invite_member_description": "Add your co-workers to this organization.",
@@ -2572,6 +2534,7 @@
         "adjust_survey_closed_message": "Adjust “Survey Closed” message",
         "adjust_survey_closed_message_description": "Change the message visitors see when the survey is closed.",
         "adjust_theme_in_look_and_feel_settings": "Adjust the theme in the <lookFeelLink>Appearance</lookFeelLink> settings.",
+        "ai_translation_complete": "AI translation complete",
         "ai_translation_field_too_long": "Some fields exceed the 20,000-character translation limit and were left untranslated. Shorten them and try again.",
         "ai_translation_run_limit_reached": "Some fields were not translated in this run. Translate with AI again to continue.",
         "all_are_true": "all are true",
@@ -3977,9 +3940,6 @@
           "preview_image": "Preview image",
           "preview_image_description": "Landscape images with small file sizes (<4MB) perform best.",
           "title": "Link settings"
-        },
-        "personal_links": {
-          "segment_survey_filters_not_visible": "The selected segment filters on surveys you don't have access to, so it can't be used for personal links."
         },
         "pretty_url": {
           "description": "Create a custom, memorable URL for your survey",
