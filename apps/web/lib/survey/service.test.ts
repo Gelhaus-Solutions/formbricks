@@ -30,6 +30,7 @@ import {
 } from "@/lib/organization/service";
 import { evaluateLogic } from "@/lib/surveyLogic/utils";
 import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
+import { syncQuotaMatrixConditions } from "@/modules/quotas/lib/quotas";
 import { handleTriggerUpdates } from "@/modules/survey/lib/trigger-updates";
 import {
   mockActionClass,
@@ -88,6 +89,11 @@ vi.mock("@/lib/actionClass/service", () => ({
 // what updateSurveyInternal hands it and when.
 vi.mock("@/lib/feedback-source/mapping-reconciliation", () => ({
   scheduleFeedbackSourceReconciliation: vi.fn(),
+}));
+
+vi.mock("@/modules/quotas/lib/quotas", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/quotas/lib/quotas")>()),
+  syncQuotaMatrixConditions: vi.fn(),
 }));
 
 vi.mock("@/modules/features/lib/flags", async (importOriginal) => ({
@@ -279,7 +285,7 @@ describe("Tests for getSurvey", () => {
     /**
      * ENG-1845: `getSurvey` feeds all three server ingest boundaries, and the contract's allow-list
      * is the joined rows and nothing else (ENG-2412). A select that loses the join therefore reads
-     * as a survey with no fields, and every ingested value is dropped rather than stored — so the
+     * as a survey with no fields, and every ingested value is dropped rather than stored, so the
      * join belongs in a test rather than only in a comment.
      */
     test("selects the Embedded Data join every ingest boundary resolves its allow-list from", async () => {
@@ -448,7 +454,7 @@ describe("Tests for updateSurvey", () => {
       expect(updatedSurvey).toEqual(mockTransformedSurveyOutput);
     });
 
-    test("does not persist workspaceId or id from the payload on update — pinned to the existing survey (ENG-1749)", async () => {
+    test("does not persist workspaceId or id from the payload on update, pinned to the existing survey (ENG-1749)", async () => {
       prisma.survey.findUnique.mockResolvedValueOnce(mockSurveyOutput);
       prisma.survey.update.mockResolvedValueOnce(mockSurveyOutput);
 
@@ -462,7 +468,7 @@ describe("Tests for updateSurvey", () => {
       expect(updateArg?.data).not.toHaveProperty("id");
       // …and the `where` carries the tenant anchor rather than the id alone, so the write is scoped
       // by workspace the way every other query in this file is. The value is the stored survey's,
-      // never the payload's — that is what the two assertions above keep true.
+      // never the payload's, that is what the two assertions above keep true.
       expect(updateArg?.where).toEqual({
         id: updateSurveyInput.id,
         workspaceId: mockSurveyOutput.workspaceId,
@@ -552,25 +558,24 @@ describe("Tests for updateSurvey", () => {
         blocks: [...updateSurveyInput.blocks, matrixBlock],
       } as unknown as TSurvey;
 
-      test("follows a matrix reorder where quotas are licensed", async () => {
+      test("hands a matrix reorder to the quota seam where quotas are on", async () => {
         prisma.survey.findUnique.mockResolvedValueOnce(mockSurveyOutput);
         prisma.survey.update.mockResolvedValueOnce(mockSurveyOutput);
-        prisma.surveyQuota.findMany.mockResolvedValueOnce([]);
 
         await updateSurvey(withMatrix);
 
         expect(getIsQuotasEnabled).toHaveBeenCalledWith(mockOrganizationOutput.id);
-        expect(prisma.surveyQuota.findMany).toHaveBeenCalled();
+        expect(syncQuotaMatrixConditions).toHaveBeenCalledWith(prisma, withMatrix.id, expect.any(Array));
       });
 
-      test("leaves the quotas alone where quotas are not licensed", async () => {
+      test("leaves the quotas alone where quotas are off", async () => {
         vi.mocked(getIsQuotasEnabled).mockResolvedValue(false);
         prisma.survey.findUnique.mockResolvedValueOnce(mockSurveyOutput);
         prisma.survey.update.mockResolvedValueOnce(mockSurveyOutput);
 
         await updateSurvey(withMatrix);
 
-        expect(prisma.surveyQuota.findMany).not.toHaveBeenCalled();
+        expect(syncQuotaMatrixConditions).not.toHaveBeenCalled();
       });
     });
 
@@ -757,7 +762,7 @@ describe("Tests for updateSurvey", () => {
     });
 
     // ENG-2305: the draft save (skipValidation=true) deliberately skips full semantic validation,
-    // but the filter tree BOUNDS must hold unconditionally — an over-bounds tree persisted through
+    // but the filter tree BOUNDS must hold unconditionally, an over-bounds tree persisted through
     // a draft would break every consumer that parses the row back (publish validation, clone,
     // evaluation).
     test("rejects an over-bounds segment filter tree even when validation is skipped (draft save)", async () => {
@@ -842,7 +847,7 @@ describe("Tests for updateSurvey", () => {
 
     // ENG-2305 sibling of the filter-tree gate: on the draft path segment.surveys is just as
     // unvalidated as the filter tree (ZSurveyDraft.segment is an untyped record), so the id-format
-    // rule and MAX_SEGMENT_SURVEYS cap must hold unconditionally — BEFORE the ids drive the batched
+    // rule and MAX_SEGMENT_SURVEYS cap must hold unconditionally, BEFORE the ids drive the batched
     // workspace lookup. An over-limit or junk draft must perform no survey queries at all.
     test("rejects an over-cap segment.surveys list on the draft path without any survey lookup", async () => {
       prisma.survey.findUnique.mockResolvedValueOnce({ ...mockSurveyOutput, status: "draft" });
@@ -850,7 +855,7 @@ describe("Tests for updateSurvey", () => {
         workspaceId: updateSurveyInput.workspaceId,
       } as any);
 
-      // Every id is a valid cuid2 — only the cap can reject this list.
+      // Every id is a valid cuid2, only the cap can reject this list.
       const overCapSurveys = Array.from({ length: MAX_SEGMENT_SURVEYS + 1 }, () => createId());
 
       await expect(
@@ -961,7 +966,7 @@ describe("Tests for updateSurvey", () => {
     });
 
     // Archived surveys are read-only on every write path that flows through updateSurveyInternal
-    // (editor save, summary status dropdown, v1/v3 update) — not just the v3 API layer.
+    // (editor save, summary status dropdown, v1/v3 update), not just the v3 API layer.
     test("rejects updating an archived survey and does not write", async () => {
       prisma.survey.findUnique.mockResolvedValueOnce({ ...mockSurveyOutput, archivedAt: new Date() } as any);
 
@@ -1105,7 +1110,7 @@ describe("Tests for updateSurvey", () => {
 
       // Reconciliation runs after the survey row is committed, so it must not be able to turn a
       // successful save into a user-visible error. The helper owns that guarantee (it never
-      // rejects — see reconcile.test.ts); this pins the ordering the guarantee depends on.
+      // rejects, see reconcile.test.ts); this pins the ordering the guarantee depends on.
       test("reconciles only after the survey row has been written", async () => {
         prisma.survey.findUnique.mockResolvedValueOnce(mockSurveyOutput);
         prisma.survey.update.mockResolvedValueOnce(mockSurveyOutput);
@@ -1128,7 +1133,7 @@ describe("Tests for updateSurvey", () => {
    * `country`, `url`, `source`, `browser`, and this ticket must not rename or break any of them.
    */
   describe("the embeddedFields carrier (ENG-3228)", () => {
-    /** One typed, defaulted, locked ingested field — none of which the legacy columns can carry. */
+    /** One typed, defaulted, locked ingested field, none of which the legacy columns can carry. */
     const typedPlan = {
       field: {
         key: null,
@@ -1248,7 +1253,7 @@ describe("Tests for updateSurvey", () => {
     });
 
     test("refuses a shared field with no row id before it writes anything", async () => {
-      // `ZLinkedEmbeddedField` lets a shared entry omit `field.id`, and the reconcile refuses it —
+      // `ZLinkedEmbeddedField` lets a shared entry omit `field.id`, and the reconcile refuses it,
       // but inside its transaction, which does not cover the segment writes above. Spending the
       // refusal first is what keeps a rejected update from half-applying.
       prisma.survey.findUnique.mockResolvedValueOnce(mockSurveyOutput);
@@ -1353,7 +1358,7 @@ describe("Tests for updateSurvey", () => {
     /**
      * A stored survey's rows, as they would exist beside its columns. ENG-3228 made the naming guard
      * read `existing.embeddedFields`, so a fixture whose rows and columns disagree grandfathers
-     * nothing — and every stored survey's rows are reconciled from its columns on every write.
+     * nothing, and every stored survey's rows are reconciled from its columns on every write.
      */
     const withRowsForColumns = <T extends { variables?: unknown; hiddenFields?: unknown }>(survey: T) => ({
       ...survey,
@@ -1807,7 +1812,7 @@ describe("Tests for createSurvey", () => {
 
     test("returns the survey as it stands AFTER its Embedded Data rows are written", async () => {
       // ENG-2412: `createSurvey` used to return the row it selected before the reconcile, whose
-      // `embeddedDataLinks` is necessarily empty — the links do not exist yet. That was survivable
+      // `embeddedDataLinks` is necessarily empty, the links do not exist yet. That was survivable
       // only while `getSurveyEmbeddedFields` fell back to the legacy columns; without the fallback it
       // reports a survey that just persisted fields as having none. The read has to happen after.
       //
@@ -1856,7 +1861,7 @@ describe("Tests for createSurvey", () => {
     test("writes an embeddedFields create payload as rows, never as columns or a nested write", async () => {
       // Both create schemas dropped their `embeddedFields` omission, so `POST /api/v1/management/surveys`
       // reaches this branch. Nothing else passed `embeddedFields` to `createSurvey`, so deleting the
-      // derive — or reverting the parsed body to the unvalidated one — used to keep the suite green.
+      // derive, or reverting the parsed body to the unvalidated one, used to keep the suite green.
       vi.mocked(getOrganizationByWorkspaceId).mockResolvedValueOnce(mockOrganizationOutput);
       prisma.survey.create.mockResolvedValueOnce({ ...mockSurveyOutput, embeddedDataLinks: [] } as never);
       prisma.survey.findUniqueOrThrow.mockResolvedValueOnce({
@@ -1898,7 +1903,7 @@ describe("Tests for createSurvey", () => {
 
       const createArg = prisma.survey.create.mock.calls[0][0] as { data: Record<string, unknown> };
 
-      // ENG-2404: the rows are the only place the fields land — `Survey` has no column for either
+      // ENG-2404: the rows are the only place the fields land, `Survey` has no column for either
       // legacy key, so Prisma would refuse both.
       expect(createArg.data).not.toHaveProperty("hiddenFields");
       expect(createArg.data).not.toHaveProperty("variables");
@@ -1912,7 +1917,7 @@ describe("Tests for createSurvey", () => {
 
     test("a shared field is checked against the library row on create, not the payload", async () => {
       // The create path refuses an unstorable legacy projection before the transaction, so it has to
-      // resolve the link itself — `reconcileEmbeddedData` re-checks it inside, but by then a refusal
+      // resolve the link itself, `reconcileEmbeddedData` re-checks it inside, but by then a refusal
       // would be a rolled-back create rather than a 400.
       vi.mocked(getOrganizationByWorkspaceId).mockResolvedValueOnce(mockOrganizationOutput);
       // Answers both calls: this path resolves the link before the transaction, and `reconcileEmbeddedData`
@@ -1976,7 +1981,7 @@ describe("Tests for createSurvey", () => {
 
     test("a shared field's name clash is caught through its library key, not the payload's", async () => {
       // The payload's key disagrees with the row's, so only a check that reads the library row sees
-      // the shared field answer to `plan_tier` — the name the local variable already has.
+      // the shared field answer to `plan_tier`, the name the local variable already has.
       vi.mocked(getOrganizationByWorkspaceId).mockResolvedValueOnce(mockOrganizationOutput);
       vi.mocked(prisma.embeddedData.findMany).mockResolvedValue([
         {

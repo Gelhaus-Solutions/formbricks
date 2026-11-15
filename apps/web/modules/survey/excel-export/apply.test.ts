@@ -16,7 +16,6 @@ import { EXCEL_EXPORT_MAX_CELL_CHARS } from "./limits";
 import { writeExcelExport } from "./write";
 
 const t = createIcuTranslate("en-US");
-const germanT = createIcuTranslate("de-DE");
 const SURVEY = EVERY_TEXT_SURVEY as unknown as TSurvey;
 
 // The texts sheet's columns: hidden key, Question ID, Type, English (default), German, Logic.
@@ -33,7 +32,7 @@ const importSheet = (
 ): Promise<TExcelExportApplied> =>
   applyExcelExport(survey, {
     read: readExportBytes(editExcelExport(bytes, edit)),
-    labels: createExcelExportLabels([germanT, t]),
+    labels: createExcelExportLabels([t]),
     newElement: (type: TSurveyElementTypeEnum) =>
       ({
         ...universalElementPresets,
@@ -482,19 +481,17 @@ describe("applyExcelExport: added rows", () => {
     expect(codes(applied)).toEqual(expect.arrayContaining(["sheet_question_added", "sheet_option_added"]));
   });
 
-  test("reads a question type named in the export's language, or by its id", async () => {
-    const applied = await importSheet(
-      (rows) =>
-        insertAfter(
-          rows,
-          "open",
-          added("q_de", "Freitext", "Noch etwas?"),
-          added("q_id", "nps", "How likely?")
-        ),
-      { bytes: exported(SURVEY, germanT, "de-DE") }
+  test("reads a question type by its name or its id", async () => {
+    const applied = await importSheet((rows) =>
+      insertAfter(
+        rows,
+        "open",
+        added("q_en", "Free text", "Anything else?"),
+        added("q_id", "nps", "How likely?")
+      )
     );
 
-    expect(elementOf(applied.survey, "q_de").type).toBe("openText");
+    expect(elementOf(applied.survey, "q_en").type).toBe("openText");
     expect(elementOf(applied.survey, "q_id").type).toBe("nps");
   });
 

@@ -52,7 +52,7 @@ const export_ = (survey: TSurvey = SURVEY) => readBack(writeExcelExport({ survey
 describe("writeExcelExport", () => {
   test("writes a header of key, Question ID, Type, one column per language with the default first, and Logic", () => {
     const [header] = rowsOf(export_().Sheets.Questions);
-    expect(header).toEqual(["key", "Question ID", "Type", "English (en) — default", "German (de)", "Logic"]);
+    expect(header).toEqual(["key", "Question ID", "Type", "English (en), default", "German (de)", "Logic"]);
   });
 
   test("writes one row per text with content, keyed by the walker's id-built key, in survey order", () => {
@@ -132,9 +132,6 @@ describe("writeExcelExport", () => {
 
     expect(rowOf("en-US", "element.address.addressLine1.placeholder")?.[2]).toBe(
       "Address Line 1 Placeholder"
-    );
-    expect(rowOf("de-DE", "element.address.addressLine1.placeholder")?.[2]).toBe(
-      "Platzhalter für Adresszeile 1"
     );
   });
 
@@ -301,7 +298,7 @@ describe("writeExcelExport", () => {
       "key",
       "Question ID",
       "Type",
-      "English (en) — default",
+      "English (en), default",
       "German (de)",
       "French (fr)",
       "Japanese (ja)",

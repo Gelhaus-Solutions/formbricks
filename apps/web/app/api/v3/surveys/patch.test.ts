@@ -13,6 +13,7 @@ import { applyRateLimit } from "@/modules/core/rate-limit/helpers";
 import { rateLimitConfigs } from "@/modules/core/rate-limit/rate-limit-configs";
 import { processCustomCss } from "@/modules/custom-css/processor";
 import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
+import { syncQuotaMatrixConditions } from "@/modules/quotas/lib/quotas";
 import { getExternalUrlsPermission } from "@/modules/survey/lib/permission";
 import {
   isSurveySchedulingDue,
@@ -111,6 +112,11 @@ vi.mock("./targeting", () => ({
 
 vi.mock("@/lib/organization/service", () => ({
   getOrganizationByWorkspaceId: vi.fn(),
+}));
+
+vi.mock("@/modules/quotas/lib/quotas", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/quotas/lib/quotas")>()),
+  syncQuotaMatrixConditions: vi.fn(),
 }));
 
 vi.mock("@/modules/features/lib/flags", () => ({
@@ -242,7 +248,7 @@ type TSurveyUpdateReturn = ReturnType<typeof prisma.survey.update>;
 
 /**
  * What the post-reconcile re-read returns: the stored survey with the last update's data applied. The
- * update itself selects only the id — the re-read is what the route serializes.
+ * update itself selects only the id, the re-read is what the route serializes.
  */
 const readBackUpdatedSurvey = (data: TSurveyUpdateArgs["data"] | undefined) => ({
   ...currentSurvey,
@@ -392,7 +398,7 @@ describe("patchV3Survey", () => {
 
   /**
    * ENG-1837 made the EmbeddedData tables the read source of truth for definitions, so a patch that
-   * moves `variables` / `hiddenFields` has to reconcile the rows in the same transaction — otherwise
+   * moves `variables` / `hiddenFields` has to reconcile the rows in the same transaction, otherwise
    * recall, the logic engine, export columns and the response filters keep reading the pre-patch set.
    * v3 patch is the one write path that did not do this.
    */
@@ -448,7 +454,7 @@ describe("patchV3Survey", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             surveyId: currentSurvey.id,
-            // Never the client payload's workspace — the stored survey's (ENG-1749).
+            // Never the client payload's workspace, the stored survey's (ENG-1749).
             workspaceId: currentSurvey.workspaceId,
             name: "score",
             source: "computed",
@@ -487,7 +493,7 @@ describe("patchV3Survey", () => {
     test("a patch that omits the fields keeps the survey's existing rows", async () => {
       // ENG-2412 moved the reconcile onto the patch document rather than the persisted row. That is
       // safe here because `prepareV3SurveyPatchInput` merges the patch over the current survey first,
-      // so a body carrying only `name` still arrives with the survey's declared fields intact — this
+      // so a body carrying only `name` still arrives with the survey's declared fields intact, this
       // asserts the two halves agree, since a raw read of the request body would unlink everything.
       vi.mocked(prisma.surveyEmbeddedData.findMany).mockResolvedValueOnce([
         {
@@ -497,7 +503,7 @@ describe("patchV3Survey", () => {
           embeddedData: {
             id: "ed_existing",
             surveyId: currentSurvey.id,
-            // Local, so no library key and no lock — the two columns ENG-3228 added to this select.
+            // Local, so no library key and no lock, the two columns ENG-3228 added to this select.
             key: null,
             name: "utm_source",
             source: "ingested",
@@ -521,7 +527,7 @@ describe("patchV3Survey", () => {
 
   // ENG-2064: this route writes blocks directly instead of going through updateSurveyInternal, so
   // without its own call a survey edited over the v3 API would leave its feedback-source mappings
-  // stale — and the API is exactly the surface an automation changes questions from.
+  // stale, and the API is exactly the surface an automation changes questions from.
   test("reconciles feedback-source mappings against the persisted blocks", async () => {
     await patchV3Survey(
       currentSurvey,
@@ -530,7 +536,7 @@ describe("patchV3Survey", () => {
     );
 
     // Pinned to the stored blocks rather than `expect.any(Array)`: this patch carries no `blocks` at
-    // all, so reconciling against the request payload would pass `undefined` — which `expect.any(Array)`
+    // all, so reconciling against the request payload would pass `undefined`, which `expect.any(Array)`
     // would have caught, but so would any other array, including an empty one. The value is what
     // matters here, because reconciling an empty block list deletes every mapping the survey has.
     // The workspaceId is what scopes the deferred re-read of the survey to its tenant.
@@ -853,7 +859,7 @@ describe("patchV3Survey", () => {
 
   /**
    * ENG-1839. `PATCH /api/v3/surveys/*` and the MCP write path reach the survey through here, so the
-   * guard has to sit at this boundary too — before the transaction, so a refusal is a validation
+   * guard has to sit at this boundary too, before the transaction, so a refusal is a validation
    * response rather than a rollback.
    */
   describe("reserved names for newly declared fields", () => {
@@ -1506,7 +1512,7 @@ describe("patchV3Survey", () => {
     test("updates segment filters when targeting changes and contacts are enabled", async () => {
       vi.mocked(areV3SurveyTargetingFiltersEqual).mockReturnValue(false);
       // Run the interactive transaction with a DISTINCT tx client so the assertions prove both writes
-      // go through it (not the global prisma) — i.e. that the update really is transactional.
+      // go through it (not the global prisma), i.e. that the update really is transactional.
       const tx = {
         survey: {
           update: vi.fn(vi.mocked(prisma.survey.update).getMockImplementation()),
@@ -1514,7 +1520,7 @@ describe("patchV3Survey", () => {
         },
         segment: { update: vi.fn() },
         // ENG-1837: the EmbeddedData reconcile is part of the same transaction, so it has to be
-        // reachable on the tx client — and the assertions below prove it used that client.
+        // reachable on the tx client, and the assertions below prove it used that client.
         surveyEmbeddedData: {
           findMany: vi.fn().mockResolvedValue([]),
           deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
@@ -1546,7 +1552,7 @@ describe("patchV3Survey", () => {
       );
       expect(tx.survey.update).toHaveBeenCalled();
       expect(prisma.survey.update).not.toHaveBeenCalled();
-      // The Embedded Data reconcile rides the same transaction — never the global client.
+      // The Embedded Data reconcile rides the same transaction, never the global client.
       expect(tx.surveyEmbeddedData.findMany).toHaveBeenCalled();
       expect(prisma.surveyEmbeddedData.findMany).not.toHaveBeenCalled();
     });
@@ -1847,16 +1853,7 @@ describe("patchV3Survey", () => {
       });
     });
 
-    test("re-syncs the survey's quotas after a row reorder, in the same transaction", async () => {
-      const quotaCondition = (row: string) => ({
-        id: "qc1",
-        leftOperand: { type: "element", value: "grid", meta: { row, rowId: "netflix" } },
-        operator: "equals",
-        rightOperand: { type: "static", value: "0", columnId: "good" },
-      });
-      vi.mocked(prisma.surveyQuota.findMany).mockResolvedValueOnce([
-        { id: "quota_1", logic: { connector: "and", conditions: [quotaCondition("0")] } },
-      ] as never);
+    test("hands a row reorder to the quota seam, in the same transaction", async () => {
       const blocks = blocksWith(
         grid(["disney", "netflix"], ["good", "poor"]),
         { row: "1", rowId: "netflix" },
@@ -1869,15 +1866,10 @@ describe("patchV3Survey", () => {
         { requestId: "req_matrix_quota", organizationId: "org_1" }
       );
 
-      expect(prisma.surveyQuota.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: "quota_1" },
-          data: { logic: { connector: "and", conditions: [quotaCondition("1")] } },
-        })
-      );
+      expect(syncQuotaMatrixConditions).toHaveBeenCalledWith(prisma, currentSurvey.id, expect.any(Array));
     });
 
-    test("leaves the quotas alone where quotas are not licensed", async () => {
+    test("leaves the quotas alone where quotas are off", async () => {
       vi.mocked(getIsQuotasEnabled).mockResolvedValue(false);
       const blocks = blocksWith(
         grid(["disney", "netflix"], ["good", "poor"]),
@@ -1892,8 +1884,7 @@ describe("patchV3Survey", () => {
       );
 
       expect(getIsQuotasEnabled).toHaveBeenCalledWith("org_1");
-      expect(prisma.surveyQuota.findMany).not.toHaveBeenCalled();
-      expect(prisma.surveyQuota.update).not.toHaveBeenCalled();
+      expect(syncQuotaMatrixConditions).not.toHaveBeenCalled();
     });
 
     test("refuses a column id the matrix doesn't have, with its path, and does not write", async () => {
@@ -2022,7 +2013,7 @@ describe("patchV3Survey", () => {
     });
 
     test("turns a P2025 under a precondition into a stale error carrying the live updatedAt", async () => {
-      // The row moved on between the authorized read and the compare-and-set — the race the early
+      // The row moved on between the authorized read and the compare-and-set, the race the early
       // check cannot see.
       rejectWithP2025();
       vi.mocked(prisma.survey.findFirst).mockResolvedValue({ updatedAt: movedOnAt } as never);
