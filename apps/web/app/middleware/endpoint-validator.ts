@@ -1,4 +1,3 @@
-import { isMarketingLinkPath } from "@/modules/settings/lib/marketing-redirects";
 import {
   getAllPubliclyAccessibleRoutePatterns,
   getPublicDomainRoutePatterns,
@@ -44,9 +43,7 @@ export const isAuthProtectedRoute = (url: string): boolean => {
   // List of routes that require authentication
   const protectedRoutes = ["/environments", "/setup/organization", "/organizations"];
 
-  // ID-free marketing links (/billing, /contacts, ...) resolve the user's organization, so they need a
-  // session too; matched per path segment so /billing-confirmation stays public.
-  return protectedRoutes.some((route) => url.startsWith(route)) || isMarketingLinkPath(url);
+  return protectedRoutes.some((route) => url.startsWith(route));
 };
 
 /**
