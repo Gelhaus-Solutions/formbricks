@@ -11,6 +11,7 @@ interface EditMembershipsProps {
   readonly role: TOrganizationRole;
   readonly isAccessControlAllowed: boolean;
   readonly isUserManagementDisabledFromUi: boolean;
+  readonly canManageUsers: boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ export const EditMemberships = async ({
   role,
   isAccessControlAllowed,
   isUserManagementDisabledFromUi,
+  canManageUsers,
 }: EditMembershipsProps) => {
   const [members, invites] = await Promise.all([
     getMembershipByOrganizationId(organization.id),
@@ -47,6 +49,7 @@ export const EditMemberships = async ({
       currentUserRole={role}
       isAccessControlAllowed={isAccessControlAllowed}
       isUserManagementDisabledFromUi={isUserManagementDisabledFromUi}
+      canManageUsers={canManageUsers}
     />
   );
 };
