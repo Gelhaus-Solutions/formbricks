@@ -127,6 +127,11 @@ catalog:
 # The `load-bearing:` notes record the consumer that keeps the vulnerable version in the
 # tree, so the next cleanup can check that single upstream instead of re-deriving it.
 overrides:
+  # ENG-2780: one pg, the 8.20.0 @prisma/adapter-pg pins, and pg-pool on 3.13.0, the version
+  # patches/pg-pool@3.13.0.patch fixes. 3.14.0 still lacks node-postgres#3711; pg 8.23.1 requires it, and
+  # better-auth's optional pg peer would otherwise resolve to 8.23.1.
+  pg: 8.20.0
+  pg-pool: 3.13.0
   # ENG-1324 / GHSA-5375-pq7m-f5r2, ENG-1325 / GHSA-99f4-grh7-6pcq:
   # @grpc/grpc-js 1.14.5 also fixes unauthorized certificate acceptance and error-message disclosure
   # (CVE-2026-101916 / CVE-2026-101915), alongside the malformed-message crash fixes in 1.14.4.
