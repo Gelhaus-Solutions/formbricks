@@ -127,6 +127,9 @@ catalog:
 # The `load-bearing:` notes record the consumer that keeps the vulnerable version in the
 # tree, so the next cleanup can check that single upstream instead of re-deriving it.
 overrides:
+  # One typescript-eslint: eslint-config-next kept resolving 8.63.0 beside the catalog's, and ESLint
+  # refuses a config that registers the @typescript-eslint plugin twice ("Cannot redefine plugin").
+  typescript-eslint: 8.72.2
   # ENG-2780: one pg, the 8.20.0 @prisma/adapter-pg pins, and pg-pool on 3.13.0, the version
   # patches/pg-pool@3.13.0.patch fixes. 3.14.0 still lacks node-postgres#3711; pg 8.23.1 requires it, and
   # better-auth's optional pg peer would otherwise resolve to 8.23.1.
