@@ -1,5 +1,8 @@
-import { describe, expect, test } from "vitest";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { describe, expect, test, vi } from "vitest";
 import {
+  type LocaleTranslations,
   type ScanResults,
   type TranslationKeys,
   checkIncompleteTranslations,
@@ -12,7 +15,8 @@ import {
   flattenKeys,
   flattenValues,
   forEachConcurrently,
-  hasKeyIssues,
+  hasValidationIssues,
+  loadAllLocaleTranslations,
   stripComments,
 } from "./scan-translations";
 
@@ -870,7 +874,6 @@ describe("Translation Scanner", () => {
       incompleteTranslations: new Map(),
       placeholderMismatches: new Map(),
       keysWithSpaces: new Set(),
-      lockfileValidation: { missing: [], outOfSync: [], extra: [] },
       ...overrides,
     });
 
@@ -897,12 +900,16 @@ describe("Translation Scanner", () => {
       ).toBe(true);
     });
 
-    test("hasLockfileIssues treats a lockfile that could not be validated as an issue", () => {
-      expect(hasLockfileIssues(resultsWith({}))).toBe(false);
-      expect(hasLockfileIssues(resultsWith({ lockfileValidation: null }))).toBe(true);
+    test("hasValidationIssues passes keys that only lack a translation: the runtime shows them in en-US", () => {
       expect(
-        hasLockfileIssues(resultsWith({ lockfileValidation: { missing: [], outOfSync: ["a.b"], extra: [] } }))
-      ).toBe(true);
+        hasValidationIssues(resultsWith({ incompleteTranslations: new Map([["de-DE", ["a.b"]]]) }))
+      ).toBe(false);
+    });
+
+    test("hasValidationIssues fails a missing, an unused or a spaced key", () => {
+      expect(hasValidationIssues(resultsWith({ missingKeys: new Set(["a.gone"]) }))).toBe(true);
+      expect(hasValidationIssues(resultsWith({ unusedKeys: new Set(["a.stale"]) }))).toBe(true);
+      expect(hasValidationIssues(resultsWith({ keysWithSpaces: new Set(["a.b c"]) }))).toBe(true);
     });
 
     test("announces matching placeholders when nothing is wrong", () => {
@@ -943,38 +950,11 @@ describe("Translation Scanner", () => {
         })
       );
 
-      expect(output).toContain("INCOMPLETE TRANSLATIONS");
+      expect(output).toContain("UNTRANSLATED KEYS");
       expect(output).toContain("📝 de-DE (12 missing keys):");
       expect(output).toContain("      • k.9");
       expect(output).not.toContain("      • k.10");
       expect(output).toContain("      ... and 2 more");
-    });
-
-    test("reports a missing lockfile", () => {
-      const output = loggedOutput(resultsWith({ lockfileValidation: null }));
-
-      expect(output).toContain("LOCKFILE MISSING");
-      expect(output).not.toContain("LOCKFILE OUT OF SYNC");
-    });
-
-    test("reports each non-empty lockfile section and skips the empty ones", () => {
-      const output = loggedOutput(
-        resultsWith({
-          lockfileValidation: {
-            missing: Array.from({ length: 11 }, (_, i) => `m.${i.toString()}`),
-            outOfSync: [],
-            extra: ["e.0"],
-          },
-        })
-      );
-
-      expect(output).toContain("LOCKFILE OUT OF SYNC");
-      expect(output).toContain("   • Keys missing from lockfile (11):");
-      expect(output).toContain("      - m.9");
-      expect(output).toContain("      ... and 1 more");
-      expect(output).not.toContain("Keys out of sync/stale in lockfile");
-      expect(output).toContain("   • Unused/extra keys in lockfile (1):");
-      expect(output).toContain("      - e.0");
     });
 
     test("truncates long per-locale lists", () => {
@@ -1214,29 +1194,6 @@ describe("Translation Scanner", () => {
       const translationKeysSet = new Set(translationKeys);
       const keysWithSpaces = detectKeysWithSpaces(usedKeysSet, translationKeysSet);
       expect(keysWithSpaces.size).toBe(0);
-    });
-  });
-
-  describe("hasKeyIssues", () => {
-    const clean = (): ScanResults => ({
-      usedKeys: new Set(["common.save"]),
-      translationKeys: new Set(["common.save"]),
-      missingKeys: new Set(),
-      unusedKeys: new Set(),
-      incompleteTranslations: new Map(),
-      keysWithSpaces: new Set(),
-    });
-
-    test("passes keys that only lack a translation: the runtime shows them in en-US", () => {
-      expect(
-        hasKeyIssues({ ...clean(), incompleteTranslations: new Map([["de-DE", ["common.save"]]]) })
-      ).toBe(false);
-    });
-
-    test("fails a missing, an unused or a spaced key", () => {
-      expect(hasKeyIssues({ ...clean(), missingKeys: new Set(["common.gone"]) })).toBe(true);
-      expect(hasKeyIssues({ ...clean(), unusedKeys: new Set(["common.stale"]) })).toBe(true);
-      expect(hasKeyIssues({ ...clean(), keysWithSpaces: new Set(["common.a b"]) })).toBe(true);
     });
   });
 });

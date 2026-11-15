@@ -2,16 +2,17 @@
  * Translation Key Scanner
  *
  * This script scans the web app and the surveys package for translation keys and validates them
- * against their en-US files: a key used in code must exist there, and a key there must be used. The
- * web app ships en-US only. A surveys package key missing from another locale is reported, not
- * failed: the runtime falls back to en-US until someone translates it.
+ * against their en-US files: a key used in code must exist there, and a key there must be used. A
+ * translated message must interpolate the placeholders its en-US message does. The web app ships
+ * en-US only. A surveys package key missing from another locale is reported, not failed: the runtime
+ * falls back to en-US until someone translates it.
  *
  * Usage:
  *   pnpm scan-translations
  *
  * Exit codes:
  *   0: Success, no issues found
- *   1: Validation errors found (missing, unused or spaced keys)
+ *   1: Validation errors found (missing, unused or spaced keys, placeholder mismatches)
  */
 import { type MessageFormatElement, TYPE, parse } from "@formatjs/icu-messageformat-parser";
 import { glob } from "glob";
@@ -67,6 +68,28 @@ const EXCLUDE_DIRS = [
 
 export interface TranslationKeys {
   [key: string]: string | TranslationKeys;
+}
+
+/**
+ * The interpolation placeholders a message expects, split by syntax.
+ *
+ * `i18next-icu` formats with `IntlMessageFormat`, which only understands `{name}`: a message carrying
+ * `{{name}}` fails to parse and renders as its raw source. `en-US` has none, but translations have
+ * picked the syntax up, so it is still recognised. The two are compared separately on purpose — a locale that "translates" `{surveys}` into
+ * `{{surveys}}` is exactly the breakage this check exists to catch, and treating them as equivalent
+ * would hide it.
+ */
+export interface PlaceholderSet {
+  icu: string[]; // `{name}`, `{count, plural, ...}`, `{count, select, ...}`
+  i18next: string[]; // `{{name}}`
+}
+
+/** A key whose placeholders disagree between the default locale and a target locale. */
+export interface PlaceholderMismatch {
+  key: string;
+  expected: PlaceholderSet;
+  /** `null` when the target message cannot be parsed as ICU at all (it renders literally). */
+  actual: PlaceholderSet | null;
 }
 
 export interface ScanResults {
@@ -612,20 +635,55 @@ export function compareKeys(
   };
 }
 
-/** Whether a package's keys fail validation: missing, unused or spaced. Untranslated keys do not. */
-export function hasKeyIssues(results: ScanResults): boolean {
-  return results.missingKeys.size > 0 || results.unusedKeys.size > 0 || results.keysWithSpaces.size > 0;
+function describePlaceholders(set: PlaceholderSet | null): string {
+  if (set === null) return "(not valid ICU)";
+
+  const parts = [...set.icu.map((name) => `{${name}}`), ...set.i18next.map((name) => `{{${name}}}`)];
+  return parts.length > 0 ? parts.join(" ") : "(none)";
+}
+
+// Long lists drown the report, so each one shows its first entries and counts the rest.
+const MAX_LISTED_ENTRIES = 10;
+
+function logFirstEntries<T>(entries: readonly T[], logEntry: (entry: T) => void): void {
+  entries.slice(0, MAX_LISTED_ENTRIES).forEach(logEntry);
+
+  if (entries.length > MAX_LISTED_ENTRIES) {
+    console.log(`      ... and ${(entries.length - MAX_LISTED_ENTRIES).toString()} more`);
+  }
+}
+
+function displayPlaceholderMismatches(
+  mismatchesByLocale: Map<string, PlaceholderMismatch[]>,
+  defaultLocale: string
+): void {
+  console.log(`\n❌ PLACEHOLDER MISMATCHES:\n`);
+  console.log(`   These messages do not interpolate what ${defaultLocale} does. A dropped or`);
+  console.log('   rewritten placeholder renders literally, e.g. "{name}" or "{{name}}".\n');
+
+  for (const [locale, mismatches] of mismatchesByLocale.entries()) {
+    console.log(`   ❌ ${locale} (${mismatches.length.toString()} keys):`);
+
+    logFirstEntries(mismatches, ({ key, expected, actual }) => {
+      console.log(`      • ${key}`);
+      console.log(`        ${defaultLocale}: ${describePlaceholders(expected)}`);
+      console.log(`        ${locale}: ${describePlaceholders(actual)}`);
+    });
+  }
 }
 
 /**
- * Display validation results
+ * Whether a package's scan found anything that fails validation: a missing, unused or spaced key, or a
+ * placeholder mismatch. Untranslated keys do not fail.
  */
-function displayResults(results: ScanResults, packageName: string, defaultLocale: string): void {
-  console.log("═══════════════════════════════════════════════════════════");
-  console.log(`              ${packageName} VALIDATION RESULTS              `);
-  console.log("═══════════════════════════════════════════════════════════\n");
-
-  const hasIssues = hasKeyIssues(results);
+export function hasValidationIssues(results: ScanResults): boolean {
+  return (
+    results.missingKeys.size > 0 ||
+    results.unusedKeys.size > 0 ||
+    results.placeholderMismatches.size > 0 ||
+    results.keysWithSpaces.size > 0
+  );
+}
 
 /**
  * Display validation results
@@ -641,7 +699,8 @@ export function displayResults(results: ScanResults, packageName: string, defaul
     console.log(`   • ${results.translationKeys.size.toString()} keys in translations`);
     console.log(`   • 0 missing keys`);
     console.log(`   • 0 unused keys`);
-    console.log(`   • 0 keys with spaces\n`);
+    console.log(`   • 0 keys with spaces`);
+    console.log(`   • All locale placeholders match\n`);
   }
 
   if (results.missingKeys.size > 0) {
@@ -756,7 +815,7 @@ async function main(): Promise<void> {
     );
 
     // Untranslated keys are reported but never fail: the runtime shows them in en-US.
-    if (hasKeyIssues(webAppResults) || hasKeyIssues(surveysResults)) {
+    if (hasValidationIssues(webAppResults) || hasValidationIssues(surveysResults)) {
       console.error("═══════════════════════════════════════════════════════════");
       console.error("❌ Translation validation failed!\n");
       console.error("   Please fix the issues above before committing.\n");
@@ -769,6 +828,11 @@ async function main(): Promise<void> {
       }
       if (webAppResults.keysWithSpaces.size > 0 || surveysResults.keysWithSpaces.size > 0) {
         console.error("   • Remove spaces from translation keys (use underscores or camelCase instead)");
+      }
+      if (webAppResults.placeholderMismatches.size > 0 || surveysResults.placeholderMismatches.size > 0) {
+        console.error(
+          "   • Keep every {placeholder} the default locale uses in the translated message, in the same syntax"
+        );
       }
       console.error();
       process.exit(1);
