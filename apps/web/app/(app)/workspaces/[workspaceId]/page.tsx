@@ -7,7 +7,7 @@ const WorkspacePage = async (props: { params: Promise<{ workspaceId: string }> }
   const params = await props.params;
   // `getWorkspaceAuth` already sends a Dashboard viewer to its dashboards and a Billing member to billing;
   // the redirects below name each role's home explicitly so this route never depends on that ordering.
-  const { organization, currentUserMembership, isBilling } = await getWorkspaceAuth(params.workspaceId);
+  const { currentUserMembership, isBilling } = await getWorkspaceAuth(params.workspaceId);
 
   if (isBilling) {
     return redirect(getBillingFallbackPath());

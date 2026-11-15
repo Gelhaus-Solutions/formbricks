@@ -11,7 +11,6 @@ import { assertCan } from "@/lib/authorization";
 import { getOrganizationLogoUrl } from "@/lib/organization/logo";
 import { getResponseCountBySurveyId } from "@/lib/response/service";
 import { getSurvey, updateSurvey } from "@/lib/survey/service";
-import { resolveSurveyActorContext } from "@/lib/survey/visibility/actor-context";
 import { authenticatedActionClient } from "@/lib/utils/action-client";
 import { getOrganizationIdFromSurveyId, getWorkspaceIdFromSurveyId } from "@/lib/utils/helper";
 import { withAuditLogging } from "@/modules/audit-log/lib/handler";

@@ -595,15 +595,9 @@ async function prepareV3QuotaMatrixSync(
 ): Promise<(tx: Prisma.TransactionClient) => Promise<void>> {
   const skip = async () => {};
   if (!Array.isArray(blocks) || !hasMatrixElement(blocks)) return skip;
-  if (!(await getIsV3QuotasEnabled(currentSurvey.workspaceId, organizationId))) return skip;
+  if (!(await getIsQuotasEnabled(organizationId))) return skip;
   const matrixBlocks: readonly unknown[] = blocks;
   return (tx) => syncQuotaMatrixConditions(tx, currentSurvey.id, matrixBlocks);
-}
-
-/** Whether the survey's organization is licensed for quotas; a workspace with none is not. */
-async function getIsV3QuotasEnabled(workspaceId: string, organizationId: string | undefined) {
-  const resolvedOrganizationId = organizationId ?? (await getOrganizationByWorkspaceId(workspaceId))?.id;
-  return resolvedOrganizationId ? getIsQuotasEnabled(resolvedOrganizationId) : false;
 }
 
 /**
