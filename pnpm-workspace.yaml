@@ -25,7 +25,7 @@ allowBuilds:
 # fails if a workspace declares a literal version for a name listed here, and if a
 # dependency is declared by 2+ workspaces without being listed here at all.
 #
-# Deps with a single consumer deliberately stay in their own package.json — a catalog
+# Deps with a single consumer deliberately stay in their own package.json: a catalog
 # entry with one referent is indirection for nothing. `saveExact: true` (below) is why
 # every entry is a bare exact version; the sole exception in the workspace is
 # packages/survey-ui's react/react-dom `peerDependencies`, which are intentionally a
@@ -37,8 +37,8 @@ catalog:
   typescript: 5.9.3
   # Vite stays on 7.x. Vite 8 replaces Rollup with rolldown, and @vitejs/plugin-react
   # has no release accepting both majors (5.1.4 caps at vite 7; 6.1.0 requires ^8.0.0
-  # exclusively plus three new peers), while vite-prerender-plugin — pulled in by
-  # @preact/preset-vite for packages/surveys — caps at 7.x. Moving the repo to Vite 8
+  # exclusively plus three new peers), while vite-prerender-plugin (pulled in by
+  # @preact/preset-vite for packages/surveys) caps at 7.x. Moving the repo to Vite 8
   # is its own migration, tracked separately; see ENG-1689's follow-ups.
   # Note: the workspace root declares `vite` alongside `vitest`. Without it, the root's vitest
   # (and `@vitest/eslint-plugin`'s optional `vitest` peer, and packages/types' vitest) resolved
@@ -108,7 +108,7 @@ catalog:
   "@prisma/client": 7.10.1
   # redis 5.x. apps/web was on 4.7.1 while @formbricks/cache was on 5.11.0, and because
   # apps/web has no nested copy its `import type { RedisClientType } from "redis"` in
-  # lib/cache/index.ts resolved to the hoisted v4 type — then used to describe the v5
+  # lib/cache/index.ts resolved to the hoisted v4 type, then used to describe the v5
   # client that getCacheService() actually returns. Aligning here removes that crossover.
   redis: 5.12.2
   pino: 10.4.0
@@ -171,7 +171,7 @@ overrides:
   # after a `#` fragment, letting a crafted URL smuggle values the origin server never saw.
   # ENG-3093 / GHSA-g6gw-c38x-mqfc (CVE-2026-84364): parseBody() honors unbounded dot-notation key
   # nesting, so a deeply nested form field can exhaust CPU/memory building the resulting object (DoS).
-  # ENG-3092 / GHSA-gqvv-2mrq-wpjv (CVE-2026-84365): incomplete fix for CVE-2026-39408 — toSSG() can
+  # ENG-3092 / GHSA-gqvv-2mrq-wpjv (CVE-2026-84365): incomplete fix for CVE-2026-39408: toSSG() can
   # still write generated files outside its configured output directory. All three patched in 4.13.5.
   # ENG-3486 / GHSA-hxh3-vqpv-xpqv (CVE-2026-93981): hono/jsx renders plain strings unescaped as children of
   # Suspense/ErrorBoundary/Context.Provider and as the renderToString() root (XSS); patched in 4.13.7.
@@ -214,7 +214,7 @@ overrides:
   # IN_PLACE-hook and XHTML-mode findings (none reachable with our configs); patched in 3.4.17.
   dompurify: 3.4.17
   # GHSA-gh4j-gqv2-49f6 + GHSA-jp2q-39xq-3w4g are patched in 5.7.0, but 5.7.0 and 5.7.1 reject
-  # entity names starting with "#", and @aws-sdk/xml-builder registers "#xD"/"#10" on its parser —
+  # entity names starting with "#", and @aws-sdk/xml-builder registers "#xD"/"#10" on its parser,
   # which threw on every XML-parsed S3 response and silently disabled storage prefix cleanup
   # (ENG-3263). 5.7.2 is the lowest version that carries both fixes, so the floor is 5.7.2, not 5.7.0.
   # load-bearing: @aws-sdk/xml-builder pins 5.4.1 / 5.5.8, both <5.7.0 and vulnerable.
@@ -237,7 +237,7 @@ overrides:
   # uuid: load-bearing security pins that are also MAJOR coercions on transitive consumers
   # (@azure/msal-node uuid v8 and @sentry/webpack-plugin uuid v9 -> v11). Natural versions are
   # vulnerable (GHSA-w5hq-g745-h8pq), so the pins stay; runtime verified in build+tests.
-  # The 11.x line no longer needs a pin — it resolves to the patched 11.1.1 on its own.
+  # The 11.x line no longer needs a pin: it resolves to the patched 11.1.1 on its own.
   uuid@8: 11.1.1
   uuid@9: 11.1.1
   # ENG-1111 / GHSA-58qx-3vcg-4xpx: ws is patched in 8.20.1+. GHSA-96hv-2xvq-fx4p raises that to 8.21.0.
@@ -245,6 +245,10 @@ overrides:
   ws@8: 8.21.0
   # Dependabot security batch (transitive-only; direct deps vite/ua-parser-js bumped in package.json).
   "@opentelemetry/core": 2.8.0 # ENG-1355 / GHSA-8988-4f7v-96qf (<2.8.0). load-bearing: the 0.208.0/0.211.0/0.212.0/0.217.0 exporter lines resolve 2.2.0–2.7.1.
+  # OpenTelemetry's core, resources, sdk-metrics and sdk-logs accept api <1.10.0, and 1.10's ESM entry
+  # makes Turbopack load the external api asynchronously, so the web build fails with "Class extends value
+  # undefined". load-bearing: bullmq, redis and the otlp exporters resolve 1.10.0.
+  "@opentelemetry/api": 1.9.0
   esbuild: 0.28.1 # ENG-1327 / GHSA-g7r4-m6w7-qqqr (>=0.27.3 <0.28.1). load-bearing: vite@7/tsx/storybook resolve 0.27.7.
   # ENG-1527-batch / GHSA-mh29-5h37-fv8m + GHSA-h67p-54hq-rp68: js-yaml <4.1.2 quadratic-complexity
   # DoS via merge keys / repeated aliases (dev-only, via @redocly/cli). No 4.1.2 published; 4.2.0 is the
@@ -263,13 +267,13 @@ overrides:
   # ENG-3806 / GHSA-8r5x-fm3f-whwj + GHSA-p8wg-vrv2-v86f (critical) and GHSA-xw65-4hp5-5hc7: handlebars
   # <=4.7.9 compiles JavaScript out of an untrusted AST, reaches `Function` through a prototype's own
   # `constructor`, and leaves `</script>` in precompiled output; all patched in 4.7.10.
-  # load-bearing: dev-only — @redocly/cli pins 4.7.9 (used only by `build-docs`, which this repo never
+  # load-bearing: dev-only: @redocly/cli pins 4.7.9 (used only by `build-docs`, which this repo never
   # runs). The 1.x line is archived (1.34.20 still pins 4.7.9); 2.x drops handlebars.
   handlebars: 4.7.10
   # ENG-3718 / GHSA-pqg4-j6r4-53mv (CVE-2026-102422): quote() lets a line terminator in a token after a
   # `{ comment }` token escape the comment and run as shell input; patched in 1.11.0. Pinned to 1.12.0
   # (1.11.0 plus new parse() syntax) because concurrently 9.2.5 pins exactly that.
-  # load-bearing: dev-only — concurrently 9.2.4 (packages/surveys) pins 1.9.0. Drop this override by
+  # load-bearing: dev-only: concurrently 9.2.4 (packages/surveys) pins 1.9.0. Drop this override by
   # bumping concurrently to 9.2.5 once it clears the `minimumReleaseAge` cooldown (published 2026-10-08).
   shell-quote: 1.12.0
   # GHSA-4cwx-7wf7-3272, GHSA-8xcm-r25x-g524, GHSA-jr45-8vmc-qm54,
@@ -337,7 +341,7 @@ overrides:
   # detection in its recursive record-merge routine, so two recursive object graphs sharing a
   # property path exhaust the call stack (DoS); patched in 8.0.0. Pinned to 8.0.1 (lowest patched
   # release, past the `minimumReleaseAge` cooldown as of 2026-08-19). This is a cross-major coercion
-  # of two consumers, both of which declare a 7.x dependency — verified safe: @prisma/config only
+  # of two consumers, both of which declare a 7.x dependency, verified safe: @prisma/config only
   # merges developer-authored prisma.config.ts contents at CLI time, and next-safe-action merges
   # middleware context (plain objects, 2-3 levels, no Map/Set) via `deepmerge`, so none of 8.0.0's
   # breaking changes apply: the deepmergeInto mutation fix and the renamed mergeInfo/
@@ -345,7 +349,7 @@ overrides:
   # new maxDepth defaults to 1000. `prisma generate` / `prisma migrate` still resolve config
   # correctly under 8.0.1.
   # load-bearing (runtime): apps/web > next-safe-action (direct, ^7.1.5) merges server-action
-  # middleware ctx (ActionClientCtx — ipAddress/oldObject/newObject can carry request-derived data)
+  # middleware ctx (ActionClientCtx: ipAddress/oldObject/newObject can carry request-derived data)
   # on every invocation.
   # load-bearing (dev-only, Prisma CLI): apps/web > @better-auth/oauth-provider > better-auth >
   # @better-auth/prisma-adapter > @prisma/client > prisma > @prisma/config resolves 7.1.5.
@@ -368,7 +372,7 @@ overrides:
   # untrusted browserslist-stats.json keys, so a key matching an Object.prototype member name (e.g.
   # `toString`, `__proto__`) crashes the process or repoints the result object's prototype. Both patched
   # in 4.28.7.
-  # load-bearing: no direct dependency — autoprefixer (packages/surveys, dev) resolves 4.28.1 and the
+  # load-bearing: no direct dependency: autoprefixer (packages/surveys, dev) resolves 4.28.1 and the
   # @babel/core / storybook / webpack build chain (dev-only) resolves 4.28.2.
   browserslist: 4.28.7
   # ENG-2841 / GHSA-x5fp-wj9c-mxmx (CVE-2026-82562): qs's comma-array parser enforces `arrayLimit` only
@@ -392,7 +396,7 @@ overrides:
   # a function property without recursing into it first, so a crafted fake-string template
   # (`{{x.constructor(...)}}`) reaches arbitrary code execution instead of the documented
   # faker-only substitution; patched in 10.5.0.
-  # load-bearing: dev-only — @redocly/cli's @redocly/respect-core (API-docs contract testing) resolves
+  # load-bearing: dev-only: @redocly/cli's @redocly/respect-core (API-docs contract testing) resolves
   # 7.6.0.
   "@faker-js/faker": 10.5.0
   # ENG-2887 / GHSA-px8p-9vwx-vf98 (CVE-2026-45820): fflate's unzipSync() can loop indefinitely on a
@@ -448,10 +452,10 @@ overrides:
   #
   # One thing that did NOT go away: the resource server in apps/web/modules/mcp/auth.ts still asserts
   # the verified `aud` against its own allow-list (ENG-2339). That is not leftover scaffolding from this
-  # acceptance — `hasAcceptedMcpAudience` answers "is this token for ME", which is a different
+  # acceptance: `hasAcceptedMcpAudience` answers "is this token for ME", which is a different
   # question from "does each `aud` resolve to a registered resource"; only the first is the one a
   # resource server must answer. (An earlier note here claimed 1.7 drops `verifyOptions.audience`
-  # from its own jwtVerify. That could not be substantiated and is retracted — see mcp/auth.ts.)
+  # from its own jwtVerify. That could not be substantiated and is retracted; see mcp/auth.ts.)
 
 autoInstallPeers: true
 linkWorkspacePackages: true
@@ -460,12 +464,12 @@ sharedWorkspaceLockfile: true
 access: public
 enablePrePostScripts: true
 # Flat, npm-style node_modules. Deliberate for now: several packages still rely on hoisted
-# (undeclared) dependencies — react/react-dom are hoisted from the workspace root (ENG-1693), and
+# (undeclared) dependencies: react/react-dom are hoisted from the workspace root (ENG-1693), and
 # apps/storybook aliases @formbricks/survey-ui's source without declaring it. The build-helper
 # imports that used to be undeclared (ENG-1681, ENG-2925) are declared now, and
 # apps/web/lib/turbo-vite-plugins-edge.test.ts guards that edge. Moving to the strict
 # `isolated` linker is the long-term goal (ENG-1674); fix the undeclared deps first.
-# `shamefullyHoist` above is left untouched here — it becomes meaningful only under the isolated
+# `shamefullyHoist` above is left untouched here: it becomes meaningful only under the isolated
 # linker, so it is handled together with that migration rather than in this cleanup.
 nodeLinker: hoisted
 saveExact: true
@@ -473,14 +477,14 @@ saveExact: true
 # 3 days (4320 minutes) ago, so compromised releases are usually detected/yanked before we
 # can pull them. pnpm 11 already defaults to 1 day; we raise it to 3 days and pin it
 # explicitly. Note: with trustLockfile disabled (below), `pnpm install` re-verifies entries
-# already in the lockfile against this policy too — a lockfile bump younger than 3 days
+# already in the lockfile against this policy too: a lockfile bump younger than 3 days
 # (e.g. written by a bot) fails install until it ages or is excluded below. Intended.
 minimumReleaseAge: 4320
 # Keep the install-time re-verification of lockfile entries active (this is pnpm's default;
 # pinned explicitly so a future default flip can't silently weaken the cooldown).
 trustLockfile: false
 minimumReleaseAgeExclude:
-  # First-party SDK (published by Formbricks' own CI) — exempt all versions from the release-age gate so
+  # First-party SDK (published by Formbricks' own CI): exempt all versions from the release-age gate so
   # a fresh hub bump isn't blocked. Version-pinned scoped entries (e.g. '@formbricks/hub@0.9.0') are not
   # reliably matched by the exclude, so match by name.
   - "@formbricks/hub"
