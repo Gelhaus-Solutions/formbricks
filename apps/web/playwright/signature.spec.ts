@@ -14,6 +14,7 @@ import { type TSurveyBlock } from "@formbricks/types/surveys/blocks";
 import { TSurveyElementTypeEnum } from "@formbricks/types/surveys/elements";
 import { type UsersFixture } from "./fixtures/users";
 import { test } from "./lib/fixtures";
+import { surveyNextButton } from "./utils/helper";
 
 /**
  * **Signature element, end to end (ENG-6810).**
@@ -231,7 +232,7 @@ const submitDrawnSignature = async (
     const card = signatureCard(page, seeded.signatureId);
     await drawWithMouse(page, signaturePad(card));
     await expect(signatureStatus(card)).toHaveText("Signed");
-    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await surveyNextButton(page).click();
     // Next creates the response; finishing while that request is still in flight can leave the survey
     // on "Sending responses…", so wait for the stored answer before pressing Finish.
     const answer = await waitForSignatureAnswer(seeded.surveyId, seeded.signatureId);
@@ -337,7 +338,7 @@ test.describe("Signature element @slow", () => {
       await test.step("a second stroke signs again and Next uploads exactly one PNG", async () => {
         await drawWithTouch(cdp, pad);
         await expect(signatureStatus(card)).toHaveText("Signed");
-        await page.getByRole("button", { name: "Next", exact: true }).click();
+        await surveyNextButton(page).click();
         await expect(page.getByText("Anything else?")).toBeVisible({ timeout: UPLOAD_TIMEOUT });
         expect(uploads).toHaveLength(1);
       });
@@ -352,7 +353,7 @@ test.describe("Signature element @slow", () => {
       await test.step("going back keeps the signature and Next does not upload it again", async () => {
         await page.getByRole("button", { name: "Back" }).click();
         await expect(signatureStatus(card)).toHaveText("Signed");
-        await page.getByRole("button", { name: "Next", exact: true }).click();
+        await surveyNextButton(page).click();
         await expect(page.getByText("Anything else?")).toBeVisible({ timeout: UPLOAD_TIMEOUT });
         expect(uploads).toHaveLength(1);
       });
@@ -376,7 +377,7 @@ test.describe("Signature element @slow", () => {
         await expect(signatureStatus(card)).toHaveText("Signed");
         await attachShot(page, testInfo, "typed-name");
 
-        await page.getByRole("button", { name: "Next", exact: true }).focus();
+        await surveyNextButton(page).focus();
         await page.keyboard.press("Enter");
         await expect(page.getByText("Anything else?")).toBeVisible({ timeout: UPLOAD_TIMEOUT });
         expect(uploads).toHaveLength(2);
@@ -415,7 +416,7 @@ test.describe("Signature element @slow", () => {
     try {
       await skipper.page.goto(`/s/${seeded.surveyId}`);
       await expect(signaturePad(signatureCard(skipper.page, seeded.signatureId))).toBeVisible();
-      await skipper.page.getByRole("button", { name: "Next", exact: true }).click();
+      await surveyNextButton(skipper.page).click();
       await expect.poll(() => prisma.response.count({ where: { surveyId: seeded.surveyId } })).toBe(2);
       await skipper.page.getByRole("button", { name: "Finish" }).click();
       await expect(skipper.page.getByText("Thank you!")).toBeVisible({ timeout: 60_000 });

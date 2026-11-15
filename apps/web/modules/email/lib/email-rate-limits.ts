@@ -129,11 +129,7 @@ export const emailRateLimits: Record<TEmailType, TEmailRateLimit> = {
 };
 
 type TEmailRateLimitScope =
-  | "deployment"
-  | "organization"
-  | "actor"
-  | "recipient-in-organization"
-  | "recipient";
+  "deployment" | "organization" | "actor" | "recipient-in-organization" | "recipient";
 
 type TCharge = { scope: TEmailRateLimitScope; config: TRateLimitConfig; identifier: string };
 

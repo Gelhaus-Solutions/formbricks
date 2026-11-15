@@ -170,7 +170,8 @@ The generated Formbricks `DATABASE_URL` and installation notes follow the bundle
 effective service name, service port, username, and database. This includes username, database, and
 service-port overrides supplied through the dependency's `global.postgresql` values. The SpiceDB datastore URI
 and database bootstrap follow the same service name and port while continuing to provision and use the dedicated
-`spicedb` role and database.
+`spicedb` role and database. The bundled Cube follows them too, with its password read from the same Secret and
+key as the PostgreSQL server's.
 
 > [!WARNING]
 > PostgreSQL initializes users and databases only when the data directory is empty. Before applying connection
@@ -215,11 +216,23 @@ The administrator URL must explicitly set `sslmode=require`, `sslmode=verify-ca`
 The bootstrap Job validates the TLS mode without logging the URL and passes the URL through unchanged, so other
 connection parameters and certificate settings are preserved.
 
-### Bootstrapping against an existing PostgreSQL without a `postgres` role
+### Which role the bundled bootstrap connects as
 
-The bundled bootstrap connects as the `postgres` superuser the subchart normally creates. An existing
-installation deployed with `postgresql.auth.enablePostgresUser=false` has no such role, so point the Job at a
-role that does hold `CREATEROLE` and `CREATEDB` instead:
+With every `authzed.bundledPostgresqlBootstrap.admin*` value empty (the default), the Job connects as
+`postgresql.auth.username` on `postgresql.auth.database`, with the password the PostgreSQL server reads
+(`postgresql.auth.existingSecret` / `secretKeys.userPasswordKey`). The bundled `pgvector/pgvector` image is the
+official PostgreSQL image, not Bitnami's: it makes that user a superuser and creates no `postgres` role, and it
+ignores the Bitnami-only admin password that `postgresql.auth.enablePostgresUser` passes. If a Bitnami image
+initialised the data directory instead, the application user is not a superuser; the Job then detects that and
+connects as the `postgres` superuser with the admin password. A role without a fallback that cannot log in or
+lacks `CREATEROLE` and `CREATEDB` stops the Job before any SQL runs, and its log names the values to set.
+
+Setting any `admin*` value selects an explicit administrator. The values you leave empty keep the previous
+defaults: `postgres` on the `postgres` database with the bundled admin password. A values file that still sets
+`adminUsername: postgres` with the bundled admin password keeps connecting as `postgres` first and falls back to
+the application user when that role does not exist.
+
+To use another role that holds `CREATEROLE` and `CREATEDB`, for example on an existing server:
 
 ```yaml
 authzed:
@@ -342,7 +355,16 @@ Cube is part of the baseline Formbricks v5 stack and is deployed by this chart b
   app secrets cannot override the listener port.
 - The generated app secret supplies `CUBEJS_API_SECRET` by default. If you disable generated secrets,
   provide it through your existing secret management flow.
-- Provide `CUBEJS_DB_*` connection variables to the Cube deployment through `cube.envFrom` or `cube.env`.
+- With the bundled PostgreSQL, the chart connects Cube to it: `CUBEJS_DB_HOST`, `CUBEJS_DB_PORT`,
+  `CUBEJS_DB_NAME` and `CUBEJS_DB_USER` follow the `postgresql` values, and `CUBEJS_DB_PASS` references the
+  Secret and key the server reads its password from. A variable set in `cube.env` replaces that default. Setting
+  `CUBEJS_DB_HOST`, `CUBEJS_DB_USER` or `CUBEJS_DB_PASS` there drops both bundled credentials, so the bundled
+  password is never paired with a user or host you chose. Kubernetes gives `env` precedence over `envFrom`, so
+  override these in `cube.env` (a `valueFrom` map is accepted), not through `cube.envFrom`.
+- With an external database (`postgresql.enabled: false`), the chart renders no Cube connection. Set
+  `CUBEJS_DB_HOST`, `CUBEJS_DB_PORT`, `CUBEJS_DB_NAME`, `CUBEJS_DB_USER` and `CUBEJS_DB_PASS` (and
+  `CUBEJS_DB_SSL: "true"` for TLS) in `cube.env` or `cube.envFrom`. Cube's Postgres driver has no URL variable,
+  so `DATABASE_URL` cannot be reused.
 - The bundled single-replica Cube has no external pre-aggregations and defaults
   `cube.env.CUBEJS_EXTERNAL_DEFAULT` to `false`, so it does not require Cube Store. If you add external
   pre-aggregations, configure Cube Store before overriding this value to `true`.
@@ -427,6 +449,47 @@ When the background pool is disabled, Hub worker reuses the foreground `baseUrl`
 with `deployRuntime=false`, `background.baseUrl` is required. The chart continues wiring Hub and the
 worker but omits the bundled TEI Deployments, StatefulSet, Services, PVC, HPAs, and PDB.
 
+For an independently managed OpenAI-compatible runtime or managed Vertex provider, use
+`hub.embeddingClient` instead of `hub.embeddings`. Set `provider`, `model`, and the provider-specific
+endpoint or project/location values. `apiBaseUrl` and `workerBaseUrl` can route search and background
+embedding to separate endpoints. When `workerBaseUrl` is empty, the worker uses `apiBaseUrl`, then
+`baseUrl`; the API uses `apiBaseUrl`, then `baseUrl`. API-key providers read a Kubernetes Secret through
+`auth.existingSecret`; Vertex uses Application Default Credentials. For example:
+
+```yaml
+hub:
+  embeddingClient:
+    enabled: true
+    provider: openai
+    model: configured-model
+    apiBaseUrl: https://foreground.example.com/v1
+    workerBaseUrl: https://background.example.com/v1
+    auth:
+      existingSecret: embedding-provider-key
+    maxConcurrent: "16"
+    batchSize: "8"
+```
+
+When `embeddingClient.enabled=true`, its values manage the matching embedding environment variables
+and take precedence over `hub.env` and `hub.worker.env`. Copy existing tuning such as
+`EMBEDDING_MAX_CONCURRENT`, `EMBEDDING_BATCH_SIZE`, input limits, and job deadlines into the
+corresponding `embeddingClient` values before switching modes. `responseModel` is optional; set it
+only when the provider reports a stable model name that Hub should validate exactly.
+`EMBEDDING_MAX_ATTEMPTS`, `EMBEDDING_HTTP_DISABLE_KEEP_ALIVES`, and `EMBEDDING_RECONCILE_*` have no
+`embeddingClient` fields; move explicit overrides to `hub.env` or `hub.worker.env` when switching.
+
+The worker performs a real provider preflight before consuming embedding queues. Its default timeout,
+refresh interval, last-success validity, and degraded-job snooze are 10, 60, 120, and 30 seconds.
+`hub.worker.embeddingPreflight` can override each value; omitted values use the Hub defaults or
+values supplied by the Hub Secret. `hub.worker.embeddingReadiness.enabled` adds a local exec probe
+and writable marker volume; it requires a Hub release containing
+[formbricks/hub#161](https://github.com/formbricks/hub/pull/161). The chart's pinned Hub 0.14.3
+image supports that command; explicit 0.14.0 through 0.14.2 digests or tags are rejected.
+The marker path must be an absolute path below `/`,
+configured only through `hub.worker.embeddingReadiness.path`.
+When using a worker PDB with `minAvailable`, set `hub.worker.pdb.unhealthyPodEvictionPolicy: AlwaysAllow`
+so a provider outage does not block node drains on NotReady workers.
+
 For sustained background throughput, enable the worker-only TEI pool. Hub API and semantic-search
 queries continue to use the foreground service; only `hub-worker` receives the background URL and
 micro-batch settings:
@@ -461,6 +524,7 @@ An existing `hub.worker.env.EMBEDDING_HTTP_DISABLE_KEEP_ALIVES` override remains
 precedence over `hub.embeddings.background.httpDisableKeepAlives` during chart upgrades.
 
 Embedding backfills are opt-in and never render a Job unless `hub.embeddingBackfill.enabled=true`.
+They can use either `hub.embeddings` or `hub.embeddingClient` for provider and model settings.
 Each deliberate run requires a new `runId`; start with `countOnly: true`, then use `tenantId` or
 `maxRecords` to limit canary waves before an unlimited run. The selected Hub image must include
 `/app/backfill-embeddings` (a release containing [formbricks/hub#121](https://github.com/formbricks/hub/pull/121));
@@ -791,13 +855,31 @@ Upgrading from a chart that did not render the web container context:
 | hub.embeddingBackfill.runId                                        | string | `""`                                                                        | Required unique identifier for each enabled Job run.      |
 | hub.embeddingBackfill.taxonomy                                     | bool   | `false`                                                                     | Use taxonomy-translated embedding input.                  |
 | hub.embeddingBackfill.tenantId                                     | string | `""`                                                                        | Restrict the run to one tenant.                           |
+| hub.embeddingClient.apiBaseUrl                                     | string | `""`                                                                        | Foreground provider endpoint.                             |
+| hub.embeddingClient.auth.existingSecret                            | string | `""`                                                                        | Secret for API-key providers.                             |
+| hub.embeddingClient.auth.secretKey                                 | string | `"EMBEDDING_PROVIDER_API_KEY"`                                              | Key within the provider Secret.                           |
+| hub.embeddingClient.baseUrl                                        | string | `""`                                                                        | Shared OpenAI-compatible endpoint fallback.               |
+| hub.embeddingClient.batchMaxInFlight                               | string | `"1"`                                                                       | Maximum concurrent batch requests.                        |
+| hub.embeddingClient.batchMaxWaitMs                                 | string | `"25"`                                                                      | Maximum batch collection wait in milliseconds.            |
+| hub.embeddingClient.batchSize                                      | string | `"1"`                                                                       | Document batch size; 1 disables batching.                 |
+| hub.embeddingClient.enabled                                        | bool   | `false`                                                                     | Enables an external embedding provider.                   |
+| hub.embeddingClient.googleCloudLocation                            | string | `""`                                                                        | Required for Vertex.                                      |
+| hub.embeddingClient.googleCloudProject                             | string | `""`                                                                        | Required for Vertex.                                      |
+| hub.embeddingClient.jobTimeoutSeconds                              | string | `"60"`                                                                      | Worker embedding job deadline.                            |
+| hub.embeddingClient.maxConcurrent                                  | string | `"5"`                                                                       | Worker embedding concurrency.                             |
+| hub.embeddingClient.maxInputBytes                                  | string | `"12000"`                                                                   | Provider input cap in UTF-8 bytes.                        |
+| hub.embeddingClient.model                                          | string | `""`                                                                        | Requested embedding model.                                |
+| hub.embeddingClient.normalize                                      | string | `"false"`                                                                   | Normalize returned vectors.                               |
+| hub.embeddingClient.provider                                       | string | `""`                                                                        | openai, google, or google-gemini.                         |
+| hub.embeddingClient.responseModel                                  | string | `""`                                                                        | Opt-in exact response-model validation.                   |
+| hub.embeddingClient.workerBaseUrl                                  | string | `""`                                                                        | Background provider endpoint.                             |
 | hub.existingSecret                                                 | string | `""`                                                                        |                                                           |
 | hub.extraVolumeMounts                                              | list   | `[]`                                                                        | Additional volume mounts for Hub API and worker.          |
 | hub.extraVolumes                                                   | list   | `[]`                                                                        | Additional pod volumes for Hub API and worker.            |
-| hub.image.digest                                                   | string | `"sha256:3407fff46303c3c24091f2d0d0a3dbc94b8539ebd84a258575bcbf52bedda745"` | When set, takes precedence over tag (immutable pin).      |
+| hub.image.digest                                                   | string | `"sha256:63b85da9a0eb4346dd9350cd2bc82e9fe00b195756ad9a4bd50195ba874d10bc"` | When set, takes precedence over tag (immutable pin).      |
 | hub.image.pullPolicy                                               | string | `"IfNotPresent"`                                                            |                                                           |
 | hub.image.repository                                               | string | `"ghcr.io/formbricks/hub"`                                                  |                                                           |
-| hub.image.tag                                                      | string | `"0.14.1"`                                                                  | Fallback when digest is empty.                            |
+| hub.image.tag                                                      | string | `"0.14.3"`                                                                  | Fallback when digest is empty.                            |
 | hub.migration.activeDeadlineSeconds                                | int    | `900`                                                                       |                                                           |
 | hub.migration.backoffLimit                                         | int    | `3`                                                                         |                                                           |
 | hub.migration.ttlSecondsAfterFinished                              | int    | `300`                                                                       |                                                           |
@@ -813,6 +895,12 @@ Upgrading from a chart that did not render the web container context:
 | hub.worker.autoscaling.enabled                                     | bool   | `false`                                                                     |                                                           |
 | hub.worker.autoscaling.maxReplicas                                 | int    | `5`                                                                         |                                                           |
 | hub.worker.autoscaling.minReplicas                                 | int    | `1`                                                                         |                                                           |
+| hub.worker.embeddingPreflight.intervalSeconds                      | null   | `null`                                                                      | Synthetic probe refresh interval.                         |
+| hub.worker.embeddingPreflight.snoozeSeconds                        | null   | `null`                                                                      | Delay for claimed work while degraded.                    |
+| hub.worker.embeddingPreflight.successTTLSeconds                    | null   | `null`                                                                      | Validity of the last successful probe.                    |
+| hub.worker.embeddingPreflight.timeoutSeconds                       | null   | `null`                                                                      | Synthetic request deadline.                               |
+| hub.worker.embeddingReadiness.enabled                              | bool   | `false`                                                                     | Requires Hub image containing hub#161.                    |
+| hub.worker.embeddingReadiness.path                                 | string | `"/run/hub/embedding-ready"`                                                | Writable local marker path.                               |
 | hub.worker.enabled                                                 | bool   | `true`                                                                      |                                                           |
 | hub.worker.env                                                     | object | `{}`                                                                        |                                                           |
 | hub.worker.pdb.enabled                                             | bool   | `false`                                                                     |                                                           |
@@ -866,7 +954,7 @@ Upgrading from a chart that did not render the web container context:
 | pdb.enabled                                                        | bool   | `true`                                                                      |                                                           |
 | pdb.minAvailable                                                   | int    | `1`                                                                         |                                                           |
 | postgresql.auth.database                                           | string | `"formbricks"`                                                              |                                                           |
-| postgresql.auth.enablePostgresUser                                 | bool   | `true`                                                                       | Required by the bundled AuthZed database bootstrap.       |
+| postgresql.auth.enablePostgresUser                                 | bool   | `true`                                                                       | Ignored by the bundled pgvector image; lets the AuthZed bootstrap fall back to `postgres` on a Bitnami-initialised server. |
 | postgresql.auth.existingSecret                                     | string | `"formbricks-app-secrets"`                                                  |                                                           |
 | postgresql.auth.secretKeys.adminPasswordKey                        | string | `"POSTGRES_ADMIN_PASSWORD"`                                                 |                                                           |
 | postgresql.auth.secretKeys.userPasswordKey                         | string | `"POSTGRES_USER_PASSWORD"`                                                  |                                                           |

@@ -33,6 +33,16 @@ const selectPictureChoice = async (pictureSelectQuestion: Locator, choiceAlt: st
 
 // The matrix radio input is visually hidden (sr-only), so it never becomes actionable itself;
 // its wrapping <label> is the visible control. Click the label, then assert the radio state.
+/** Focus shows Back as the step arrow beside the card on wide screens, not inside it. */
+const backButton = (page: Page) => page.getByRole("button", { name: "Back" });
+
+/** GForms starts new surveys with auto-progress on; these flows answer each card and click its Next. */
+const turnOffAutoProgress = async (page: Page) => {
+  const responseOptions = page.getByRole("button", { name: /Response Options/ });
+  if ((await responseOptions.getAttribute("aria-expanded")) !== "true") await responseOptions.click();
+  await page.locator("#autoProgressRatingNps").setChecked(false);
+};
+
 const checkMatrixRadio = async (page: Page, name: string) => {
   const radio = page.getByRole("radio", { name });
   await radio.locator("..").click();
@@ -68,6 +78,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
       await page.locator("#howToSendCardTrigger").click();
       await expect(page.locator("#howToSendCardOption-link")).toBeVisible();
       await page.locator("#howToSendCardOption-link").click();
+      await turnOffAutoProgress(page);
 
       await page.getByRole("button", { name: "Save as draft", exact: true }).click();
       await expect(page.getByText("Changes saved.")).toBeVisible();
@@ -111,7 +122,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
       }
       await expect(page.getByText("Other")).toBeVisible();
       await expect(page.locator("#questionCard-1").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-1").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await page
         .locator("#questionCard-1 label")
         .filter({ hasText: surveys.createAndSubmit.singleSelectQuestion.options[0] })
@@ -129,7 +140,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
         ).toBeVisible();
       }
       await expect(page.locator("#questionCard-2").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-2").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       for (let i = 0; i < surveys.createAndSubmit.multiSelectQuestion.options.length; i++) {
         await page
           .locator("#questionCard-2 label")
@@ -150,7 +161,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
       // Rating component uses fieldset with labels, not a group with name "Choices"
       expect(await page.locator("#questionCard-3").locator("fieldset label").count()).toBe(5);
       await expect(page.locator("#questionCard-3").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-3").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       // Click on the label instead of the radio to avoid SVG intercepting pointer events
       await page.locator("#questionCard-3").locator('label:has(input[value="3"])').click();
       await page.locator("#questionCard-3").getByRole("button", { name: "Next" }).click();
@@ -164,7 +175,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
         page.locator("#questionCard-4").getByText(surveys.createAndSubmit.npsQuestion.highLabel)
       ).toBeVisible();
       await expect(page.locator("#questionCard-4").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-4").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
 
       for (let i = 0; i < 11; i++) {
         await expect(page.locator("#questionCard-4").getByText(`${i}`, { exact: true })).toBeVisible();
@@ -183,7 +194,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
       await expect(page.getByText(surveys.createAndSubmit.consentQuestion.question)).toBeVisible();
       await expect(page.getByText(surveys.createAndSubmit.consentQuestion.checkboxLabel)).toBeVisible();
       await expect(page.locator("#questionCard-6").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-6").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await page.getByLabel(surveys.createAndSubmit.consentQuestion.checkboxLabel).check();
       await page.locator("#questionCard-6").getByRole("button", { name: "Next" }).click();
 
@@ -192,7 +203,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
       await expect(page.getByText(surveys.createAndSubmit.pictureSelectQuestion.description)).toBeVisible();
       const pictureSelectQuestion = page.locator("#questionCard-7");
       await expect(pictureSelectQuestion.getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(pictureSelectQuestion.getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await expect(pictureSelectQuestion.getByRole("img", { name: creatorPictureChoiceAlt })).toBeVisible();
       await expect(pictureSelectQuestion.getByRole("img", { name: secondPictureChoiceAlt })).toBeVisible();
       await selectPictureChoice(pictureSelectQuestion, creatorPictureChoiceAlt);
@@ -201,7 +212,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
       // File Upload Question
       await expect(page.getByText(surveys.createAndSubmit.fileUploadQuestion.question)).toBeVisible();
       await expect(page.locator("#questionCard-8").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-8").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await expect(page.getByText("Click or drag to upload files")).toBeVisible();
 
       await page.locator("input[type=file]").setInputFiles({
@@ -238,7 +249,7 @@ test.describe("Survey Create & Submit Response without logic", async () => {
         page.getByRole("columnheader", { name: surveys.createAndSubmit.matrix.columns[3], exact: true })
       ).toBeVisible();
       await expect(page.locator("#questionCard-9").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-9").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await checkMatrixRadio(page, "Roses 0");
       await checkMatrixRadio(page, "Trees 0");
       await checkMatrixRadio(page, "Ocean 0");
@@ -648,11 +659,7 @@ test.describe("Multi Language Survey Create", async () => {
       "endings.0.subheader",
       surveys.germanCreate.endingCard.description
     );
-    await helper.fillModalTranslation(
-      page,
-      "endings.0.buttonLabel",
-      surveys.germanCreate.endingCard.buttonLabel
-    );
+    // GForms' ending card has no button by default, so there is no button label to translate.
 
     // Save translations
     await page.getByRole("button", { name: "Save" }).click();
@@ -694,7 +701,7 @@ test.describe("Multi Language Survey Create", async () => {
           welcomeCard(respondent).getByText(surveys.germanCreate.welcomeCard.headline)
         ).toBeVisible();
 
-        // With the setting off, the same German browser gets the default (English) language —
+        // With the setting off, the same German browser gets the default (English) language:
         // this survey keeps the template's English welcome headline.
         await prisma.survey.update({ where: { id: surveyId }, data: { autoSelectLanguage: false } });
         await respondent.reload();
@@ -734,6 +741,7 @@ test.describe("Testing Survey with advanced logic", async () => {
       await page.locator("#howToSendCardTrigger").click();
       await expect(page.locator("#howToSendCardOption-link")).toBeVisible();
       await page.locator("#howToSendCardOption-link").click();
+      await turnOffAutoProgress(page);
 
       await page.getByRole("button", { name: "Save as draft", exact: true }).click();
       await expect(page.getByText("Changes saved.")).toBeVisible();
@@ -787,7 +795,7 @@ test.describe("Testing Survey with advanced logic", async () => {
       }
       await expect(page.getByText("Other")).toBeVisible();
       await expect(page.locator("#questionCard-1").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-1").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await page
         .locator("#questionCard-1 label")
         .filter({ hasText: surveys.createWithLogicAndSubmit.singleSelectQuestion.options[0] })
@@ -809,7 +817,7 @@ test.describe("Testing Survey with advanced logic", async () => {
         ).toBeVisible();
       }
       await expect(page.locator("#questionCard-2").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-2").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       for (let i = 0; i < surveys.createWithLogicAndSubmit.multiSelectQuestion.options.length; i++) {
         await page
           .locator("#questionCard-2 label")
@@ -827,7 +835,7 @@ test.describe("Testing Survey with advanced logic", async () => {
       ).toBeVisible();
       const pictureSelectQuestion = page.locator("#questionCard-3");
       await expect(pictureSelectQuestion.getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(pictureSelectQuestion.getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await expect(pictureSelectQuestion.getByRole("img", { name: firstPictureChoiceAlt })).toBeVisible();
       await expect(pictureSelectQuestion.getByRole("img", { name: secondPictureChoiceAlt })).toBeVisible();
       await selectPictureChoice(pictureSelectQuestion, firstPictureChoiceAlt);
@@ -843,7 +851,7 @@ test.describe("Testing Survey with advanced logic", async () => {
         page.locator("#questionCard-4").getByText(surveys.createWithLogicAndSubmit.ratingQuestion.highLabel)
       ).toBeVisible();
       await expect(page.locator("#questionCard-4").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-4").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       // Click on the label instead of the radio to avoid SVG intercepting pointer events
       await page.locator("#questionCard-4").locator('label:has(input[value="4"])').click();
       await page.locator("#questionCard-4").getByRole("button", { name: "Next" }).click();
@@ -857,7 +865,7 @@ test.describe("Testing Survey with advanced logic", async () => {
         page.locator("#questionCard-5").getByText(surveys.createWithLogicAndSubmit.npsQuestion.highLabel)
       ).toBeVisible();
       await expect(page.locator("#questionCard-5").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-5").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
 
       for (let i = 0; i < 11; i++) {
         await expect(page.locator("#questionCard-5").getByText(`${i}`, { exact: true })).toBeVisible();
@@ -906,7 +914,7 @@ test.describe("Testing Survey with advanced logic", async () => {
         })
       ).toBeVisible();
       await expect(page.locator("#questionCard-7").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-7").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await checkMatrixRadio(page, "Roses 0");
       await checkMatrixRadio(page, "Trees 0");
       await checkMatrixRadio(page, "Ocean 0");
@@ -928,7 +936,7 @@ test.describe("Testing Survey with advanced logic", async () => {
         page.getByText(surveys.createWithLogicAndSubmit.consentQuestion.checkboxLabel)
       ).toBeVisible();
       await expect(page.locator("#questionCard-9").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-9").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
       await page.getByLabel(surveys.createWithLogicAndSubmit.consentQuestion.checkboxLabel).check();
       await page.locator("#questionCard-9").getByRole("button", { name: "Next" }).click();
 
@@ -937,7 +945,7 @@ test.describe("Testing Survey with advanced logic", async () => {
         page.getByText(surveys.createWithLogicAndSubmit.fileUploadQuestion.question)
       ).toBeVisible();
       await expect(page.locator("#questionCard-10").getByRole("button", { name: "Next" })).toBeVisible();
-      await expect(page.locator("#questionCard-10").getByRole("button", { name: "Back" })).toBeVisible();
+      await expect(backButton(page)).toBeVisible();
 
       await expect(page.getByText("Click or drag to upload files")).toBeVisible();
 
@@ -1001,7 +1009,7 @@ test.describe("Testing Survey with advanced logic", async () => {
       });
 
       // No settle wait here on purpose: the cell assertions below auto-wait, and
-      // `waitForLoadState("networkidle")` never resolved on this page — it burned the whole 8 minute
+      // `waitForLoadState("networkidle")` never resolved on this page; it burned the whole 8 minute
       // test timeout, then a retry, which is what pushed the Playwright step past its 15 minute cap.
 
       // Look for any cell containing "32" or a score-related value

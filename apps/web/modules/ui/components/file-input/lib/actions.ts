@@ -15,15 +15,15 @@ export const convertHeicToJpegAction = authenticatedActionClient
     const convert = (await import("heic-convert")).default;
 
     const arrayBuffer = await parsedInput.file.arrayBuffer();
-    const nodeBuffer = Buffer.from(arrayBuffer) as unknown as ArrayBufferLike;
 
     const convertedBuffer = await convert({
-      buffer: nodeBuffer,
+      buffer: Buffer.from(arrayBuffer),
       format: "JPEG",
       quality: 0.9,
     });
 
-    return new File([convertedBuffer], parsedInput.file.name.replace(/\.heic$/, ".jpg"), {
+    // Copied into a buffer of its own: a File takes only ArrayBuffer-backed views.
+    return new File([new Uint8Array(convertedBuffer)], parsedInput.file.name.replace(/\.heic$/, ".jpg"), {
       type: "image/jpeg",
     });
   });

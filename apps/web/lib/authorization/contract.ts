@@ -20,7 +20,7 @@ export const AUTHORIZATION_PERMISSION_MAP = {
     "manage_api_keys",
   ],
   team: ["read", "manage", "delete"],
-  workspace: ["read", "write", "manage", "share"],
+  workspace: ["read", "write", "manage", "share", "dashboard_read"],
   survey: [
     "read",
     "write",
@@ -33,12 +33,14 @@ export const AUTHORIZATION_PERMISSION_MAP = {
   ],
   dashboard: ["read", "write"],
   feedbackDirectory: ["read", "write", "manage"],
-  feedbackDirectoryAssignment: ["read", "write", "manage"],
+  feedbackDirectoryAssignment: ["read", "write", "manage", "dashboard_read"],
   response: ["read", "write", "manage", "export"],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
 type TAuthorizationPermissionMap = {
-  readonly [TResourceType in keyof typeof AUTHORIZATION_PERMISSION_MAP]: (typeof AUTHORIZATION_PERMISSION_MAP)[TResourceType][number];
+  readonly [
+    TResourceType in keyof typeof AUTHORIZATION_PERMISSION_MAP
+  ]: (typeof AUTHORIZATION_PERMISSION_MAP)[TResourceType][number];
 };
 
 export type TAuthorizationResourceType = keyof TAuthorizationPermissionMap;
@@ -70,7 +72,9 @@ type TAuthorizationResourceOfType<TResourceType extends TAuthorizationResourceTy
 export type TAuthorizationResource = TAuthorizationResourceOfType<TAuthorizationResourceType>;
 
 export type TAuthorizationAction = {
-  [TResourceType in TAuthorizationResourceType]: `${TResourceType}.${TAuthorizationPermissionMap[TResourceType]}`;
+  [
+    TResourceType in TAuthorizationResourceType
+  ]: `${TResourceType}.${TAuthorizationPermissionMap[TResourceType]}`;
 }[TAuthorizationResourceType];
 
 type TAuthorizationResourceTypeForAction<TAction extends TAuthorizationAction> =

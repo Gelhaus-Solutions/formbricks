@@ -1,7 +1,11 @@
 import { type JSX, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SurveyType, Workspace } from "@formbricks/database/prisma-browser";
-import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
+import {
+  getLinkSurveyArrangement,
+  getLinkSurveyCardMaxWidth,
+  isFullPageLinkArrangement,
+} from "@formbricks/types/styling";
 import { TSurveyStyling } from "@formbricks/types/surveys/types";
 import { TWorkspaceStyling } from "@formbricks/types/workspace";
 import { cn } from "@/lib/cn";
@@ -61,14 +65,15 @@ export const LinkSurveyWrapper = ({
   };
   const styling = determineStyling();
   // Footer legal links sit on the survey background; resolve an AA-compliant color (and an
-  // optional backdrop for non-solid backgrounds). An explicit footerLinkColor override wins —
+  // optional backdrop for non-solid backgrounds). An explicit footerLinkColor override wins,
   // and also disables the near-white media backdrop: the user takes ownership of contrast, and
   // e.g. a light override would otherwise be unreadable on the light backdrop.
   const footerLinkStyle = getFooterLinkStyle(styling);
   const explicitFooterLinkColor = styling.footerLinkColor?.light;
   const footerLinkColor = explicitFooterLinkColor ?? footerLinkStyle.textColor;
   const footerLinkBackdropColor = explicitFooterLinkColor ? undefined : footerLinkStyle.backdropColor;
-  const isCardless = isFullPageLinkArrangement(styling.cardArrangement?.linkSurveys);
+  const linkArrangement = getLinkSurveyArrangement(styling.cardArrangement?.linkSurveys);
+  const isCardless = isFullPageLinkArrangement(linkArrangement);
   const linkSurveyCardMaxWidth = getLinkSurveyCardMaxWidth(styling.linkSurveyCardWidth);
   const hasLogo = !styling.isLogoHidden && !!(workspace.logo?.url || styling.logo?.url);
   const showCardlessLogo = isCardless && hasLogo;
@@ -83,8 +88,8 @@ export const LinkSurveyWrapper = ({
           "flex h-full w-full flex-col",
           isCardless && "overflow-hidden",
           !isCardless && "mx-auto",
-          styling.cardArrangement?.linkSurveys === "straight" && "pt-6",
-          styling.cardArrangement?.linkSurveys === "casual" && "px-6 py-10"
+          linkArrangement === "straight" && "pt-6",
+          linkArrangement === "casual" && "px-6 py-10"
         )}
         style={cardMaxWidthStyle}>
         {children}

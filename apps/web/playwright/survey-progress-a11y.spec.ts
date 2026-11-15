@@ -17,18 +17,18 @@ import { test } from "./lib/fixtures";
  * `aria-valuenow` can never drift from what is painted: one clamped, floored
  * expression drives both the indicator's inline width and the exposed value. A
  * refactor that splits them (floor one, round the other) is exactly the silent
- * regression this spec catches — a screen reader announcing 17% over a 16% bar
+ * regression this spec catches: a screen reader announcing 17% over a 16% bar
  * looks fine in every screenshot.
  *
  * Covered here:
- * - determinate semantics + name on the default (stacked) link-survey layout,
+ * - determinate semantics + name on the stacked link-survey layout,
  * - value == painted width on every card of a full walk, forwards and backwards,
  * - 0 on the welcome card, 100 on the ending card, strictly increasing between,
  * - the cardless layout, which renders the same bar from a different call site
  *   and deliberately omits it on the welcome card,
  * - `hideProgressBar` styling: no phantom progressbar left in the a11y tree.
  *
- * Tagged @slow — it provisions three surveys and walks two of them end to end.
+ * Tagged @slow: it provisions three surveys and walks two of them end to end.
  * The tag is metadata only; the spec still runs in the standard `pnpm test:e2e`
  * job (testMatch **\/*.spec.ts).
  */
@@ -83,7 +83,7 @@ interface SeedOptions {
 }
 
 /**
- * Seeds a published multi-card survey straight through Prisma — the same boundary
+ * Seeds a published multi-card survey straight through Prisma, the same boundary
  * the `users` fixture writes through, so no login or dashboard step is needed for
  * the link-survey cases. The legacy `questions` shape is converted with the SAME
  * `transformQuestionsToBlocks` the v1 management API uses server-side, so the stored
@@ -155,7 +155,7 @@ interface BarSnapshot {
  * stacked cards mounted, but only the current one gets real content (the peeking
  * cards render a dummy body, see wrappers/stacked-card.tsx). The helper still reads
  * all of them and requires agreement, because the swap between outgoing and incoming
- * card is staggered by 300ms and could briefly mount two — and two bars disagreeing
+ * card is staggered by 300ms and could briefly mount two, and two bars disagreeing
  * would itself be a defect worth failing on.
  */
 const readBars = (page: Page): Promise<BarSnapshot[]> =>
@@ -208,8 +208,8 @@ const settledBars = async (
 
 /**
  * Asserts the determinate contract on every rendered bar and returns the value they
- * agree on: a 0..100 range, a numeric current value inside it, and — the point of
- * the change — a painted width that is exactly that value.
+ * agree on: a 0..100 range, a numeric current value inside it, and (the point of
+ * the change) a painted width that is exactly that value.
  */
 const assertDeterminate = (bars: BarSnapshot[], context: string): number => {
   expect(bars.length, `${context}: at least one progress bar should be rendered`).toBeGreaterThan(0);
@@ -269,7 +269,14 @@ test.describe("Survey progress accessibility @slow", () => {
     if (!user.workspaceId) throw new Error("users.create() did not return a workspaceId");
 
     const [stackedId, cardlessId, hiddenBarId] = await Promise.all([
-      seedProgressSurvey(user.workspaceId, user.id, { name: "Progress semantics (stacked)" }),
+      // Stacked by name: a link survey's GForms default is Focus.
+      seedProgressSurvey(user.workspaceId, user.id, {
+        name: "Progress semantics (stacked)",
+        styling: {
+          overwriteThemeStyling: true,
+          cardArrangement: { linkSurveys: "straight", appSurveys: "straight" },
+        },
+      }),
       seedProgressSurvey(user.workspaceId, user.id, {
         name: "Progress semantics (cardless)",
         styling: {
@@ -335,7 +342,7 @@ test.describe("Survey progress accessibility @slow", () => {
     await page.goto(cardlessUrl ?? "");
     await expect(advanceButton(page), "cardless survey should render").toBeVisible({ timeout: CARD_TIMEOUT });
 
-    // The cardless layout deliberately hides the bar on the welcome card — so it must
+    // The cardless layout deliberately hides the bar on the welcome card, so it must
     // be absent from the accessibility tree there, not present and reporting 0.
     await expect(
       page.getByRole("progressbar"),
@@ -363,7 +370,7 @@ test.describe("Survey progress accessibility @slow", () => {
 
     await expect(page.getByRole("progressbar"), "a hidden progress bar must not be announced").toHaveCount(0);
 
-    // Still true after navigating — the role is not attached late by a different path.
+    // Still true after navigating: the role is not attached late by a different path.
     await advanceButton(page).click({ timeout: ACTION_TIMEOUT });
     await expect(page.getByText(QUESTION_HEADLINES[0]).first()).toBeVisible({ timeout: CARD_TIMEOUT });
     await expect(page.getByRole("progressbar")).toHaveCount(0);
@@ -372,7 +379,7 @@ test.describe("Survey progress accessibility @slow", () => {
 
 /**
  * The auto-close countdown only renders for `type: "app"` surveys with `autoClose`
- * set, and `/s/<id>` 404s for anything that is not a link survey — so it is
+ * set, and `/s/<id>` 404s for anything that is not a link survey, so it is
  * unreachable from the link-survey fixtures above. The editor's live preview renders
  * the very same `AutoCloseProgressBar` through `SurveyInline`, which makes it the
  * cheapest surface that exercises this component: seed + login + one navigation, no
@@ -400,7 +407,7 @@ test.describe("App survey auto-close countdown accessibility @slow", () => {
     const surveyId = await seedProgressSurvey(user.workspaceId, user.id, {
       name: "Auto-close countdown semantics",
       type: "app",
-      // No welcome card, so the countdown shows on the first question card — the
+      // No welcome card, so the countdown shows on the first question card; the
       // wrapper only renders it while `isFirstQuestion && !hasInteracted`.
       welcomeCardEnabled: false,
       autoCloseSeconds: AUTO_CLOSE_SECONDS,

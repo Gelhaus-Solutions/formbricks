@@ -35,7 +35,7 @@ describe("getFrameClassName", () => {
 describe("getHeaderCellClassName", () => {
   // The settings header type lives here rather than on the shared `TableHead`: a class on the `th` beats
   // the colour a `<thead>` passes down, so putting it in the primitive would lighten every bare
-  // `TableHead` in the app — including contacts, attributes and survey responses.
+  // `TableHead` in the app, including contacts, attributes and survey responses.
   test("sets the settings header type itself instead of relying on the shared primitive", () => {
     expect(getHeaderCellClassName(column())).toBe("font-medium text-slate-500");
   });
@@ -68,7 +68,7 @@ describe("getHeaderCellClassName", () => {
     expect(getHeaderCellClassName(column({ hideBelow: bp }))).toBe(`font-medium text-slate-500 ${expected}`);
   });
 
-  test("ignores cellClassName — that is for body cells only", () => {
+  test("ignores cellClassName: that is for body cells only", () => {
     expect(getHeaderCellClassName(column({ cellClassName: "font-medium text-slate-900" }))).toBe(
       "font-medium text-slate-500"
     );
@@ -76,7 +76,7 @@ describe("getHeaderCellClassName", () => {
 });
 
 describe("getBodyCellClassName", () => {
-  test("ignores headerClassName — a width there must not leak onto every cell", () => {
+  test("ignores headerClassName: a width there must not leak onto every cell", () => {
     expect(getBodyCellClassName(column({ headerClassName: "w-[22%]" }))).toBe("");
   });
 
@@ -153,7 +153,7 @@ describe("getRowActivatorColumnId", () => {
  * element inside `cell`.
  *
  * This reads source text, so it only catches the literal form every call site actually uses
- * (`cellClassName: "..."`). A computed value or a `cn()` call would slip past — it is a guard against the
+ * (`cellClassName: "..."`). A computed value or a `cn()` call would slip past, it is a guard against the
  * easy mistake, not a proof.
  */
 describe("column class props never change a cell's display", () => {
@@ -218,9 +218,7 @@ describe("column class props never change a cell's display", () => {
           .filter((token) => DISPLAY_UTILITIES.has(token));
 
         if (display.length > 0) {
-          offenders.push(
-            `${path.relative(appRoot, file)} — ${prop}: "${classes}" sets ${display.join(", ")}`
-          );
+          offenders.push(`${path.relative(appRoot, file)}: ${prop}: "${classes}" sets ${display.join(", ")}`);
         }
       }
     }
@@ -232,7 +230,7 @@ describe("column class props never change a cell's display", () => {
     const files = collectSourceFiles(path.join(appRoot, "modules"));
 
     // A silently empty walk would make the test above pass for the wrong reason.
-    expect(files.some((file) => file.endsWith("feedback-directory-table.tsx"))).toBe(true);
+    expect(files.some((file) => file.endsWith("library-columns.tsx"))).toBe(true);
     expect(files.some((file) => file.endsWith("column-classes.ts"))).toBe(true);
   });
 });

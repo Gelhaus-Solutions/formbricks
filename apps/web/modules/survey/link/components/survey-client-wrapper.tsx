@@ -6,7 +6,7 @@ import { Workspace } from "@formbricks/database/prisma-browser";
 import type { TRendererCustomCss } from "@formbricks/types/custom-css";
 import { getIngestedStorageKeys } from "@formbricks/types/embedded-data-fields";
 import { TResponseData } from "@formbricks/types/responses";
-import { isFullPageLinkArrangement } from "@formbricks/types/styling";
+import { getLinkSurveyArrangement, isFullPageLinkArrangement } from "@formbricks/types/styling";
 import { findElementByIdOrCode } from "@formbricks/types/surveys/element-lookup";
 import { TSurvey, TSurveyStyling } from "@formbricks/types/surveys/types";
 import { TWorkspaceStyling } from "@formbricks/types/workspace";
@@ -195,7 +195,9 @@ export const SurveyClientWrapper = ({
     setResponseData({});
   };
   const jsSurvey = useMemo(() => toJsWorkspaceStateSurvey(survey), [survey]);
-  const isCardless = isFullPageLinkArrangement(styling.cardArrangement?.linkSurveys);
+  const isCardless = isFullPageLinkArrangement(
+    getLinkSurveyArrangement(styling.cardArrangement?.linkSurveys)
+  );
   const hasLogo = !styling.isLogoHidden && !!(styling.logo?.url || workspace.logo?.url);
 
   // Determine text direction based on language code for logo positioning only

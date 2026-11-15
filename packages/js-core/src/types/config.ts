@@ -16,13 +16,7 @@ export interface TRendererCustomCss {
 }
 
 export type TActionClassPageUrlRule =
-  | "exactMatch"
-  | "contains"
-  | "startsWith"
-  | "endsWith"
-  | "notMatch"
-  | "notContains"
-  | "matchesRegex";
+  "exactMatch" | "contains" | "startsWith" | "endsWith" | "notMatch" | "notContains" | "matchesRegex";
 
 export type TActionClassNoCodeConfig =
   | {
@@ -204,6 +198,8 @@ export interface TConfigInput {
   environmentId?: string;
   workspaceId?: string;
   appUrl: string;
+  /** Warm the survey renderer cache during setup. Set false when the host CSP blocks prefetch. Defaults to true. */
+  prefetch?: boolean;
   /** How surveys and creatives render. Defaults to light; can be changed later with `setAppearance`. */
   appearance?: "light" | "dark" | "system";
 }

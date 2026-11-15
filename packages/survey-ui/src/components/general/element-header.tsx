@@ -62,7 +62,13 @@ function ElementHeader({
 
       {/* Headline */}
       <div>
-        <div>{required ? <span className="label-card mb-[3px]">{requiredLabel}</span> : null}</div>
+        <div>
+          {required ? (
+            <span className="label-card mb-[3px]" data-slot="element-required">
+              {requiredLabel}
+            </span>
+          ) : null}
+        </div>
         <HeadingTag className="flex" data-slot="element-headline">
           <Label htmlFor={htmlFor} id={headlineId} variant="headline" data-fb-part={FB_PART.headline}>
             {headline}

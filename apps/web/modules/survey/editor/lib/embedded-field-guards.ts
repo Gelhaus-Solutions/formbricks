@@ -34,11 +34,7 @@ import { declaredEmbeddedFieldName } from "@/modules/survey/editor/lib/embedded-
  * namespaces and the merged one no longer does.
  */
 export type TEmbeddedFieldWarning =
-  | "unsafeAddress"
-  | "reservedAddress"
-  | "systemParamAddress"
-  | "clashingAddress"
-  | "lockedWithoutDefault";
+  "unsafeAddress" | "reservedAddress" | "systemParamAddress" | "clashingAddress" | "lockedWithoutDefault";
 
 /** Addresses one row, the way the reconcile does. The card's React key and the warning map agree. */
 export const embeddedFieldKey = ({ field, link }: TLinkedEmbeddedField): string =>

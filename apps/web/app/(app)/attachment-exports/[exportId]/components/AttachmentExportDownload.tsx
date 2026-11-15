@@ -11,13 +11,7 @@ import type { TAttachmentExportStatus } from "@/modules/storage/attachment-expor
 import { Button } from "@/modules/ui/components/button";
 
 type TDownloadState =
-  | "starting"
-  | "started"
-  | "expired"
-  | "not_ready"
-  | "not_available"
-  | "export_failed"
-  | "download_failed";
+  "starting" | "started" | "expired" | "not_ready" | "not_available" | "export_failed" | "download_failed";
 
 type TAttachmentExportLink = {
   id: string;

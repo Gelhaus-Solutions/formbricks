@@ -11,6 +11,9 @@ pdb:
   enabled: false
 # Leave CPU headroom for the replacement web Pod during a one-node RollingUpdate.
 deployment:
+  # GForms publishes no image under the chart's appVersion; edge is main's latest build.
+  image:
+    tag: edge
   resources:
     requests:
       cpu: 100m

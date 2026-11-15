@@ -216,6 +216,9 @@ export const UNSPLASH_ALLOWED_DOMAINS = ["api.unsplash.com"];
 
 // Maximum number of attribute classes allowed:
 export const MAX_ATTRIBUTE_CLASSES_PER_ENVIRONMENT = 150;
+// Most attributes one identify request may carry. Over three times what an environment can define, so
+// no real call reaches it; it stops a body from making the attribute validation walk an unbounded map.
+export const MAX_CONTACT_ATTRIBUTES_PER_REQUEST = 500;
 
 export { AVAILABLE_LOCALES, DEFAULT_LOCALE } from "./i18n/app-locale";
 

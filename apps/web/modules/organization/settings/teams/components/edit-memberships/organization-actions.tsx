@@ -43,6 +43,7 @@ interface OrganizationActionsProps {
   readonly isAccessControlAllowed: boolean;
   readonly isMultiOrgEnabled: boolean;
   readonly isUserManagementDisabledFromUi: boolean;
+  readonly canManageUsers: boolean;
   readonly isTeamAdmin: boolean;
   readonly userAdminTeamIds?: string[];
   readonly isBulkInviteAllowed: boolean;
@@ -58,6 +59,7 @@ export const OrganizationActions = ({
   isAccessControlAllowed,
   isMultiOrgEnabled,
   isUserManagementDisabledFromUi,
+  canManageUsers,
   isTeamAdmin,
   userAdminTeamIds,
   isBulkInviteAllowed,
@@ -71,7 +73,7 @@ export const OrganizationActions = ({
   const { isOwner, isManager } = getAccessFlags(membershipRole);
   const isOwnerOrManager = isOwner || isManager;
 
-  const canInvite = isOwnerOrManager || (isAccessControlAllowed && isTeamAdmin);
+  const canInvite = isOwnerOrManager ? canManageUsers : isAccessControlAllowed && isTeamAdmin;
 
   const handleLeaveOrganization = async () => {
     setLoading(true);

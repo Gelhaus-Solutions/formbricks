@@ -193,11 +193,7 @@ export interface NotionConfig {
 
 // Union type for all integration configs
 export type IntegrationConfig =
-  | GoogleSheetsConfig
-  | AirtableConfig
-  | SlackConfig
-  | NotionConfig
-  | Record<string, unknown>;
+  GoogleSheetsConfig | AirtableConfig | SlackConfig | NotionConfig | Record<string, unknown>;
 
 // Integration migration types
 export interface IntegrationRecord {

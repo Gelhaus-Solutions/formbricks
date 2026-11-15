@@ -71,7 +71,7 @@
 
 /* this is for styling the HtmlBody component */
 #fbjs .htmlbody {
-  @apply block text-sm font-normal leading-6;
+  @apply block text-sm leading-6 font-normal;
   /* need to use !important because in packages/survey-ui/components/editor/styles-editor-frontend.css the color is defined for some classes */
   color: var(--fb-subheading-color) !important;
 }
@@ -144,7 +144,7 @@
  * The rules above are the fallback for list markup without the editor's theme classes. Rich text
  * authored in the app carries them, and its geometry (1.5em per level, no item margins, no marker
  * on the .fb-editor-nested-listitem wrapper Lexical puts around a nested list) comes from the
- * editor stylesheet that lib/styles.ts injects right after this file — one definition shared with
+ * editor stylesheet that lib/styles.ts injects right after this file: one definition shared with
  * the editor itself. Source of truth for those class names:
  * apps/web/modules/ui/components/editor/lib/example-theme.ts
  */
@@ -188,7 +188,7 @@
   --fb-placeholder-color: var(--slate-300);
   --fb-info-text-color: var(--slate-500);
   /* slate-600, not slate-500: the branding line is 12px text and slate-500 on a white
-     card is 4.42:1 — just under the WCAG 1.4.3 AA 4.5:1 threshold (axe color-contrast). */
+     card is 4.42:1, just under the WCAG 1.4.3 AA 4.5:1 threshold (axe color-contrast). */
   --fb-signature-text-color: var(--slate-600);
   --fb-branding-text-color: var(--slate-600);
   --fb-survey-background-color: white;
@@ -305,8 +305,9 @@
     text-align: start !important;
   }
 
-  /* Required or not shows when the respondent tries to move on, not as a label over every question. */
-  #fbjs .fb-focus .fb-focus-content .label-card {
+  /* Required or not shows when the respondent tries to move on, not as a label over every question.
+     Only the marker: a rating's or NPS's scale labels share its label-card look and stay. */
+  #fbjs .fb-focus .fb-focus-content [data-slot="element-required"] {
     display: none !important;
   }
 

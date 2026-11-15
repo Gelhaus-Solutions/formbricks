@@ -1,7 +1,7 @@
 name: API v3 Contract Tests
 
 # Drives a real instance against the committed v3 OpenAPI bundle with Schemathesis and fails when a
-# response violates the documented status codes, content type, or schema — or answers 5xx.
+# response violates the documented status codes, content type, or schema, or answers 5xx.
 # api-v3-spec.yml proves the document is well-formed and the bundle is fresh; this proves the running
 # API still matches it. Harness and local instructions: docs/api-v3-reference/contract-tests/.
 #
@@ -47,7 +47,7 @@ jobs:
           - 6379:6379
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
@@ -63,7 +63,7 @@ jobs:
       - uses: ./.github/actions/dangerous-git-checkout
 
       # This workflow is resolved from the base branch but tests the PR head, so branches cut before
-      # this landed do not contain the harness. Detect it and skip instead of failing every open PR —
+      # this landed do not contain the harness. Detect it and skip instead of failing every open PR:
       # same pattern, and same reason, as integration-tests.yml.
       - name: Detect contract-test harness
         id: harness
@@ -73,12 +73,12 @@ jobs:
             echo "present=true" >> "$GITHUB_OUTPUT"
           else
             echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::v3 contract-test harness absent on this ref (branch predates ENG-2191) — skipping."
+            echo "::notice::v3 contract-test harness absent on this ref (branch predates ENG-2191), skipping."
           fi
 
       - name: Install pnpm
         if: steps.harness.outputs.present == 'true'
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
       - name: Setup Node.js (version from .nvmrc)
         if: steps.harness.outputs.present == 'true'
@@ -117,7 +117,7 @@ jobs:
         timeout-minutes: 15
         env:
           # Turborepo hashes its own process environment, not the `.env` file, and next.config.mjs
-          # reads this at build time — so setting it only in `.env` would let a cached non-E2E build
+          # reads this at build time, so setting it only in `.env` would let a cached non-E2E build
           # be replayed here. Same reason e2e.yml passes it twice.
           E2E_TESTING: "1"
         run: pnpm build --filter=@formbricks/web...
@@ -162,7 +162,7 @@ jobs:
           pnpm authzed:backfill --apply > /tmp/authzed-backfill.json
           backfill_exit=$?
           # ENG-3282: surveys are their own scope. Converge them and set the readiness marker, so the
-          # contract is exercised with survey visibility enforced — the state production runs in.
+          # contract is exercised with survey visibility enforced: the state production runs in.
           pnpm authzed:backfill --scope=survey --apply --mark-ready > /tmp/authzed-survey-backfill.json
           survey_backfill_exit=$?
           # The fixtures make surveys restricted, which the outbox records as revocations. The backfill
@@ -197,7 +197,7 @@ jobs:
           exit 1
 
       # Guards the failure mode this job is most likely to die of quietly: if seeding or the API key
-      # broke, every operation would answer 401/403 — all documented, so Schemathesis would report a
+      # broke, every operation would answer 401/403 (all documented), so Schemathesis would report a
       # green run that proved nothing. One authenticated read is enough to know the fixtures are live.
       - name: Verify the seeded API key reaches real data
         if: steps.harness.outputs.present == 'true'
@@ -208,13 +208,13 @@ jobs:
             -H "x-api-key: fbk_${SEED_API_KEY}" \
             "http://localhost:3000/api/v3/surveys?workspaceId=${workspace_id}&limit=1")
           if [ "${status}" -ne 200 ]; then
-            echo "::error::Pre-flight read returned ${status}, expected 200. Seeded data or API key is broken — the contract run would be meaningless."
+            echo "::error::Pre-flight read returned ${status}, expected 200. Seeded data or API key is broken: the contract run would be meaningless."
             cat /tmp/preflight.json
             exit 1
           fi
 
           # The list endpoint above answers 200 off the base seed alone, so it says nothing about the
-          # contract fixtures. The deepest response schema in the contract — the survey resource —
+          # contract fixtures. The deepest response schema in the contract (the survey resource)
           # only gets exercised when the read fixture exists *and* carries the languages the spec's
           # `lang` examples ask for; without them the operation degrades to a documented 400 and the
           # suite stays green having validated nothing.
@@ -298,7 +298,7 @@ jobs:
 
       - name: Upload deployment check report
         if: always() && steps.harness.outputs.present == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: deployment-check-report
           if-no-files-found: ignore
@@ -306,7 +306,7 @@ jobs:
 
       - name: Set up Python
         if: steps.harness.outputs.present == 'true'
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
 
@@ -316,7 +316,7 @@ jobs:
         shell: bash
 
       # Which operations are skipped, and why, lives in schemathesis.toml next to the operations it
-      # names — not here. An endpoint's own PR deletes its block there as the route lands, so each
+      # names, not here. An endpoint's own PR deletes its block there as the route lands, so each
       # one is contract-checked when it ships rather than all of them at the end (ENG-2959).
       #
       # The selected-operation count is the check: it is printed on every run, and it must rise by

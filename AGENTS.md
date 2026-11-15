@@ -10,13 +10,15 @@ Use root `package.json` scripts for commands. Run tests and typechecking through
 so their workspace dependencies rebuild first.
 
 Read `docs/agents/monorepo-builds.md` before changing workspace packages, shared dependencies, build
-configuration, workspace CSS, or adding tests outside a workspace. Also read it when a package change
-is missing from the running app or a direct test command fails after switching branches.
+configuration, workspace CSS, adding tests outside a workspace, or running integration tests. Also read
+it after pulling or merging main, or when a package change is missing from the running app or a direct
+test command fails after switching branches.
 
 ## Architecture & Patterns
 
 - Server actions are legacy: do not add new ones. New backend work belongs in an `/api/v3` route consumed from the client with TanStack Query, with server data living in the query cache rather than mirrored into `useState` or Jotai. The existing server actions wrap service calls and return `{ data }` or `{ error }` consistently; keep that contract when changing them.
 - MCP tools (`apps/web/modules/mcp`) are thin adapters over v3 operations, registered only through `registerScopedTool`. Before adding a tool or a scope, read "Adding a tool" in `docs/development/technical-handbook/mcp-server.mdx`.
+- Code that calls an LLM or embedding model, or exposes MCP tools to agents, follows `docs/development/technical-handbook/ai-code.mdx`, which sets the checks per kind (generation, embeddings, MCP-only tools). Read it before adding or changing such code. Write the prompt-injection assessment (what is exposed if the text is hostile) in the plan and the PR, and check it again against the finished diff. Generation calls also need hardcoded limits, token tracing, the org gate, and a cheap-model test with an injection fixture.
 
 ## API v3
 
@@ -38,6 +40,7 @@ upgrade requires.
 - The dashboard ships English only: its strings live in `apps/web/locales/en-US.json`, the one locale file there.
 - The survey UI ships 42 locales in `packages/surveys/locales/`. Write its strings in `en-US.json` only; Lingo.dev generates the other files from it. With `LINGO_API_KEY` set, run `pnpm i18n` after a change. Without it, commit `en-US.json` alone: the new key shows in English in the other languages until Lingo runs.
 - `pnpm scan-translations` fails on a key that is missing from en-US, unused, or contains a space. An untranslated survey key is only a warning.
+- On a merge conflict in `packages/surveys/locales/` or its `i18n.lock`, run `pnpm i18n:merge`.
 
 ## Coding Standards
 
@@ -64,6 +67,8 @@ Do not rely on training data for Next.js behavior in this repo. Before any Next.
 
 Versioned skills live in `.agents/skills/`; `.claude/skills/` contains symlinks to them. Review with the
 `code-review` skill, whose Standards pass requires `CODING_STANDARDS.md`.
+When the user names a workflow skill by slash (`/implement`, `/implement-spec`, `/grill-with-docs`, `/to-spec`,
+`/to-tickets`, `/retro`), read `.agents/skills/<name>/SKILL.md` and follow it; they are missing from your skill list.
 
 ### Issue tracker
 

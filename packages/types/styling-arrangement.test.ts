@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   ZAppSurveyCardArrangementOptions,
   ZLinkSurveyCardArrangementOptions,
+  getLinkSurveyArrangement,
   isFullPageLinkArrangement,
 } from "./styling";
 
@@ -21,5 +22,12 @@ describe("link survey arrangements", () => {
     [null, false],
   ])("treats %s as a full-page layout: %s", (arrangement, expected) => {
     expect(isFullPageLinkArrangement(arrangement)).toBe(expected);
+  });
+
+  test("renders Focus when a styling sets no arrangement, and the set one otherwise", () => {
+    expect(getLinkSurveyArrangement(undefined)).toBe("focus");
+    expect(getLinkSurveyArrangement(null)).toBe("focus");
+    expect(getLinkSurveyArrangement("straight")).toBe("straight");
+    expect(isFullPageLinkArrangement(getLinkSurveyArrangement(undefined))).toBe(true);
   });
 });

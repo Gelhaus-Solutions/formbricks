@@ -8,6 +8,7 @@ import { type TSurveyEnding } from "@formbricks/types/surveys/types";
 import { transformQuestionsToBlocks } from "@/app/lib/api/survey-transformation";
 import { readZip } from "@/lib/analysis-export/__fixtures__/read-zip";
 import { test } from "./lib/fixtures";
+import { surveyNextButton } from "./utils/helper";
 
 /**
  * **Response export, end to end (ENG-1847, ENG-6794).**
@@ -99,7 +100,7 @@ const seedSurvey = async (workspaceId: string, createdBy: string): Promise<TSeed
 const submitAnswer = async (page: Page, answer: string, colour: string): Promise<void> => {
   await expect(page.getByText(QUESTION)).toBeVisible();
   await page.getByPlaceholder("Type your answer here...").fill(answer);
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await surveyNextButton(page).click();
   await page.getByText(colour, { exact: true }).click();
   await page.getByRole("button", { name: "Finish" }).click();
   // The ending card only renders once the ingest POST resolves; the first submission of a run can

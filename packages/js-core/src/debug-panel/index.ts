@@ -122,7 +122,7 @@ const renderConditionResults = (check: TDebugSurveyEvent | undefined): HTMLEleme
     return element(
       "div",
       `row ${result.passed ? "ok" : "fail"}`,
-      `${result.passed ? "✓" : "✗"} ${label} — read: ${describeActual(result.actual)}`
+      `${result.passed ? "✓" : "✗"} ${label} (read: ${describeActual(result.actual)})`
     );
   });
 };

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@formbricks/database";
+import { ResourceNotFoundError, ResponseAlreadyFinishedError } from "@formbricks/types/errors";
 import { TSurveyQuota } from "@formbricks/types/quota";
 import { TResponse } from "@formbricks/types/responses";
-import { updateResponse } from "@/lib/response/service";
+import { lockResponseForUpdate, updateResponse } from "@/lib/response/service";
 import { evaluateResponseQuotas, loadQuotaEvaluationContext } from "@/modules/quotas/lib/evaluation-service";
 import { updateResponseWithQuotaEvaluation } from "./response";
 
@@ -10,6 +11,7 @@ vi.mock("@/lib/response/service");
 vi.mock("@/modules/quotas/lib/evaluation-service");
 
 const mockUpdateResponse = vi.mocked(updateResponse);
+const mockLockResponseForUpdate = vi.mocked(lockResponseForUpdate);
 const mockEvaluateResponseQuotas = vi.mocked(evaluateResponseQuotas);
 const mockLoadQuotaEvaluationContext = vi.mocked(loadQuotaEvaluationContext);
 const mockQuotaContext = { quotas: [], survey: { id: "survey123" } } as unknown as Awaited<
@@ -34,12 +36,19 @@ describe("updateResponseWithQuotaEvaluation", () => {
     };
     prisma.$transaction = vi.fn(async (cb: any) => cb(mockTx));
     mockLoadQuotaEvaluationContext.mockResolvedValue(mockQuotaContext);
+    mockLockResponseForUpdate.mockResolvedValue({ finished: false });
   });
 
   const mockResponseId = "response123";
   const mockResponseInput = {
     data: { question1: "answer1" },
     finished: true,
+  };
+  const updateArgs = {
+    responseId: mockResponseId,
+    workspaceId: "workspace123",
+    surveyId: "survey123",
+    responseInput: mockResponseInput,
   };
 
   const mockResponse: TResponse = {
@@ -84,7 +93,7 @@ describe("updateResponseWithQuotaEvaluation", () => {
       shouldEndSurvey: true,
     });
 
-    const result = await updateResponseWithQuotaEvaluation(mockResponseId, "survey123", mockResponseInput);
+    const result = await updateResponseWithQuotaEvaluation(updateArgs);
 
     // No ingest flags: this caller did not run the Embedded Data contract, so the stored column is
     // left alone rather than cleared (ENG-1845).
@@ -114,7 +123,7 @@ describe("updateResponseWithQuotaEvaluation", () => {
       shouldEndSurvey: false,
     });
 
-    const result = await updateResponseWithQuotaEvaluation(mockResponseId, "survey123", mockResponseInput);
+    const result = await updateResponseWithQuotaEvaluation(updateArgs);
 
     // No ingest flags: this caller did not run the Embedded Data contract, so the stored column is
     // left alone rather than cleared (ENG-1845).
@@ -143,7 +152,7 @@ describe("updateResponseWithQuotaEvaluation", () => {
       shouldEndSurvey: false,
     });
 
-    const result = await updateResponseWithQuotaEvaluation(mockResponseId, "survey123", mockResponseInput);
+    const result = await updateResponseWithQuotaEvaluation(updateArgs);
 
     expect(mockEvaluateResponseQuotas).toHaveBeenCalledWith({
       surveyId: responseWithNullLanguage.surveyId,
@@ -165,7 +174,7 @@ describe("updateResponseWithQuotaEvaluation", () => {
     mockEvaluateResponseQuotas.mockResolvedValue({ shouldEndSurvey: false });
     const ingestFlags = [{ key: "seats", reason: "coercion_failed" as const }];
 
-    await updateResponseWithQuotaEvaluation(mockResponseId, "survey123", mockResponseInput, ingestFlags);
+    await updateResponseWithQuotaEvaluation({ ...updateArgs, ingestFlags });
 
     expect(mockUpdateResponse).toHaveBeenCalledWith(mockResponseId, mockResponseInput, mockTx, ingestFlags);
   });
@@ -174,7 +183,7 @@ describe("updateResponseWithQuotaEvaluation", () => {
     mockUpdateResponse.mockResolvedValue(mockResponse);
     mockEvaluateResponseQuotas.mockResolvedValue({ shouldEndSurvey: false });
 
-    await updateResponseWithQuotaEvaluation(mockResponseId, "survey123", mockResponseInput);
+    await updateResponseWithQuotaEvaluation(updateArgs);
 
     expect(mockLoadQuotaEvaluationContext).toHaveBeenCalledWith("survey123");
     expect(mockLoadQuotaEvaluationContext.mock.invocationCallOrder[0]).toBeLessThan(
@@ -183,5 +192,26 @@ describe("updateResponseWithQuotaEvaluation", () => {
     expect(mockEvaluateResponseQuotas).toHaveBeenCalledWith(
       expect.objectContaining({ quotaContext: mockQuotaContext })
     );
+  });
+
+  test("refuses a response that is finished under the row lock, without writing it (ENG-6869)", async () => {
+    mockLockResponseForUpdate.mockResolvedValue({ finished: true });
+
+    await expect(updateResponseWithQuotaEvaluation(updateArgs)).rejects.toThrow(ResponseAlreadyFinishedError);
+
+    expect(mockLockResponseForUpdate).toHaveBeenCalledWith(mockTx, {
+      responseId: mockResponseId,
+      workspaceId: "workspace123",
+    });
+    expect(mockUpdateResponse).not.toHaveBeenCalled();
+    expect(mockEvaluateResponseQuotas).not.toHaveBeenCalled();
+  });
+
+  test("reports a response that no longer exists as not found", async () => {
+    mockLockResponseForUpdate.mockResolvedValue(null);
+
+    await expect(updateResponseWithQuotaEvaluation(updateArgs)).rejects.toThrow(ResourceNotFoundError);
+
+    expect(mockUpdateResponse).not.toHaveBeenCalled();
   });
 });

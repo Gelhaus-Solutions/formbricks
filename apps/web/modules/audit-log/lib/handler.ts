@@ -14,8 +14,10 @@ export const withAuditLogging = <TArgs, TResult>(
   handler: (args: TArgs) => Promise<TResult>
 ): ((args: TArgs) => Promise<TResult>) => handler;
 
-/** Queues an event raised while handling a request. */
-export const queueAuditEvent = async (_event: TAuditEvent): Promise<void> => {};
+/** Queues an event raised while handling a request; metadata it already holds may come along. */
+export const queueAuditEvent = async (
+  _event: TAuditEvent & { requestMetadata?: TAuditRequestMetadata }
+): Promise<void> => {};
 
 /** Queues an event raised outside a request, such as in a job. */
 export const queueAuditEventWithoutRequest = async (

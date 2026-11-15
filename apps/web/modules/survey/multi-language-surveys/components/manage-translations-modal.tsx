@@ -143,7 +143,7 @@ export const ManageTranslationsModal = ({
   const progressTextColor = getProgressTextColor(progress.percentage);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? setOpen(true) : handleCancel())}>
       <DialogContent width="wide" className="max-h-[85dvh]" disableCloseOnOutsideClick>
         <DialogHeader>
           <DialogTitle>{t("workspace.surveys.edit.manage_translations")}</DialogTitle>

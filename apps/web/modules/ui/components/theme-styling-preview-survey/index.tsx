@@ -6,7 +6,11 @@ import { useTranslation } from "react-i18next";
 import type { TRendererCustomCss } from "@formbricks/types/custom-css";
 import { resolveDarkColors } from "@formbricks/types/dark-palette";
 import { resolveOverlayAppearance } from "@formbricks/types/overlay";
-import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
+import {
+  getLinkSurveyArrangement,
+  getLinkSurveyCardMaxWidth,
+  isFullPageLinkArrangement,
+} from "@formbricks/types/styling";
 import { TSurvey, TSurveyType } from "@formbricks/types/surveys/types";
 import { TWorkspace } from "@formbricks/types/workspace";
 import { cn } from "@/lib/cn";
@@ -134,7 +138,7 @@ export const ThemeStylingPreviewSurvey = ({
 
   const highlightBorderColor = workspace.styling.highlightBorderColor?.light;
   // Bumped to force the preview to remount and start over. A counter rather than `Date.now()`: the
-  // key only has to differ from the previous one, and reading the clock during render is impure —
+  // key only has to differ from the previous one, and reading the clock during render is impure:
   // it would also make the rendered key differ between the server pass and hydration (ENG-2366).
   const [surveyFormKey, setSurveyFormKey] = useState(0);
 
@@ -149,7 +153,9 @@ export const ThemeStylingPreviewSurvey = ({
     return workspace.styling;
   }, [workspace.styling, survey.styling]);
 
-  const isCardless = isFullPageLinkArrangement(styling.cardArrangement?.linkSurveys);
+  const isCardless = isFullPageLinkArrangement(
+    getLinkSurveyArrangement(styling.cardArrangement?.linkSurveys)
+  );
   const linkSurveyCardMaxWidth = getLinkSurveyCardMaxWidth(styling.linkSurveyCardWidth);
 
   // Create a unique key that includes both timestamp and preview type

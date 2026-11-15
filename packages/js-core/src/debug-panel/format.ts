@@ -91,7 +91,7 @@ const describeValue = (value: string | number | string[] | undefined): string =>
     : shown;
 };
 
-/** "Current URL contains any of /plans, /compare" — the condition in one line. */
+/** "Current URL contains any of /plans, /compare": the condition in one line. */
 export const describeCondition = (condition: TShowConditionSingle): string => {
   const operand = OPERAND_TEXT[condition.leftOperand.value] ?? condition.leftOperand.value;
   const key = condition.leftOperand.meta?.key ? ` "${condition.leftOperand.meta.key}"` : "";
@@ -165,7 +165,7 @@ export const describeConditionTree = (
       rows.push({
         depth: depth + 1,
         passed: result?.passed ?? false,
-        text: `${describeCondition(item)} — read: ${describeActual(result?.actual)}`,
+        text: `${describeCondition(item)} (read: ${describeActual(result?.actual)})`,
       });
     }
   };

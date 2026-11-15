@@ -14,11 +14,7 @@ const validationsTotal = meter.createCounter("formbricks_survey_single_use_link_
  * page and its metadata share one resolution per request.
  */
 export type TSingleUseLinkSurface =
-  | "link_page"
-  | "link_pin_action"
-  | "link_email_action"
-  | "client_response_v1"
-  | "client_response_v2";
+  "link_page" | "link_pin_action" | "link_email_action" | "client_response_v1" | "client_response_v2";
 
 export type TSingleUseLinkValidationMetric = Readonly<{
   outcome: "accepted" | "rejected";

@@ -81,9 +81,11 @@ const expectLinkedAndScreened = async (responseId: string, contactId: string, qu
   await expect(
     prisma.response.findUnique({ where: { id: responseId }, select: { contactId: true } })
   ).resolves.toEqual({ contactId });
+  // GFORMS-19: quotas are stubbed until their rebuild, so nothing is screened; the rebuild expects
+  // `{ status: "screenedIn" }` here again.
   await expect(
     prisma.responseQuotaLink.findUnique({ where: { responseId_quotaId: { responseId, quotaId } } })
-  ).resolves.toMatchObject({ status: "screenedIn" });
+  ).resolves.toBeNull();
 };
 
 describe("management response creates on a saturated pool (ENG-3722)", () => {

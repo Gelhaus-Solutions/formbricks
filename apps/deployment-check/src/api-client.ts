@@ -95,8 +95,7 @@ export type TApiClient = ReturnType<typeof createApiClient>;
 /** RFC 9457 problem body → one readable line, for failures the API explains itself. */
 export const problemDetail = (response: TApiResponse): string => {
   const problem = response.json as
-    | { detail?: string; title?: string; invalid_params?: { name: string; reason: string }[] }
-    | undefined;
+    { detail?: string; title?: string; invalid_params?: { name: string; reason: string }[] } | undefined;
   const base = problem?.detail ?? problem?.title ?? response.text.slice(0, 200);
   const params = (problem?.invalid_params ?? []).map((param) => `${param.name}: ${param.reason}`);
   return params.length > 0 ? `${base} (${params.join("; ")})` : base;

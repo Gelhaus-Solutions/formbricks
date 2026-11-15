@@ -23,9 +23,7 @@ export const getClientOrigin = (): string | undefined =>
   typeof window === "undefined" ? undefined : window.location.origin;
 
 export type TSignatureResponseView =
-  | { kind: "skipped" }
-  | { kind: "image"; src: string; fileName: string }
-  | { kind: "text"; text: string };
+  { kind: "skipped" } | { kind: "image"; src: string; fileName: string } | { kind: "text"; text: string };
 
 const isPrivateStoragePath = (path: string): boolean => {
   if (!PRIVATE_STORAGE_PATH.test(path)) return false;

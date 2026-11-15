@@ -120,8 +120,7 @@ export type TV3ContactsListQuery = {
 };
 
 export type TV3ContactsListQueryParseResult =
-  | ({ ok: true } & TV3ContactsListQuery)
-  | { ok: false; invalid_params: TV3InvalidParam[] };
+  ({ ok: true } & TV3ContactsListQuery) | { ok: false; invalid_params: TV3InvalidParam[] };
 
 const ZDateBound = z.iso.datetime({ offset: true }).transform((value) => new Date(value));
 

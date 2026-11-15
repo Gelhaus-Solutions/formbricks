@@ -28,6 +28,11 @@ vi.mock("@/lib/constants", () => ({
   ENCRYPTION_KEY: "test",
 }));
 
+// The Mark as low quality audit entry (ENG-6933); this suite doesn't send the flag.
+vi.mock("@/modules/audit-log/lib/handler", () => ({
+  queueAuditEvent: vi.fn(),
+}));
+
 vi.mock("@/lib/organization/service", () => ({
   getOrganization: vi.fn(),
 }));

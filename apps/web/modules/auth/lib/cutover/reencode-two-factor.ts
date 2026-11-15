@@ -54,8 +54,7 @@ export const reencodeTwoFactorBackupCodes = async (
   secretConfig: string | SecretConfig
 ): Promise<string> => {
   const storedCodes = JSON.parse(symmetricDecrypt(encryptedFormbricksBackupCodes, ENCRYPTION_KEY)) as (
-    | string
-    | null
+    string | null
   )[];
   const displayedCodes = storedCodes
     .filter((code): code is string => typeof code === "string")

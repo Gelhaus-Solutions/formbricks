@@ -3,7 +3,7 @@ import type { TCustomCssAppearance, TCustomCssScope } from "@formbricks/types/cu
 import { CUSTOM_CSS_LAYER_ORDER } from "@formbricks/types/custom-css";
 
 /**
- * Block every resource-loading value (`url()`, `image-set()`, `src()`, …) in customer CSS — relative,
+ * Block every resource-loading value (`url()`, `image-set()`, `src()`, …) in customer CSS, relative,
  * `data:` and same-origin URLs included. One server-side constant shared by validation and saving; there
  * is deliberately no env var or setting. Turning it off disables only that filter: parsing, selector
  * isolation, the dangerous-scheme check, at-rule removal (`@import` and `@font-face` stay unsupported)
@@ -13,14 +13,14 @@ import { CUSTOM_CSS_LAYER_ORDER } from "@formbricks/types/custom-css";
 export const BLOCK_EXTERNAL_CUSTOM_CSS_RESOURCES = true as const;
 
 /**
- * Bump on ANY change to what the processor accepts or emits — policy tables, limits, selector rewriting,
- * output format — and on every `lightningcss` upgrade (its printer and minifier shape the output).
+ * Bump on ANY change to what the processor accepts or emits (policy tables, limits, selector rewriting,
+ * output format) and on every `lightningcss` upgrade (its printer and minifier shape the output).
  * Stored output compiled under another version is reprocessed from source before delivery.
  */
-const CUSTOM_CSS_PROCESSOR_REVISION = 4;
+const CUSTOM_CSS_PROCESSOR_REVISION = 5;
 
 /** The lightningcss version the revision above was produced with; a unit test pins the installed one. */
-export const CUSTOM_CSS_LIGHTNINGCSS_VERSION = "1.32.0";
+export const CUSTOM_CSS_LIGHTNINGCSS_VERSION = "1.33.0";
 
 /** The effective version stored next to compiled output: the revision plus the URL policy it ran under. */
 export const getCustomCssProcessorVersion = (blockExternalResources: boolean): number =>
@@ -32,8 +32,8 @@ export const CUSTOM_CSS_PROCESSOR_VERSION = getCustomCssProcessorVersion(BLOCK_E
  * Limits (ENG-2950, M2.08). Size budgets live in `CUSTOM_CSS_MAX_SOURCE_BYTES`; these bound the shape of
  * the CSS. Every one is checked before the expensive work (a tokenizer pre-scan before parsing, the AST
  * before nesting is flattened) and the rule count again after flattening. Exceeding one rejects the
- * whole operation with `limit_exceeded`. The values sit far above real stylesheets — the CMS file this
- * feature was designed around has 17 rules, one level of nesting and short selectors — and well below
+ * whole operation with `limit_exceeded`. The values sit far above real stylesheets (the CMS file this
+ * feature was designed around has 17 rules, one level of nesting and short selectors) and well below
  * what the native parser can be pushed to: around 10,000 nested blocks it overflows the stack and takes
  * the Node process down, which is why depth is bounded by a pre-scan that runs before it ever sees the
  * source. Documented for customers (M4.5); keep the docs in step when changing them.
@@ -64,7 +64,7 @@ export const CUSTOM_CSS_MAX_UNIVERSAL_COMPOUNDS = 2;
 /** Warnings reported per operation; the rest of the removals still happen, they are just not listed. */
 export const CUSTOM_CSS_MAX_WARNINGS = 100;
 
-/** M2.01 browser targets — the same ones Tailwind compiles the built-in survey styles for. */
+/** M2.01 browser targets, the same ones Tailwind compiles the built-in survey styles for. */
 const version = (major: number, minor = 0): number => (major << 16) | (minor << 8);
 
 export const CUSTOM_CSS_TARGETS: Targets = {
@@ -100,8 +100,8 @@ export const getCustomCssLayerName = (
 
 /*
  * Policy tables. Anything not explicitly allowed is removed with a warning, and every table is covered by
- * processor.test.ts. The allowed at-rules — `@media`, `@supports`, `@container` (their rules scoped like
- * top-level ones) and `@keyframes` (namespaced) — are the explicit cases in process.ts; every other at-rule
+ * processor.test.ts. The allowed at-rules (`@media`, `@supports`, `@container` with their rules scoped like
+ * top-level ones, and `@keyframes`, namespaced) are the explicit cases in process.ts; every other at-rule
  * is removed.
  */
 

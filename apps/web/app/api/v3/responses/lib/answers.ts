@@ -332,8 +332,7 @@ const serializeComposite = (
       fields: ids.map((fieldId, slot) => ({
         slot,
         fieldId: fieldId as
-          | (typeof V3_ADDRESS_FIELD_IDS)[number]
-          | (typeof V3_CONTACT_INFO_FIELD_IDS)[number],
+          (typeof V3_ADDRESS_FIELD_IDS)[number] | (typeof V3_CONTACT_INFO_FIELD_IDS)[number],
         fieldLabel: localizeSurveyString(
           (
             element as unknown as Record<

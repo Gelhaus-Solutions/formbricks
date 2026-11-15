@@ -18,6 +18,7 @@ vi.mock("@/lib/utils/action-client", () => ({
     inputSchema: vi.fn(() => ({
       action: vi.fn((fn) => fn),
     })),
+    action: vi.fn((fn) => fn),
   },
 }));
 vi.mock("@/modules/audit-log/lib/handler", () => ({

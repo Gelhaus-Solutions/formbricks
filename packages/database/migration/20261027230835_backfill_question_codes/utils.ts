@@ -36,8 +36,7 @@ export interface TSurveyCodesRow {
 }
 
 export type TSurveyCodesPlan =
-  | { status: "unchanged" }
-  | { status: "update"; column: "blocks" | "questions"; value: unknown[] };
+  { status: "unchanged" } | { status: "update"; column: "blocks" | "questions"; value: unknown[] };
 
 const isRecord = (value: unknown): value is TRecord =>
   typeof value === "object" && value !== null && !Array.isArray(value);

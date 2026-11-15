@@ -41,8 +41,7 @@ type TUploadElementOfType<T extends TUploadElementType> = Extract<TSurveyUploadE
  * type's allowed-extension list comes from, and no caller switches on the element type to find out.
  */
 export type TUploadElementKind<TElement extends TSurveyUploadElement = TSurveyUploadElement> =
-  | TArrayUploadElementKind<TElement>
-  | TStringUploadElementKind;
+  TArrayUploadElementKind<TElement> | TStringUploadElementKind;
 
 /** An answer that is an array of URLs (File upload). */
 export type TArrayUploadElementKind<TElement extends TSurveyUploadElement = TSurveyUploadElement> = {

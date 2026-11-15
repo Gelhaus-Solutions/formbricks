@@ -232,8 +232,7 @@ const streamAnalysisCsv = (
 };
 
 export type TExportResult =
-  | { ok: true; response: Response }
-  | { ok: false; reason: "excel_too_large" | "no_columns"; message: string };
+  { ok: true; response: Response } | { ok: false; reason: "excel_too_large" | "no_columns"; message: string };
 
 const NO_COLUMNS: TExportResult = {
   ok: false,

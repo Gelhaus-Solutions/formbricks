@@ -116,11 +116,7 @@ export type TaxonomyFieldOption = TaxonomyScope & {
 export type TaxonomyRunStatus = "pending" | "running" | "succeeded" | "failed" | "canceled";
 
 export type TaxonomyRunFailureCode =
-  | "insufficient_data"
-  | "service_unavailable"
-  | "generation_failed"
-  | "invalid_output"
-  | "internal_error";
+  "insufficient_data" | "service_unavailable" | "generation_failed" | "invalid_output" | "internal_error";
 
 export type TaxonomyRun = TaxonomyScope & {
   id: string;

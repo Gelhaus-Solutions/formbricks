@@ -109,8 +109,7 @@ export const getCodeClashLabel = (survey: TSurvey, issue: TCodeIssue, t: TFuncti
 
   if (issue.kind === "duplicate_answer_code" && typeof listKey === "string") {
     const element = survey.blocks[blockIdx as number]?.elements[elementIdx as number] as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     const options = (element?.[listKey] ?? []) as { id: string; label?: Record<string, string> }[];
     const label = options.find((option) => option.id === issue.clashesWith)?.label;
     return label ? getLocalizedValue(label, "default") || undefined : undefined;
