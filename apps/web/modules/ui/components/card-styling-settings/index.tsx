@@ -5,6 +5,7 @@ import { CheckIcon } from "lucide-react";
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { getLinkSurveyArrangement } from "@formbricks/types/styling";
 import { TSurveyStyling, TSurveyType } from "@formbricks/types/surveys/types";
 import { TWorkspaceStyling } from "@formbricks/types/workspace";
 import { cn } from "@/lib/cn";
@@ -40,7 +41,7 @@ export const CardStylingSettings = ({
   const isAppSurvey = surveyType === "app";
   const surveyTypeDerived = isAppSurvey ? "App" : "Link";
 
-  const linkCardArrangement = form.watch("cardArrangement.linkSurveys") ?? "straight";
+  const linkCardArrangement = getLinkSurveyArrangement(form.watch("cardArrangement.linkSurveys"));
   const appCardArrangement = form.watch("cardArrangement.appSurveys") ?? "straight";
   const linkSurveyCardWidth = form.watch("linkSurveyCardWidth") ?? "default";
   const hideProgressBar = form.watch("hideProgressBar");

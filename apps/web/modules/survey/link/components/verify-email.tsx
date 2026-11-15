@@ -8,7 +8,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { Toaster, toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { isFullPageLinkArrangement } from "@formbricks/types/styling";
+import { getLinkSurveyArrangement, isFullPageLinkArrangement } from "@formbricks/types/styling";
 import { TSurvey } from "@formbricks/types/surveys/types";
 import { getTextContent } from "@formbricks/types/surveys/validation";
 import { TUserLocale } from "@formbricks/types/user";
@@ -66,8 +66,9 @@ export const VerifyEmail = ({
   }, [survey]);
 
   const questions = useMemo(() => getElementsFromBlocks(localSurvey.blocks), [localSurvey.blocks]);
-  const cardArrangement =
-    localSurvey.styling?.cardArrangement?.linkSurveys ?? styling.cardArrangement?.linkSurveys ?? "focus";
+  const cardArrangement = getLinkSurveyArrangement(
+    localSurvey.styling?.cardArrangement?.linkSurveys ?? styling.cardArrangement?.linkSurveys
+  );
   const isCardless = isFullPageLinkArrangement(cardArrangement);
   const linkSurveyCardWidth =
     localSurvey.styling?.linkSurveyCardWidth ?? styling.linkSurveyCardWidth ?? "default";

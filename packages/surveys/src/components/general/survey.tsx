@@ -23,7 +23,11 @@ import type {
   TResponseVariables,
 } from "@formbricks/types/responses";
 import { TUploadFileConfig } from "@formbricks/types/storage";
-import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
+import {
+  getLinkSurveyArrangement,
+  getLinkSurveyCardMaxWidth,
+  isFullPageLinkArrangement,
+} from "@formbricks/types/styling";
 import { TSurveyBlock } from "@formbricks/types/surveys/blocks";
 import { TSurveyElement } from "@formbricks/types/surveys/elements";
 import { getNotShownElementIds } from "@formbricks/types/surveys/not-shown";
@@ -243,12 +247,12 @@ export function Survey({
   /**
    * The browser-runtime context, snapshotted **once on this survey's first render** and frozen for
    * the rest of its life. `onResponseCreateOrUpdate` runs on every submit, so reading the runtime
-   * there — as this did before — meant a respondent who rotated their phone or resized the window
+   * there (as this did before) meant a respondent who rotated their phone or resized the window
    * mid-survey silently rewrote the viewport the finished response reports.
    *
    * Lazy `useRef` initialisation is what makes "first render" the capture point. A survey with a
    * `delay` is not mounted until the widget actually renders it, so render time is the only moment
-   * this component can reach — and it is the right one anyway: it is when the respondent first sees
+   * this component can reach, and it is the right one anyway: it is when the respondent first sees
    * the survey, not when some earlier action queued it.
    */
   const webSurveyMetaRef = useRef<(() => TWebSurveyMeta) | null>(null);
@@ -260,7 +264,7 @@ export function Survey({
   })();
 
   /**
-   * The Embedded Data ingest contract (ENG-1845) applied to whatever the host handed us — URL params
+   * The Embedded Data ingest contract (ENG-1845) applied to whatever the host handed us: URL params
    * for a link survey, `track({ hiddenFields })` or `setEmbeddedData` for an app one. Every caller
    * passes a raw bag and this is the one place it is filtered and coerced, so the SDKs stay dumb
    * pipes and the four mobile ones inherit the rules without shipping a copy (ENG-2472).
@@ -269,7 +273,7 @@ export function Survey({
    * mount, like the browser-runtime context beside it. The values it produces are the ones the
    * respondent's logic and recall see, so they must not change under them mid-survey.
    *
-   * Client-side enforcement is for immediate correctness and developer feedback only — the server
+   * Client-side enforcement is for immediate correctness and developer feedback only; the server
    * re-runs the same contract on ingest and recomputes the flags, because it cannot trust this.
    */
   const [ingestedFieldsRecord] = useState<TResponseData>(() => {
@@ -279,7 +283,7 @@ export function Survey({
       ingestedFields: getIngestedEmbeddedFields(survey),
       elementIds,
       // This record is what the queue sends, so cutting here would hand the server a value that
-      // already fits — and the server's re-run is what produces the persisted flags, so the
+      // already fits, and the server's re-run is what produces the persisted flags, so the
       // `truncated` verdict would be lost on the only path the feature actually ships on. The flag is
       // still raised below for the console; the server does the cutting.
       enforceSizeLimit: false,
@@ -287,7 +291,7 @@ export function Survey({
     logIngestResult(result);
 
     // The contract passes question answers through because at a server boundary `incoming` IS
-    // `response.data`. Here it is only the host's bag, so a key naming a question is not an answer —
+    // `response.data`. Here it is only the host's bag, so a key naming a question is not an answer:
     // and keeping it would be worse than useless: `ResponseQueue` merges this record OVER `data` on
     // every submit, so a hidden field named after a question id would re-apply its display-time
     // value on top of whatever the respondent actually answered. Prefilling has its own prop.
@@ -305,7 +309,7 @@ export function Survey({
 
   /**
    * How the survey starts (ENG-6932): the rules before the first question run once, as soon as the
-   * survey loads — before the welcome card, and on start-at links too. They read what the survey
+   * survey loads: before the welcome card, and on start-at links too. They read what the survey
    * loaded with (the ingested hidden fields and URL parameters, the seeded computed fields and the
    * reserved fields this browser knows), so this lives in a lazy initialiser like the ingest record
    * above: the decision belongs to the display, and later renders must not re-run it.
@@ -355,11 +359,11 @@ export function Survey({
   );
 
   // `onResponseCreateOrUpdate` runs on every question submit, but a response is only *created* on the
-  // first submit — later submits update it. `onResponseCreated` must therefore fire once, not per
+  // first submit; later submits update it. `onResponseCreated` must therefore fire once, not per
   // question, otherwise a 5-question survey triggers 5 downstream `/user` refreshes in js-core.
   //
   // Fired from the queue's server-ack seam below (not at enqueue time) so it can carry the persisted
-  // `responseId` — the id is minted by the server, so an event that carries it can only fire after
+  // `responseId`: the id is minted by the server, so an event that carries it can only fire after
   // the ack (ENG-1846). Same post-ack semantics as `onDisplayCreated`, which fires after
   // createDisplay. Preview mode never reaches the queue and fires this without an id at submit time.
   const responseCreatedRef = useRef(false);
@@ -428,7 +432,7 @@ export function Survey({
             } catch (error) {
               // This runs inside ResponseQueue.sendResponse's try block, and the callback reaches
               // host-supplied code (js-core's event bus → the host page). A throw here would be
-              // caught as a SEND failure — the respondent shown an error and a retry for a response
+              // caught as a SEND failure, the respondent shown an error and a retry for a response
               // the server already created. Never let a host page do that.
               console.error("Formbricks: onResponseCreated handler threw", error);
             }
@@ -483,7 +487,7 @@ export function Survey({
 
   // Block-based navigation: track current block ID instead of question ID
   // The welcome card, a start-at block, or wherever the rules before the first question sent the
-  // respondent — an ending for a screen-out (see `startOutcome`).
+  // respondent: an ending for a screen-out (see `startOutcome`).
   const [blockId, setBlockId] = useState(() => startOutcome.firstCardId);
 
   // True once the user navigated between cards (Next/Back/auto-progress). Moving focus into
@@ -532,8 +536,7 @@ export function Survey({
 
   const cardArrangement = useMemo(() => {
     if (localSurvey.type === "link") {
-      // Focus is the GForms default for link surveys (one question per screen, no card).
-      return styling.cardArrangement?.linkSurveys ?? "focus";
+      return getLinkSurveyArrangement(styling.cardArrangement?.linkSurveys);
     }
     return styling.cardArrangement?.appSurveys ?? "straight";
   }, [localSurvey.type, styling.cardArrangement?.linkSurveys, styling.cardArrangement?.appSurveys]);
@@ -756,7 +759,7 @@ export function Survey({
         return;
       }
 
-      // Check pending responses first — this determines whether the survey is truly complete.
+      // Check pending responses first: this determines whether the survey is truly complete.
       const pendingCount = responseQueue ? await responseQueue.loadPersistedQueue() : 0;
 
       // If the survey is fully complete (no pending responses + finished), discard stale
@@ -781,7 +784,7 @@ export function Survey({
       /*
        * Reinstate the browser context this response was first displayed with. Past this point the
        * entry is being resumed, so the writes that follow go to the response `surveyStateSnapshot`
-       * already identifies — and the meta they carry has to keep describing the original display.
+       * already identifies, and the meta they carry has to keep describing the original display.
        * Lazy `useRef` init has already measured the *current* page by now (a reload can land on a
        * different URL, referrer or viewport), so the persisted snapshot replaces it rather than
        * merging with it: a partial merge would report a context that never existed.
@@ -847,7 +850,7 @@ export function Survey({
           responseQueue?.updateSurveyState(surveyState);
         }
       } else {
-        // Block no longer exists (survey structure changed) — discard UI progress
+        // Block no longer exists (survey structure changed): discard UI progress
         // but still restore survey state and sync pending responses below.
         await clearSurveyProgress(survey.id);
 
@@ -907,7 +910,7 @@ export function Survey({
 
         // Clean up IndexedDB and mark sending as finished after successful sync
         // Individual entries are already removed from IndexedDB inside syncPersistedResponses.
-        // Don't use clearPendingResponses here — it would wipe entries added during the async sync.
+        // Don't use clearPendingResponses here: it would wipe entries added during the async sync.
         if (result.success) {
           await clearSurveyProgress(survey.id);
 
@@ -1106,14 +1109,14 @@ export function Survey({
   );
 
   /**
-   * The catalog entries this survey may resolve at all — everything the survey does not declare
+   * The catalog entries this survey may resolve at all: everything the survey does not declare
    * itself (ENG-2538).
    *
    * Without this filter the projection below carried a reserved value for every name in the catalog,
    * and {@link mergeReservedValues}'s spread was the only thing keeping a declared field ahead of
    * it. A spread only wins for keys that exist, so a survey declaring an optional `url` rendered the
-   * page's own address — an internal `/edit` URL in the editor's preview, the respondent's own link
-   * in production — wherever the respondent had not supplied the field. That is the normal case for
+   * page's own address (an internal `/edit` URL in the editor's preview, the respondent's own link
+   * in production) wherever the respondent had not supplied the field. That is the normal case for
    * a hidden field, and it reached respondent-facing copy.
    *
    * Element ids count as declarations here, which is why `questions` is in the list: a question with
@@ -1138,7 +1141,7 @@ export function Survey({
    * `projectClientReservedValues` drops every `server` catalog entry, so the map holds only what a
    * browser mid-survey actually knows (url, source, action, language today; the SDK-captured entries
    * light up automatically once they land in the catalog). A recall token or logic operand naming a
-   * server-derived field — country, durationSeconds, browser — finds no key and reads as unset,
+   * server-derived field (country, durationSeconds, browser) finds no key and reads as unset,
    * which is the correct answer rather than a fabricated empty string.
    *
    * The meta slice is the same expression the response queue persists, so what recall shows and what
@@ -1175,7 +1178,7 @@ export function Survey({
    *
    * Ingested defaults go underneath both, because they are the answer of last resort: a field the
    * respondent supplied nothing usable for falls back to what the survey declared. They are kept out
-   * of `responseData` on purpose — that record is what the queue submits, and ingest does not write
+   * of `responseData` on purpose: that record is what the queue submits, and ingest does not write
    * defaults (see `projectIngestedDefaults`).
    */
   const recallValues = useMemo(
@@ -1329,7 +1332,7 @@ export function Survey({
   };
 
   const onSubmit = async (surveyResponseData: TResponseData, responsettc: TResponseTtc) => {
-    // The survey is already over — an ending card or the "end" sentinel is showing. Re-sending the
+    // The survey is already over: an ending card or the "end" sentinel is showing. Re-sending the
     // response would repeat `finished: true`, which the server rejects with a 400, and the error card
     // would then replace the ending. Nothing is left to record, so the submit is a no-op; returning
     // here also keeps the ending id out of `history`.
@@ -1465,7 +1468,7 @@ export function Survey({
   const onBack = (): void => {
     const prevBlockId = getPreviousBlockId(localSurvey, blockId, history);
 
-    // Nothing precedes the current card — the respondent is on the first block, or `blockId` is an
+    // Nothing precedes the current card: the respondent is on the first block, or `blockId` is an
     // ending / a block that no longer exists and no history was saved. Back is a no-op rather than
     // a throw (ENG-2818), and nothing is consumed: neither the history nor the variable stack is
     // popped for a navigation that does not happen.
@@ -1761,7 +1764,7 @@ export function Survey({
   };
 
   // Survey instructions, available on every page. They live on the welcome card, which the
-  // respondent leaves after one click and can never get back to — so the text that explains what the
+  // respondent leaves after one click and can never get back to, so the text that explains what the
   // survey is for was gone for the rest of it (the second half of the 2.4.2 VPAT finding).
   //
   // Rendered once here rather than inside getCardContent, which runs per card and would emit a

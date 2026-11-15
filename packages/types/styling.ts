@@ -26,6 +26,14 @@ export type TAppSurveyCardArrangementOptions = z.infer<typeof ZAppSurveyCardArra
 export const isFullPageLinkArrangement = (arrangement?: string | null): boolean =>
   arrangement === "cardless" || arrangement === "focus";
 
+/**
+ * The arrangement a link survey renders in. A styling that sets none (a workspace created before Focus,
+ * or through the API) renders Focus, so the page around the survey must read it the same way.
+ */
+export const getLinkSurveyArrangement = (
+  arrangement?: TCardArrangementOptions | null
+): TCardArrangementOptions => arrangement ?? "focus";
+
 export const ZCardArrangement = z.object({
   linkSurveys: ZLinkSurveyCardArrangementOptions,
   appSurveys: ZAppSurveyCardArrangementOptions,

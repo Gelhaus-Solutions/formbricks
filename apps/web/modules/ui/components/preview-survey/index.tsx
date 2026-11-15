@@ -8,7 +8,11 @@ import { getLanguageLabel } from "@formbricks/i18n-utils/utils";
 import type { TRendererCustomCss } from "@formbricks/types/custom-css";
 import { resolveDarkColors } from "@formbricks/types/dark-palette";
 import { resolveOverlayAppearance } from "@formbricks/types/overlay";
-import { getLinkSurveyCardMaxWidth, isFullPageLinkArrangement } from "@formbricks/types/styling";
+import {
+  getLinkSurveyArrangement,
+  getLinkSurveyCardMaxWidth,
+  isFullPageLinkArrangement,
+} from "@formbricks/types/styling";
 import type { TSurveyBlockLogic } from "@formbricks/types/surveys/blocks";
 import { TSurvey, TSurveyLanguage, TSurveyStyling } from "@formbricks/types/surveys/types";
 import { TUserLocale } from "@formbricks/types/user";
@@ -69,7 +73,7 @@ interface PreviewSurveyProps {
   onAppearanceChange?: (appearance: TStylingAppearance) => void;
   /**
    * Compiled workspace + survey custom CSS to preview (ENG-3552): the editor's validated draft. Passed
-   * straight to the renderer, which applies CSS from this prop only — never from `survey`.
+   * straight to the renderer, which applies CSS from this prop only, never from `survey`.
    */
   customCss?: TRendererCustomCss;
   /**
@@ -207,14 +211,14 @@ export const PreviewSurvey = ({
   const { placement: surveyPlacement } = workspaceOverwrites || {};
   const { clickOutsideClose: surveyClickOutsideClose } = workspaceOverwrites || {};
 
-  // Placement mirrors with the previewed language, exactly as the shipped widget does — see
+  // Placement mirrors with the previewed language, exactly as the shipped widget does; see
   // `mirrorPlacementForDir`.
   //
   // The input is the language the RENDERED SURVEY is actually on, not the `languageCode` prop. The
   // previewed survey carries its own language switch (`getShowLanguageSwitch` in survey.tsx gates only
   // on `showLanguageSwitch` and the enabled-language count, so it is present in preview mode too), and
   // an author who uses it changes the survey's direction without touching this prop. Keying the mirror
-  // on the prop alone left an LTR survey sitting in the RTL corner on exactly that path — the
+  // on the prop alone left an LTR survey sitting in the RTL corner on exactly that path: the
   // contradiction between preview and shipped widget this is here to remove.
   //
   // Tracked in local state rather than reported up through `setLanguageCode`: that state is the
@@ -231,7 +235,7 @@ export const PreviewSurvey = ({
 
   // Sets BOTH, because picking the language the prop already holds is a same-value setState: React
   // bails and the effect above never re-runs. That is exactly the "put it back after an in-survey
-  // switch" click — both switches spell the default language `"default"` — so keying the reset on the
+  // switch" click (both switches spell the default language `"default"`), so keying the reset on the
   // prop alone left the question pane on the editing language and the preview on the other one.
   const handleChromeLanguageChange = useCallback(
     (code: string) => {
@@ -242,7 +246,7 @@ export const PreviewSurvey = ({
   );
 
   // Both modal previews are rendered behind a `previewMode === …` gate, so switching between the phone
-  // and browser frames unmounts one and mounts the other — and a fresh RenderSurvey seeds its language
+  // and browser frames unmounts one and mounts the other, and a fresh RenderSurvey seeds its language
   // from whatever `languageCode` prop it is handed. Handing it the prop would reset the survey to the
   // editing language while `placement` still reflected the language the author had switched to, sliding
   // an Arabic card across the viewport to the LTR corner before the remounted survey reported its own
@@ -283,7 +287,9 @@ export const PreviewSurvey = ({
   // Page font (ENG-3864): the app survey takes the font of the page around it, here the editor's.
   const pageFont = (styling.pageFont ?? workspace.styling.pageFont) === true;
 
-  const isCardless = isFullPageLinkArrangement(styling.cardArrangement?.linkSurveys);
+  const isCardless = isFullPageLinkArrangement(
+    getLinkSurveyArrangement(styling.cardArrangement?.linkSurveys)
+  );
   // The mock modal paints its own card color around the survey, so it has to follow the dark palette.
   const modalBackground =
     appearance === "dark"
