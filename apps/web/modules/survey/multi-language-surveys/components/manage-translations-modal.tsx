@@ -43,32 +43,6 @@ interface ManageTranslationsModalProps {
   readonly defaultLanguageName: string;
 }
 
-type TranslationFunction = ReturnType<typeof useTranslation>["t"];
-
-const showTranslationRunResult = (
-  t: TranslationFunction,
-  toastId: string,
-  failedMessage: string | undefined,
-  hasOversizedFields: boolean,
-  hasRemainingBatches: boolean
-) => {
-  if (failedMessage) {
-    toast.error(failedMessage, { id: toastId });
-    return;
-  }
-
-  const messages = [
-    hasOversizedFields ? t("workspace.surveys.edit.ai_translation_field_too_long") : undefined,
-    hasRemainingBatches ? t("workspace.surveys.edit.ai_translation_run_limit_reached") : undefined,
-  ].filter((message): message is string => Boolean(message));
-  if (messages.length > 0) {
-    toast.error(messages.join(" "), { id: toastId });
-    return;
-  }
-
-  toast.success(t("workspace.surveys.edit.ai_translation_complete"), { id: toastId });
-};
-
 export const ManageTranslationsModal = ({
   open,
   setOpen,
@@ -162,11 +136,6 @@ export const ManageTranslationsModal = ({
   };
 
   const handleCancel = () => {
-    translationRunId.current++;
-    if (translationToastId.current) toast.dismiss(translationToastId.current);
-    translationToastId.current = undefined;
-    setIsTranslating(false);
-    setTranslatingPaths(new Set());
     setOpen(false);
   };
 
@@ -246,7 +215,7 @@ export const ManageTranslationsModal = ({
           <Button variant="secondary" size="sm" onClick={handleCancel}>
             {t("common.cancel")}
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={isTranslating}>
+          <Button size="sm" onClick={handleSave}>
             {t("common.save")}
           </Button>
         </DialogFooter>
