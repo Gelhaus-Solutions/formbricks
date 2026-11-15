@@ -271,12 +271,12 @@ export function CardlessSurveyLayout({
           </>
         )}
         {isFocus && isQuestionScreen ? (
-          // Pointer shortcuts to the card's own Back and Next, which keyboard and screen reader users
-          // reach in the card: one control per action for them, not two of the same name.
-          <div className="fb-focus-nav" aria-hidden="true">
+          // On wide screens the card's Back is hidden and this arrow is the only Back, so everyone
+          // reaches it. Next repeats the card's own Next: a pointer shortcut, out of the
+          // accessibility tree, so nobody meets two controls of the same name.
+          <div className="fb-focus-nav">
             <button
               type="button"
-              tabIndex={-1}
               aria-label={t("common.back")}
               disabled={blockPosition === 0 || survey.isBackButtonHidden}
               onClick={() => {
@@ -289,6 +289,7 @@ export function CardlessSurveyLayout({
             <button
               type="button"
               tabIndex={-1}
+              aria-hidden="true"
               aria-label={t("common.next")}
               onClick={() => {
                 clickInContent('[data-fb-part="button-primary"]');
