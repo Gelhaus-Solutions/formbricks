@@ -111,7 +111,9 @@ catalog:
   # lib/cache/index.ts resolved to the hoisted v4 type, then used to describe the v5
   # client that getCacheService() actually returns. Aligning here removes that crossover.
   redis: 5.12.2
-  pino: 10.4.0
+  # 10.4 finds a transport's caller through util.getCallSites, which names no file for modules Vite's
+  # module runner evaluates, so `pnpm qsf:eval` and `document:eval` cannot start pino-pretty.
+  pino: 10.3.1
   bcryptjs: 3.0.3
   uuid: 14.0.3
   "@paralleldrive/cuid2": 2.3.1
@@ -247,7 +249,8 @@ overrides:
   "@opentelemetry/core": 2.8.0 # ENG-1355 / GHSA-8988-4f7v-96qf (<2.8.0). load-bearing: the 0.208.0/0.211.0/0.212.0/0.217.0 exporter lines resolve 2.2.0–2.7.1.
   # OpenTelemetry's core, resources, sdk-metrics and sdk-logs accept api <1.10.0, and 1.10's ESM entry
   # makes Turbopack load the external api asynchronously, so the web build fails with "Class extends value
-  # undefined". load-bearing: bullmq, redis and the otlp exporters resolve 1.10.0.
+  # undefined". load-bearing: bullmq, redis and the otlp exporters resolve 1.10.0. apps/web keeps
+  # @opentelemetry/semantic-conventions on 1.43 for the same reason: 1.45 has the same ESM entry.
   "@opentelemetry/api": 1.9.0
   esbuild: 0.28.1 # ENG-1327 / GHSA-g7r4-m6w7-qqqr (>=0.27.3 <0.28.1). load-bearing: vite@7/tsx/storybook resolve 0.27.7.
   # ENG-1527-batch / GHSA-mh29-5h37-fv8m + GHSA-h67p-54hq-rp68: js-yaml <4.1.2 quadratic-complexity
