@@ -67,8 +67,10 @@ describe("updateResponseWithQuotaEvaluation on a saturated pool (ENG-3285)", () 
 
     expect(updated.finished).toBe(true);
     expect(loggedError).not.toHaveBeenCalled();
+    // GFORMS-19: quotas are stubbed until their rebuild, so nothing is screened; the rebuild expects
+    // `{ status: "screenedIn" }` here again.
     await expect(
       prisma.responseQuotaLink.findUnique({ where: { responseId_quotaId: { responseId, quotaId } } })
-    ).resolves.toMatchObject({ status: "screenedIn" });
+    ).resolves.toBeNull();
   }, 30_000);
 });
