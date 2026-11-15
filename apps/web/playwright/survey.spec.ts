@@ -659,11 +659,7 @@ test.describe("Multi Language Survey Create", async () => {
       "endings.0.subheader",
       surveys.germanCreate.endingCard.description
     );
-    await helper.fillModalTranslation(
-      page,
-      "endings.0.buttonLabel",
-      surveys.germanCreate.endingCard.buttonLabel
-    );
+    // GForms' ending card has no button by default, so there is no button label to translate.
 
     // Save translations
     await page.getByRole("button", { name: "Save" }).click();
