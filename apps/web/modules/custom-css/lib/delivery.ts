@@ -21,8 +21,7 @@ import { parseStoredCustomCss, toCustomCssSource } from "./service";
 export const CUSTOM_CSS_REPROCESS_TTL_MS = 6 * 60 * 60 * 1000;
 
 type TReprocessed =
-  | { ok: true; light: string | null; dark: string | null }
-  | { ok: false; errors: TCustomCssError[] };
+  { ok: true; light: string | null; dark: string | null } | { ok: false; errors: TCustomCssError[] };
 
 const compact = (light: string | null | undefined, dark: string | null | undefined) => {
   const compiled: TCustomCssCompiled = {
@@ -112,9 +111,7 @@ export const toDeliveredCustomCss = async (
 };
 
 export type TCustomCssHealth =
-  | { status: "ok" }
-  | { status: "stale" }
-  | { status: "withheld"; errors: TCustomCssError[] };
+  { status: "ok" } | { status: "stale" } | { status: "withheld"; errors: TCustomCssError[] };
 
 /**
  * Creator-facing state of stored CSS. `stale`: compiled by an older processor, delivered by recompiling

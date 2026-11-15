@@ -425,8 +425,7 @@ describe("an Excel export, matched with the survey it names (ENG-6809)", () => {
       .filter((line) => line.length > 0)
       .map((line) => JSON.parse(line) as Record<string, unknown>)
       .find((event) => event.type === "done") as
-      | { match?: TSurveyImportMatch; report: { source: { kind: string } } }
-      | undefined;
+      { match?: TSurveyImportMatch; report: { source: { kind: string } } } | undefined;
     return { status: response.status, kind: done?.report.source.kind, match: done?.match };
   };
 

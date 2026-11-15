@@ -292,7 +292,7 @@ export const CssCodeField = ({
           aria-activedescendant={activeOptionId}
           // Sizes are restated: the forms plugin's textarea defaults would put the text off the gutter's lines.
           className={cn(
-            "relative block w-full rounded-r-md border-0 bg-transparent px-3 py-2 font-mono text-xs leading-5 whitespace-pre text-slate-800 shadow-none outline-none [tab-size:2] placeholder:text-slate-400 focus:ring-0 focus:outline-none",
+            "relative block w-full rounded-r-md border-0 bg-transparent px-3 py-2 font-mono text-xs leading-5 whitespace-pre [tab-size:2] text-slate-800 shadow-none outline-none placeholder:text-slate-400 focus:ring-0 focus:outline-none",
             resizable ? "min-h-24 resize-y" : "resize-none",
             !isEditable && "cursor-default text-slate-600"
           )}

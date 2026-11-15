@@ -38,8 +38,7 @@ export const ADDRESS_SUB_FIELDS = [
 export const CONTACT_INFO_SUB_FIELDS = ["firstName", "lastName", "email", "phone", "company"] as const;
 
 export type TSurveyTextSubField =
-  | (typeof ADDRESS_SUB_FIELDS)[number]
-  | (typeof CONTACT_INFO_SUB_FIELDS)[number];
+  (typeof ADDRESS_SUB_FIELDS)[number] | (typeof CONTACT_INFO_SUB_FIELDS)[number];
 
 /** What a text is, relative to what holds it. `index` is the 0-based position in its list. */
 export type TSurveyTextField =

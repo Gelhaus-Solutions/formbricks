@@ -12,9 +12,7 @@ import type { TFilterProperty, TTableFilter } from "../lib/types";
 import { datePresetFromSlug, datePresetToSlug } from "../lib/url-codec";
 
 export type TDateFilterChange =
-  | { operator: "preset"; preset: string }
-  | { operator: "between"; from: string; to: string }
-  | null;
+  { operator: "preset"; preset: string } | { operator: "between"; from: string; to: string } | null;
 
 /** A date quick filter: one of the shared presets, or a custom range of calendar days. */
 export const DateFilterEditor = ({

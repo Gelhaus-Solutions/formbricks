@@ -68,8 +68,7 @@ export interface TFeedbackButtonPlacement {
 }
 
 export type TBannerPlacement =
-  | { placement: "top"; layout: "inPage" | "overlay" }
-  | { placement: "bottom"; layout: "overlay" };
+  { placement: "top"; layout: "inPage" | "overlay" } | { placement: "bottom"; layout: "overlay" };
 
 /** Desktop placement, plus the one used below 768 px viewport width (`null` keeps the desktop one). */
 export interface TCreativePosition<TPlacement> {

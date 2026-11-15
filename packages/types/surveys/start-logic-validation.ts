@@ -33,8 +33,7 @@ export interface TStartLogicSurvey {
   /** The typed fields, when the payload has them: a computed date (ENG-6935) is declared only here. */
   embeddedFields?:
     | readonly (
-        | TLinkedEmbeddedField
-        | { storageKey?: string; source?: string; dataType?: TEmbeddedDataType }
+        TLinkedEmbeddedField | { storageKey?: string; source?: string; dataType?: TEmbeddedDataType }
       )[]
     | null;
 }

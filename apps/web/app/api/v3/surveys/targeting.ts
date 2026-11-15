@@ -5,12 +5,12 @@ import { DatabaseError } from "@formbricks/types/errors";
 import type { InvalidParam } from "@/app/api/v3/lib/response";
 import { getOrganizationByWorkspaceId } from "@/lib/organization/service";
 import { getContactAttributeKeys } from "@/modules/contacts/lib/contact-attribute-keys";
-import { getSurveyIdsReadBySegments } from "@/modules/contacts/segments/lib/survey-visibility";
 import {
   ALL_SEGMENT_SURVEY_REFS,
   getExistingWorkspaceSurveyIds,
   getSegments,
 } from "@/modules/contacts/segments/lib/segments";
+import { getSurveyIdsReadBySegments } from "@/modules/contacts/segments/lib/survey-visibility";
 import { getIsContactsEnabled } from "@/modules/features/lib/flags";
 import { V3SurveyReferenceValidationError } from "./reference-validation";
 import type { TV3SurveyTargeting } from "./schemas";

@@ -1511,7 +1511,7 @@ export function Survey({
           return (
             <>
               {localSurvey.type !== "link" ? (
-                <div className="relative w-full bg-survey-bg">
+                <div className="bg-survey-bg relative w-full">
                   <div
                     className={cn(
                       "flex w-full items-center justify-end",
@@ -1540,7 +1540,7 @@ export function Survey({
           return (
             <>
               {localSurvey.type !== "link" ? (
-                <div className="relative w-full bg-survey-bg">
+                <div className="bg-survey-bg relative w-full">
                   <div
                     className={cn(
                       "flex w-full items-center justify-end",

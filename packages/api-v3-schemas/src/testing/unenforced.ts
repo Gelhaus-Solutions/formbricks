@@ -14,12 +14,7 @@
  *   must reject a counterexample for every entry in its scope, at the right path.
  */
 export type TUnenforcedKeyword =
-  | "uniqueItems"
-  | "minProperties"
-  | "maxProperties"
-  | "conditional"
-  | "requiredAtRuntime"
-  | "format";
+  "uniqueItems" | "minProperties" | "maxProperties" | "conditional" | "requiredAtRuntime" | "format";
 
 export type TUnenforced = {
   /** The component the constraint is published on, as it appears under `components.schemas`. */

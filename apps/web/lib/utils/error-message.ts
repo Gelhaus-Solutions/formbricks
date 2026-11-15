@@ -8,8 +8,7 @@ export const getFormattedErrorMessage = (result: {
     message = result.serverError;
   } else {
     const errors = result.validationErrors as
-      | Record<string, { _errors?: string[] } | string[] | undefined>
-      | undefined;
+      Record<string, { _errors?: string[] } | string[] | undefined> | undefined;
     message = Object.keys(errors || {})
       .map((key) => {
         const value = errors?.[key];

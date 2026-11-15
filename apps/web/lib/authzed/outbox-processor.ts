@@ -266,8 +266,7 @@ const sanitizeDeliveryError = (error: unknown): string => {
 };
 
 type TGroupOutcome =
-  | Readonly<{ status: "projected" }>
-  | Readonly<{ code: string; retryable: boolean; status: "failed" }>;
+  Readonly<{ status: "projected" }> | Readonly<{ code: string; retryable: boolean; status: "failed" }>;
 
 const runGroup = async (
   group: TDeliveryGroup,

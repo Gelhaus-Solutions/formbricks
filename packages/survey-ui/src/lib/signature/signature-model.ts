@@ -114,8 +114,7 @@ export const clearSignature = (value: SignatureValue): SignatureValue => ({
 });
 
 export type SignatureContent =
-  | { kind: "strokes"; strokes: SignatureStroke[] }
-  | { kind: "name"; name: string };
+  { kind: "strokes"; strokes: SignatureStroke[] } | { kind: "name"; name: string };
 
 /**
  * What the exported PNG shows: the active tab's content, so the image matches the pad. A signature kept

@@ -22,10 +22,7 @@
  */
 
 export type TGatewayJsonBodyRejectionReason =
-  | "invalid_json"
-  | "not_object"
-  | "duplicate_key"
-  | "non_ascii_key";
+  "invalid_json" | "not_object" | "duplicate_key" | "non_ascii_key";
 
 export type TGatewayJsonObjectParseResult =
   | { ok: true; body: Record<string, unknown>; keys: string[] }

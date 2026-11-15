@@ -771,9 +771,7 @@ export type TFormulaSlotType = TExpressionValueType | "any";
 
 /** What decides the type at the cursor: the target field, a function's argument, or an operator. */
 export type TFormulaSlotContext =
-  | { kind: "field" }
-  | { kind: "function"; fn: TExpressionFunction }
-  | { kind: "operator"; symbol: string };
+  { kind: "field" } | { kind: "function"; fn: TExpressionFunction } | { kind: "operator"; symbol: string };
 
 export interface TFormulaSlot {
   wanted: TFormulaSlotType;

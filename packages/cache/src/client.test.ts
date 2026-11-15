@@ -316,8 +316,7 @@ describe("@formbricks/cache factory", () => {
         firstClient.isReady = false;
         firstClient.isOpen = false;
         const onError = firstClient.on.mock.calls.find(([event]) => event === "error")?.[1] as
-          | ((error: Error) => void)
-          | undefined;
+          ((error: Error) => void) | undefined;
         expect(onError).toBeDefined();
         onError?.(new Error("socket closed"));
 

@@ -18,14 +18,7 @@ const EXACT_OPERATORS: ReadonlySet<TRuleOperator> = new Set(["equals", "notEqual
  * - `date`, `number`, `text`: a value typed, or a day picked.
  */
 export type TRuleValueControl =
-  | "placeholder"
-  | "none"
-  | "editor"
-  | "picker"
-  | "multiPicker"
-  | "date"
-  | "number"
-  | "text";
+  "placeholder" | "none" | "editor" | "picker" | "multiPicker" | "date" | "number" | "text";
 
 export const getRuleValueControl = (
   property: TFilterProperty | undefined,

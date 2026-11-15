@@ -28,11 +28,7 @@ const NO_AI_FILE_EXTENSIONS: readonly string[] = [FORMBRICKS_FILE_INPUT_EXTENSIO
 
 /** Why the browser refused a file before uploading it. */
 export type TSurveyImportFileError =
-  | "file_wrong_extension"
-  | "file_needs_ai"
-  | "file_earlier_excel_export"
-  | "file_empty"
-  | "file_too_large";
+  "file_wrong_extension" | "file_needs_ai" | "file_earlier_excel_export" | "file_empty" | "file_too_large";
 
 /**
  * The extensions the drop zone offers: a Formbricks file and an Excel file always, the other files

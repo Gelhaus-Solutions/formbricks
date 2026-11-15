@@ -17,12 +17,7 @@ export type TSurveyImportContactField = "firstName" | "lastName" | "email" | "ph
 
 /** The fields an address element asks for. */
 export type TSurveyImportAddressField =
-  | "addressLine1"
-  | "addressLine2"
-  | "city"
-  | "state"
-  | "zip"
-  | "country";
+  "addressLine1" | "addressLine2" | "city" | "state" | "zip" | "country";
 
 /** Text keyed by language code, default language first. */
 export type TSurveyImportLocaleText = Record<string, string>;

@@ -13,8 +13,7 @@ import type { TV3SurveyDocument } from "./schemas";
 import { V3_SURVEY_TRANSLATABLE_METADATA_KEYS } from "./translation-fields";
 
 export type TV3SurveyDocumentValidationResult =
-  | { valid: true; invalidParams: [] }
-  | { valid: false; invalidParams: InvalidParam[] };
+  { valid: true; invalidParams: [] } | { valid: false; invalidParams: InvalidParam[] };
 
 function getConfiguredTranslationLanguageCodes(document: TV3SurveyDocument): string[] {
   const defaultLanguage = document.defaultLanguage.toLowerCase();
@@ -204,9 +203,7 @@ export function getV3SurveyIntroducedMediaInvalidParams(
  * than defaulted so a new caller has to choose.
  */
 export type TV3SurveyPrecedencePolicy =
-  | { mode: "enforce" }
-  | { mode: "introduced"; baseline: TV3SurveyDocument }
-  | { mode: "skip" };
+  { mode: "enforce" } | { mode: "introduced"; baseline: TV3SurveyDocument } | { mode: "skip" };
 
 /**
  * ENG-3946: the steps of a respondent's path that lie on a loop, as `from→to` block keys. A step is a
@@ -407,14 +404,12 @@ function getDocumentTypedFields(
   );
 
   return [
-    ...document.variables.map(
-      (variable): TV3TypedEmbeddedField => ({
-        storageKey: variable.id,
-        name: variable.name,
-        source: "computed",
-        dataType: variable.type === "number" ? "number" : "string",
-      })
-    ),
+    ...document.variables.map((variable): TV3TypedEmbeddedField => ({
+      storageKey: variable.id,
+      name: variable.name,
+      source: "computed",
+      dataType: variable.type === "number" ? "number" : "string",
+    })),
     ...storedEmbeddedFields.filter(
       (field) =>
         field.source === "computed" &&

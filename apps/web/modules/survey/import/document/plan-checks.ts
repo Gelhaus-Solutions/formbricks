@@ -370,8 +370,7 @@ const wholeCellHeadline = (
 };
 
 type TEntryResult =
-  | { ok: true; entry: TDocumentPlannedEntry }
-  | { ok: false; reasons: TDocumentPlanFailure[] };
+  { ok: true; entry: TDocumentPlannedEntry } | { ok: false; reasons: TDocumentPlanFailure[] };
 
 /** Whether one entry fits the file and its kind. On the retry, a split that did not hold falls back. */
 export function checkEntry(

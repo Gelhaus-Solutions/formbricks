@@ -52,10 +52,7 @@ export const SENTENCE_ICON_BUTTON_CLASS = "size-7 text-slate-500 hover:text-slat
 
 /** What stands in the label column before a condition. */
 export type TSentenceLead =
-  | { kind: "if" }
-  | { kind: "select" }
-  | { kind: "text"; connector: TConnector }
-  | { kind: "none" };
+  { kind: "if" } | { kind: "select" } | { kind: "text"; connector: TConnector } | { kind: "none" };
 
 export const getSentenceLead = ({
   index,

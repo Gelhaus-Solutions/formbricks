@@ -31,8 +31,7 @@ const toTextKey = (
   if (blocksWord !== "blocks" || elementsWord !== "elements" || !Array.isArray(draft.blocks)) return null;
   const block = draft.blocks[Number(blockIndex)] as { elements?: unknown } | undefined;
   const element = (Array.isArray(block?.elements) ? block.elements[Number(elementIndex)] : undefined) as
-    | TDraftElement
-    | undefined;
+    TDraftElement | undefined;
   if (typeof element?.id !== "string") return null;
 
   const language = rest.length > 0 && languages.has(rest.at(-1) ?? "") ? (rest.pop() ?? null) : null;

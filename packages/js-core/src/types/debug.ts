@@ -9,11 +9,7 @@ import type { TShowConditionsEvaluation } from "@formbricks/types/show-condition
 
 /** Why a survey was dropped before any trigger fired. */
 export type TDebugSurveyExclusion =
-  | "alreadyDisplayed"
-  | "alreadyResponded"
-  | "displayLimitReached"
-  | "cooldown"
-  | "segment";
+  "alreadyDisplayed" | "alreadyResponded" | "displayLimitReached" | "cooldown" | "segment";
 
 export type TDebugSurveyOutcome =
   | "excluded"

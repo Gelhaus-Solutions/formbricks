@@ -55,14 +55,7 @@ const MAX_SUGGESTIONS = 100;
 const LANGUAGE_PROPERTY = "language";
 
 type TResponseFieldKind =
-  | "question"
-  | "matrixRow"
-  | "attribute"
-  | "hiddenField"
-  | "variable"
-  | "meta"
-  | "quota"
-  | "shown";
+  "question" | "matrixRow" | "attribute" | "hiddenField" | "variable" | "meta" | "quota" | "shown";
 
 /** What a rule property points at, so a rule can be turned back into the filter row it stands for. */
 export type TResponseFilterField = {

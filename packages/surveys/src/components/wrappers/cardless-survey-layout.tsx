@@ -232,14 +232,14 @@ export function CardlessSurveyLayout({
       {showCardlessPreviewLogoSlot ? (
         <div
           id="formbricks-cardless-preview-logo-slot"
-          className="mx-auto w-full shrink-0 px-4 pb-2 pt-5 sm:px-6 sm:pt-6"
+          className="mx-auto w-full shrink-0 px-4 pt-5 pb-2 sm:px-6 sm:pt-6"
           style={cardMaxWidthStyle}
         />
       ) : null}
       <div className="relative min-h-0 flex-1">
         {isSolidColorBackground && !isScrollAtTop && (
           <div
-            className="pointer-events-none absolute left-0 right-0 top-0 z-10 h-4"
+            className="pointer-events-none absolute top-0 right-0 left-0 z-10 h-4"
             style={{ background: `linear-gradient(to bottom, ${fadeColor}, transparent)` }}
           />
         )}
@@ -262,7 +262,7 @@ export function CardlessSurveyLayout({
           <>
             {isSolidColorBackground && (
               <div
-                className="pointer-events-none absolute bottom-0 left-4 right-4 z-10 h-10"
+                className="pointer-events-none absolute right-4 bottom-0 left-4 z-10 h-10"
                 style={{ background: `linear-gradient(to top, ${fadeColor}, transparent)` }}
               />
             )}

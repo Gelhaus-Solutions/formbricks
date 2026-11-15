@@ -61,8 +61,7 @@ describe("v3 responses read metrics, as exported", () => {
     shutdown = () => provider.shutdown();
 
     const value = byName("formbricks_api_v3_responses_page_surveys")?.dataPoints[0]?.value as
-      | THistogramValue
-      | undefined;
+      THistogramValue | undefined;
 
     expect(value?.buckets.boundaries[0]).toBe(0.5);
     // Buckets are upper-inclusive: (-inf, 0.5] holds the empty page, (0.5, 1] the one-survey page.
@@ -76,8 +75,7 @@ describe("v3 responses read metrics, as exported", () => {
     shutdown = () => provider.shutdown();
 
     const value = byName("formbricks_api_v3_responses_read_duration_seconds")?.dataPoints[0]?.value as
-      | THistogramValue
-      | undefined;
+      THistogramValue | undefined;
 
     // 100ms in, 0.1 recorded — a unit mismatch would be invisible to the bucket assertion alone.
     expect(value?.sum).toBeCloseTo(0.1);

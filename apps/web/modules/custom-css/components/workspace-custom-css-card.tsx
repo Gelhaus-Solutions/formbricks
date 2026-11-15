@@ -21,9 +21,7 @@ import { type TWorkspaceCustomCssAccess } from "./types";
 
 /** `stopped`: the CSS could not be saved and the page's Save stops with it, after saying why. */
 export type TWorkspaceCustomCssSaveOutcome =
-  | { status: "skipped" }
-  | { status: "saved"; removedCount: number }
-  | { status: "stopped" };
+  { status: "skipped" } | { status: "saved"; removedCount: number } | { status: "stopped" };
 
 export interface TWorkspaceCustomCssSaveHandle {
   save: () => Promise<TWorkspaceCustomCssSaveOutcome>;

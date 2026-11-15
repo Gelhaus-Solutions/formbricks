@@ -144,30 +144,31 @@ describe("/api/auth route surface", () => {
     }
   );
 
-  test.each([
-    ["./[...all]/route.ts", "oauth2/authorize"],
-  ])("%s refuses a Content-Type listing several media types before any handler", async (file, path) => {
-    const { POST } = (await loadRoute(file)) as { POST: (request: Request) => Promise<Response> };
-    const fields = Array.from({ length: AUTH_REQUEST_MAX_ENTRIES + 1 }, (_, index) => `k${index}=1`).join(
-      "&"
-    );
-
-    for (const contentType of [
-      "text/plain, application/x-www-form-urlencoded",
-      "application/x-www-form-urlencoded; a=b, multipart/form-data; boundary=x",
-    ]) {
-      const response = await POST(
-        new Request(`http://localhost/api/auth/${path}`, {
-          method: "POST",
-          headers: { "content-type": contentType },
-          body: fields,
-        })
+  test.each([["./[...all]/route.ts", "oauth2/authorize"]])(
+    "%s refuses a Content-Type listing several media types before any handler",
+    async (file, path) => {
+      const { POST } = (await loadRoute(file)) as { POST: (request: Request) => Promise<Response> };
+      const fields = Array.from({ length: AUTH_REQUEST_MAX_ENTRIES + 1 }, (_, index) => `k${index}=1`).join(
+        "&"
       );
 
-      expect(response.status).toBe(415);
+      for (const contentType of [
+        "text/plain, application/x-www-form-urlencoded",
+        "application/x-www-form-urlencoded; a=b, multipart/form-data; boundary=x",
+      ]) {
+        const response = await POST(
+          new Request(`http://localhost/api/auth/${path}`, {
+            method: "POST",
+            headers: { "content-type": contentType },
+            body: fields,
+          })
+        );
+
+        expect(response.status).toBe(415);
+      }
+      expect(handlerCalls).not.toHaveBeenCalled();
     }
-    expect(handlerCalls).not.toHaveBeenCalled();
-  });
+  );
 
   // A hybrid type reads as JSON to better-call and as a form to oauth-provider. Every route refuses both
   // before its handler or the DCR step runs.

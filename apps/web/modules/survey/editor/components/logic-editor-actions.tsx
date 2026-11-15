@@ -422,10 +422,7 @@ export function LogicEditorActions({
                               )}
                               onChangeValue={(val, option, fromInput) => {
                                 const fieldType = option?.meta?.type as
-                                  | "static"
-                                  | "variable"
-                                  | "hiddenField"
-                                  | "element";
+                                  "static" | "variable" | "hiddenField" | "element";
 
                                 if (!fromInput && fieldType === "static") return;
                                 if (isDateOneStep(action)) {

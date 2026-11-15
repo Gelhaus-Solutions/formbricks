@@ -64,16 +64,16 @@ import {
 } from "@/lib/survey/write-transaction";
 import { getSurveyWorkspaceIdMap } from "@/modules/contacts/segments/lib/segments";
 import {
+  assertAddedSegmentSurveyFiltersVisible,
+  assertSegmentSurveyFiltersVisible,
+  getAddedSegmentSurveyIds,
+} from "@/modules/contacts/segments/lib/survey-visibility";
+import {
   invalidateCustomCssCaches,
   parseStoredCustomCss,
   readCustomCssPayloadSource,
   resolveCustomCssWriteOrThrow,
 } from "@/modules/custom-css/lib/service";
-import {
-  assertAddedSegmentSurveyFiltersVisible,
-  assertSegmentSurveyFiltersVisible,
-  getAddedSegmentSurveyIds,
-} from "@/modules/contacts/segments/lib/survey-visibility";
 import { getIsQuotasEnabled } from "@/modules/features/lib/flags";
 import { hasMatrixElement, syncQuotaMatrixConditions } from "@/modules/quotas/lib/quotas";
 import { handleTriggerUpdates } from "@/modules/survey/lib/trigger-updates";

@@ -71,7 +71,7 @@
 
 /* this is for styling the HtmlBody component */
 #fbjs .htmlbody {
-  @apply block text-sm font-normal leading-6;
+  @apply block text-sm leading-6 font-normal;
   /* need to use !important because in packages/survey-ui/components/editor/styles-editor-frontend.css the color is defined for some classes */
   color: var(--fb-subheading-color) !important;
 }

@@ -4,7 +4,11 @@ import { prisma } from "@formbricks/database";
 import type { Prisma } from "@formbricks/database/prisma";
 import { ZId } from "@formbricks/types/common";
 import { InvalidInputError, ResourceNotFoundError, ValidationError } from "@formbricks/types/errors";
-import type { TBaseFilters, TSegmentFilter, TSegmentSurveyInteractionFilter } from "@formbricks/types/segment";
+import type {
+  TBaseFilters,
+  TSegmentFilter,
+  TSegmentSurveyInteractionFilter,
+} from "@formbricks/types/segment";
 import type { TSurveyActorContext } from "@/lib/survey/visibility/actor-context";
 import { buildHiddenSurveyWhere } from "@/lib/survey/visibility/predicate";
 

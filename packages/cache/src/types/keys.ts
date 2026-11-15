@@ -17,9 +17,4 @@ export type CacheKey = z.infer<typeof ZCacheKey>;
  * Add new namespaces here as they are introduced
  */
 export type CustomCacheNamespace =
-  | "account_deletion"
-  | "analytics"
-  | "billing"
-  | "oauth"
-  | "github"
-  | "sso_recovery";
+  "account_deletion" | "analytics" | "billing" | "oauth" | "github" | "sso_recovery";

@@ -38,8 +38,7 @@ import {
 export type TSubjectPosition = "root" | "inside";
 
 export type TSelectorOutcome =
-  | { ok: true; selector: Selector; subject: TSubjectPosition }
-  | { ok: false; reason: string };
+  { ok: true; selector: Selector; subject: TSubjectPosition } | { ok: false; reason: string };
 
 export const SELECTOR_REASONS = {
   outsideRoot: "Selectors cannot depend on elements outside the survey root.",

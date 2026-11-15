@@ -76,10 +76,7 @@ export const ZActionCalculate = z.union([
 export type TActionCalculate = z.infer<typeof ZActionCalculate>;
 
 export type TSurveyBlockLogicActionObjective =
-  | "calculate"
-  | "requireAnswer"
-  | "jumpToBlock"
-  | "markLowQuality";
+  "calculate" | "requireAnswer" | "jumpToBlock" | "markLowQuality";
 
 // RequireAnswer action - targets element IDs
 

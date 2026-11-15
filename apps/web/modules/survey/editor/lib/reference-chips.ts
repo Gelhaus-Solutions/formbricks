@@ -25,8 +25,7 @@ export interface TReferenceChip {
  * the plain text a tooltip, an `aria-label` and the tests read. A reference part carries both.
  */
 export type TFlowTextPart =
-  | { kind: "text"; text: string }
-  | { kind: "reference"; chip: TReferenceChip; plain: string };
+  { kind: "text"; text: string } | { kind: "reference"; chip: TReferenceChip; plain: string };
 
 /** Parts as the plain sentence: each reference as its plain text (“code”, @field, field). */
 export const toPlainText = (parts: TFlowTextPart[]): string =>

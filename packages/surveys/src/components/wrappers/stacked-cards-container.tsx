@@ -189,7 +189,7 @@ export function StackedCardsContainer({
               data-fb-part={isCardless ? undefined : FB_PART.card}
               className={cn(
                 "w-full",
-                !isCardless && "overflow-hidden bg-survey-bg",
+                !isCardless && "bg-survey-bg overflow-hidden",
                 fullSizeCards && !isCardless ? "h-full" : ""
               )}
               style={isCardless ? undefined : borderStyles}>

@@ -91,11 +91,13 @@ const { Prisma } = await import("@formbricks/database/prisma");
  * rather than spreading `as never` through every assertion below.
  */
 const knownRequestError = (message: string, code: string, meta?: Record<string, unknown>) =>
-  new (Prisma.PrismaClientKnownRequestError as unknown as new (
-    message: string,
-    code: string,
-    meta?: Record<string, unknown>
-  ) => Error)(message, code, meta);
+  new (
+    Prisma.PrismaClientKnownRequestError as unknown as new (
+      message: string,
+      code: string,
+      meta?: Record<string, unknown>
+    ) => Error
+  )(message, code, meta);
 
 /**
  * A P2002 in the shape THIS repo actually produces.

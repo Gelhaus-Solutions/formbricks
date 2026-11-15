@@ -5,8 +5,7 @@ import {
 } from "@/app/lib/api/parse-and-validate-json-body";
 
 export type TValidatedResponseUpdateInputResult =
-  | { response: Response }
-  | { responseUpdateInput: TClientResponseUpdateInput };
+  { response: Response } | { responseUpdateInput: TClientResponseUpdateInput };
 
 export const getValidatedResponseUpdateInput = async (
   req: Request
