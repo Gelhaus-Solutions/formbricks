@@ -37,7 +37,7 @@ import {
 
 /**
  * The assembly of a document import (ENG-6852): the checked plan's entries become the draft the dialog
- * creates — the locale-keyed request shape — and their routing becomes logic.
+ * creates (the locale-keyed request shape), and their routing becomes logic.
  *
  * Every text is the file's, as the checks read it from its cell; here it is sanitized like any imported
  * text (plain text, so a cell's markup is stripped, not shown). Ids are the import's own: element ids
@@ -46,8 +46,8 @@ import {
  *
  * Blocks follow the file's sections: consecutive questions of one section share a block, a question
  * outside any is a block of its own. Routing then splits blocks where logic needs a block to start or
- * end — a question asked only if a condition holds starts one, a question that jumps ends one, a jump's
- * target starts one — and becomes logic:
+ * end (a question asked only if a condition holds starts one, a question that jumps ends one, a jump's
+ * target starts one) and becomes logic:
  *
  * - `skipTo`: a rule on the question's block, jumping to the target's block (or the ending) when the
  *   condition holds;
@@ -55,7 +55,7 @@ import {
  *   go next: to the first of the following conditional blocks whose condition holds, else past them.
  *
  * Every rule the draft carries is reported for checking (`logic_imported`); one the draft cannot carry
- * — its question is not in the draft, or comes later, or its answers are not the question's — is
+ * (its question is not in the draft, or comes later, or its answers are not the question's) is
  * reported as `logic_not_imported`, with the AI's note on it.
  */
 
@@ -483,8 +483,20 @@ class DocumentDraftBuilder {
 
     const defaults = await getDefaultEndingTexts(this.languageCodes);
     this.issues.push({ code: "ending_added", severity: "info", params: { subject: "ending" } });
+    // The default language always has a text; a language without the app's strings shows it, reported.
+    const fallback = defaults[0] ?? { headline: "", subheader: "" };
+    const standIns = this.languageCodes.filter((_code, index) => !defaults[index]);
+    if (standIns.length > 0) {
+      this.issues.push({
+        code: "ending_not_translated",
+        severity: "warning",
+        params: { subject: "ending", languages: standIns.join(", ") },
+      });
+    }
     const text = (part: "headline" | "subheader"): TSurveyImportLocaleText =>
-      Object.fromEntries(this.languageCodes.map((code, index) => [code, defaults[index]?.[part] ?? ""]));
+      Object.fromEntries(
+        this.languageCodes.map((code, index) => [code, (defaults[index] ?? fallback)[part]])
+      );
     return [{ id: createId(), type: "endScreen", headline: text("headline"), subheader: text("subheader") }];
   }
 

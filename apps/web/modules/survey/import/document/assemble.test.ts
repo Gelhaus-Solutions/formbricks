@@ -453,7 +453,7 @@ describe("assembleDocumentDraft: welcome and endings", () => {
     expect(checkImportDraft(document)).toEqual([]);
   });
 
-  test("a file with no closing text gets the editor's default ending in each language, reported", async () => {
+  test("a file with no closing text gets the editor's English default ending in each language, reported", async () => {
     const { document, issues } = await assemble(
       [entry("R2", { headline: text("How are you?", "Wie geht's?") })],
       {
@@ -467,13 +467,17 @@ describe("assembleDocumentDraft: welcome and endings", () => {
       headline: Record<string, string>;
       subheader: Record<string, string>;
     }[];
-    expect(ending.headline["en-US"]).not.toBe("");
-    expect(ending.headline["de-DE"]).not.toBe("");
-    expect(ending.headline["de-DE"]).not.toBe(ending.headline["en-US"]);
+    expect(ending.headline).toEqual({ "en-US": "Thank you!", "de-DE": "Thank you!" });
+    expect(ending.subheader["de-DE"]).toBe("We appreciate your feedback.");
     expect(issues).toContainEqual({ code: "ending_added", severity: "info", params: { subject: "ending" } });
+    expect(issues).toContainEqual({
+      code: "ending_not_translated",
+      severity: "warning",
+      params: { subject: "ending", languages: "de-DE" },
+    });
   });
 
-  test("a default ending has no text in a language Formbricks has no strings for", async () => {
+  test("a default ending shows the default language's text where Formbricks has no strings", async () => {
     const { document } = await assemble(
       [
         entry("R2", {
@@ -489,8 +493,7 @@ describe("assembleDocumentDraft: welcome and endings", () => {
     );
 
     const [ending] = document.endings as { headline: Record<string, string> }[];
-    expect(ending.headline.tlh).toBe("");
-    expect(ending.headline["en-US"]).not.toBe("");
+    expect(ending.headline).toEqual({ "en-US": "Thank you!", tlh: "Thank you!" });
   });
 });
 
