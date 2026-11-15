@@ -265,8 +265,8 @@ importers:
   .:
     devDependencies:
       '@axe-core/playwright':
-        specifier: 4.14.0
-        version: 4.14.0(playwright-core@1.65.0)
+        specifier: 4.11.3
+        version: 4.11.3(playwright-core@1.65.0)
       '@formbricks/config-eslint':
         specifier: workspace:*
         version: link:packages/config-eslint
@@ -2072,9 +2072,8 @@ packages:
     resolution: {integrity: sha512-sl4Bm6yiMNYrZKkqqDFWN0UfnWhlS8ivKxrYl+6t0gCLrqr8y3B2IqZZbFRkfaVVp7C/baApyh71P+LeE1A2sQ==}
     engines: {node: '>=18.0.0'}
 
-  '@axe-core/playwright@4.14.0':
-    resolution: {integrity: sha512-SGUhG5PIHd2eMdpgBF2PyQLOhX+qyDR2PT4cmoS4Qk2ak+jX/rrSvst9l0PGv5WTHolKpUMvVmoHpr4cZgf1RQ==}
-    engines: {node: '>=22.12.0'}
+  '@axe-core/playwright@4.11.3':
+    resolution: {integrity: sha512-h/kfksv4F0cVIDlKpT4700OehdRgpvuVskuQ2nb7/JmtWUXpe9ftHAPtwyXGvVSsa6SJ64A9ER7Zrzc/sIvC4w==}
     peerDependencies:
       playwright-core: '>= 1.0.0'
 
@@ -6960,10 +6959,6 @@ packages:
 
   axe-core@4.11.4:
     resolution: {integrity: sha512-KunSNx+TVpkAw/6ULfhnx+HWRecjqZGTOyquAoWHYLRSdK1tB5Ihce1ZW+UY3fj33bYAFWPu7W/GRSmmrCGuxA==}
-    engines: {node: '>=4'}
-
-  axe-core@4.14.0:
-    resolution: {integrity: sha512-9WTZxEjsZ7b13TH8JPmbV2z8CHbl80/2hm3XPEG4JgNdQLK81IBRXmSxHfMAOkSqQeRxT/0dwNDz2GOm3zzpcQ==}
     engines: {node: '>=4'}
 
   axobject-query@4.1.0:
@@ -12314,9 +12309,9 @@ snapshots:
 
   '@aws/lambda-invoke-store@0.3.0': {}
 
-  '@axe-core/playwright@4.14.0(playwright-core@1.65.0)':
+  '@axe-core/playwright@4.11.3(playwright-core@1.65.0)':
     dependencies:
-      axe-core: 4.14.0
+      axe-core: 4.11.4
       playwright-core: 1.65.0
 
   '@babel/code-frame@7.29.7':
@@ -17521,8 +17516,6 @@ snapshots:
   aws4fetch@1.0.20: {}
 
   axe-core@4.11.4: {}
-
-  axe-core@4.14.0: {}
 
   axobject-query@4.1.0: {}
 
