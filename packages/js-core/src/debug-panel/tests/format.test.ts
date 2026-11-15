@@ -132,10 +132,10 @@ describe("debug panel condition tree (ENG-4070)", () => {
   test("an any-of group that passed shows ✓, even with a failing branch under it", () => {
     expect(treeOf(rule([onPhone, twoPages]))).toEqual([
       { depth: 0, passed: true, text: "All of:" },
-      { depth: 1, passed: true, text: "Current URL path is any of /plans — read: /plans" },
+      { depth: 1, passed: true, text: "Current URL path is any of /plans (read: /plans)" },
       { depth: 1, passed: true, text: "Any of:" },
-      { depth: 2, passed: false, text: "Device is phone — read: desktop" },
-      { depth: 2, passed: true, text: "Pages viewed ≥ 2 — read: 2" },
+      { depth: 2, passed: false, text: "Device is phone (read: desktop)" },
+      { depth: 2, passed: true, text: "Pages viewed ≥ 2 (read: 2)" },
     ]);
   });
 
