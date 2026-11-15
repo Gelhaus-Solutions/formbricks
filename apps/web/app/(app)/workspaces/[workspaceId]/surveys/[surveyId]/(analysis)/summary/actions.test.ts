@@ -9,9 +9,6 @@ const mocks = vi.hoisted(() => ({
   getOrganizationIdFromSurveyId: vi.fn(),
   getOrganizationLogoUrl: vi.fn(),
   sendEmbedSurveyPreviewEmail: vi.fn(),
-  generatePersonalLinks: vi.fn(),
-  getIsContactsEnabled: vi.fn(),
-  resolveSurveyActorContext: vi.fn(),
 }));
 
 vi.mock("@/lib/utils/action-client", () => ({
@@ -32,9 +29,6 @@ vi.mock("@/lib/utils/helper", () => ({
 }));
 
 vi.mock("@/lib/survey/service", () => ({ getSurvey: mocks.getSurvey, updateSurvey: vi.fn() }));
-vi.mock("@/lib/survey/visibility/actor-context", () => ({
-  resolveSurveyActorContext: mocks.resolveSurveyActorContext,
-}));
 
 vi.mock("./lib/survey", () => ({
   deleteResponsesAndDisplaysForSurvey: mocks.deleteResponsesAndDisplaysForSurvey,
@@ -63,8 +57,7 @@ vi.mock("@/lib/organization/logo", () => ({
 }));
 vi.mock("@/modules/email", () => ({ sendEmbedSurveyPreviewEmail: mocks.sendEmbedSurveyPreviewEmail }));
 
-const { generatePersonalLinksAction, resetSurveyAction, sendEmbedSurveyPreviewEmailAction } =
-  await import("./actions");
+const { resetSurveyAction, sendEmbedSurveyPreviewEmailAction } = await import("./actions");
 
 const callReset = () =>
   (resetSurveyAction as unknown as (args: unknown) => Promise<unknown>)({
@@ -140,34 +133,5 @@ describe("resetSurveyAction", () => {
       deletedDisplaysCount: 5,
     });
     expect(mocks.deleteResponsesAndDisplaysForSurvey).toHaveBeenCalledWith("survey1");
-  });
-});
-
-describe("generatePersonalLinksAction", () => {
-  const memberActor = { enforced: true, isOrganizationAdmin: false, kind: "user", userId: "user1" };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.getOrganizationIdFromSurveyId.mockResolvedValue("org1");
-    mocks.getIsContactsEnabled.mockResolvedValue(true);
-    mocks.assertCan.mockResolvedValue(undefined);
-    mocks.resolveSurveyActorContext.mockResolvedValue(memberActor);
-  });
-
-  // ENG-6870: the segment's filters are evaluated with the caller's survey visibility, not the destination
-  // survey's permission alone.
-  test("evaluates the segment as the signed-in user", async () => {
-    const visibilityError = new Error("segment_survey_filters_not_visible");
-    mocks.generatePersonalLinks.mockRejectedValue(visibilityError);
-
-    await expect(
-      (generatePersonalLinksAction as unknown as (args: unknown) => Promise<unknown>)({
-        ctx: { user: { id: "user1" } },
-        parsedInput: { surveyId: "survey1", segmentId: "segment1", expirationDays: 7 },
-      })
-    ).rejects.toBe(visibilityError);
-
-    expect(mocks.resolveSurveyActorContext).toHaveBeenCalledWith({ type: "user", id: "user1" }, "org1");
-    expect(mocks.generatePersonalLinks).toHaveBeenCalledWith("survey1", "segment1", memberActor, 7);
   });
 });

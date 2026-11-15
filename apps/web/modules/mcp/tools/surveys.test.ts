@@ -12,6 +12,7 @@ import {
   successListResponse,
   successResponse,
 } from "@/app/api/v3/lib/response";
+import type { TV3AuditLog } from "@/app/api/v3/lib/types";
 import {
   createV3SurveyResponseFromRawInput,
   deleteV3Survey,
